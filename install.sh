@@ -1,8 +1,8 @@
 #!/bin/sh
 set -e
 
-DIR="${SIDEBOT_DIR:-/root/telegram-iloader-minis}"
-BASE="https://github.com/Vitaliicloud/Sidebot/releases/latest/download"
+DIR="${SIDEBOT_DIR:-/root/sidebot-local}"
+BASE="https://github.com/Sideb0t/Sidebot/releases/latest/download"
 PARTS="SideBot-v1.0.tar.gz.part0 SideBot-v1.0.tar.gz.part1"
 
 if command -v apk >/dev/null 2>&1; then
@@ -41,7 +41,7 @@ chmod +x "$DIR/start.sh" 2>/dev/null || true
 echo "✅ SideBot installed to $DIR"
 
 if [ -e /dev/tty ]; then
-  exec sh "$DIR/start.sh" "$@" < /dev/tty
+  exec sh "$DIR/start.sh" --local --bg "$@" < /dev/tty
 else
-  exec sh "$DIR/start.sh" "$@"
+  exec sh "$DIR/start.sh" --local --bg "$@"
 fi
