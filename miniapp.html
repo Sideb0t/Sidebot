@@ -3411,7 +3411,7 @@ if(!S.loaded){ refreshState(); }
           updBtn.textContent = orig;
           if(r && r.ok && r.botupdate){
             toast('✅ Оновлено! Перезапуск...', false);
-            setTimeout(function(){ try{ location.reload(); }catch(e){} }, 2500);
+            setTimeout(function(){ try{ location.reload(); }catch(e){} }, 3500);
           }else{
             toast('❌ ' + ((r && (r.error || r.text)) || 'Помилка оновлення'), true);
           }
@@ -3430,7 +3430,7 @@ if(!S.loaded){ refreshState(); }
     apiCmd({action:'apply_update', url:(u && u.url)||'', version:(u && u.remote_version)||''}, 40000).then(function(r){
       if(r && r.ok){
         toast('✅ Оновлено до ' + (r.version || 'нової версії') + '! Перезапуск...', false);
-        setTimeout(function(){ try{ location.reload(); }catch(e){} }, 2500);
+        setTimeout(function(){ try{ location.reload(); }catch(e){} }, 3500);
       }else{
         if(btn){ btn.disabled = false; btn.textContent = '⬆️ Оновити зараз'; }
         toast('❌ ' + ((r && r.text) || 'Помилка оновлення'), true);

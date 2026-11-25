@@ -10581,7 +10581,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.6"
+SIDEBOT_VERSION = "2026.11.25.7"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 
 
@@ -10654,8 +10654,7 @@ def _miniapp_api_dispatch(cmd, chat_id):
                         pass
                 def _gh_restart():
                     time.sleep(0.8)
-                    if _botupdate_restart():
-                        os._exit(0)
+                    _botupdate_do_exec_restart()
                 threading.Thread(target=_gh_restart, daemon=True).start()
                 return {"ok": True, "restarting": True, "files": len(_files), "version": _rver}
             except Exception as _ae:
@@ -12809,8 +12808,7 @@ def _miniapp_upload(handler):
                 if not _no_restart:
                     def _delayed_restart():
                         time.sleep(0.8)
-                        if _botupdate_restart():
-                            os._exit(0)
+                        _botupdate_do_exec_restart()
                     threading.Thread(target=_delayed_restart, daemon=True).start()
                 return
             finally:
