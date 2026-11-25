@@ -10581,8 +10581,9 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.9"
+SIDEBOT_VERSION = "2026.11.25.10"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
+SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
 
 def _sidebot_local_version():
@@ -10611,13 +10612,17 @@ def _miniapp_api_dispatch(cmd, chat_id):
         _action = cmd.get("action") or ""
         if _action == "check_update":
             _lver = _sidebot_local_version()
-            _vurl = "%s/version.json?t=%d" % (SIDEBOT_UPDATE_BASE, int(time.time()))
+            _vurl = "%s/version.json?ref=main&t=%d" % (SIDEBOT_API_BASE, int(time.time()))
             try:
-                _req = urllib.request.Request(_vurl, headers={"User-Agent": "SideBot/1.0", "Cache-Control": "no-cache"})
+                _req = urllib.request.Request(_vurl, headers={
+                    "User-Agent": "SideBot/1.0",
+                    "Accept": "application/vnd.github.raw",
+                    "Cache-Control": "no-cache",
+                })
                 with urllib.request.urlopen(_req, timeout=6) as _r:
                     _rd = json.loads(_r.read().decode("utf-8", "ignore"))
                 _rver = str((_rd or {}).get("version") or "").strip()
-                _turl = str((_rd or {}).get("url") or (SIDEBOT_UPDATE_BASE + "/bot-update-fixes.tar.gz")).strip()
+                _turl = str((_rd or {}).get("url") or (SIDEBOT_API_BASE + "/bot-update-fixes.tar.gz?ref=main")).strip()
                 return {
                     "ok": True,
                     "has_update": bool(_rver and _rver != _lver),
@@ -10628,14 +10633,20 @@ def _miniapp_api_dispatch(cmd, chat_id):
             except Exception as _ue:
                 return {"ok": False, "local_version": _lver, "text": str(_ue)[:120]}
         if _action == "apply_update":
-            _turl = str(cmd.get("url") or (SIDEBOT_UPDATE_BASE + "/bot-update-fixes.tar.gz")).strip()
+            _turl = str(cmd.get("url") or (SIDEBOT_API_BASE + "/bot-update-fixes.tar.gz?ref=main")).strip()
             if "?" not in _turl:
-                _turl += "?t=%d" % int(time.time())
+                _turl += "?ref=main&t=%d" % int(time.time())
+            else:
+                _turl += "&t=%d" % int(time.time())
             _utmp_dl = tempfile.mkdtemp(prefix="gh-dl-")
             _utmp = tempfile.mkdtemp(prefix="gh-botup-")
             try:
                 _tgz = os.path.join(_utmp_dl, "update.tar.gz")
-                _req = urllib.request.Request(_turl, headers={"User-Agent": "SideBot/1.0", "Cache-Control": "no-cache"})
+                _req = urllib.request.Request(_turl, headers={
+                    "User-Agent": "SideBot/1.0",
+                    "Accept": "application/vnd.github.raw",
+                    "Cache-Control": "no-cache",
+                })
                 with urllib.request.urlopen(_req, timeout=30) as _r, open(_tgz, "wb") as _out:
                     shutil.copyfileobj(_r, _out)
                 _files, _build, _uerr = _botupdate_extract(_tgz, _utmp)
