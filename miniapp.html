@@ -56,9 +56,6 @@
   html[data-theme="sidestore"] .tabbar .tab-pill{ display:none !important; }
   html[data-theme="sidestore"] .tabbar button{ color:#8e8e93; }
   html[data-theme="sidestore"] .tabbar button.active{ color:#a855f7; }
-  html[data-theme="sidestore"] .ic-browse-bag{ display:none; }
-  html[data-theme="sidestore"] .ic-browse-fork{ display:block; }
-  html:not([data-theme="sidestore"]) .ic-browse-fork{ display:none; }
   html[data-theme="altstore"] .tabbar{
     left:16px; right:16px; bottom:max(10px, env(safe-area-inset-bottom)); padding:4px;
     background:linear-gradient(180deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,.06) 100%);
@@ -240,8 +237,9 @@
     font-size:10px; font-weight:500; font-family:inherit; padding:5px 2px; min-height:46px; cursor:pointer; border-radius:999px;
     transition:color .18s ease; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:2px;
   }
-  .tabbar button .ic{ width:22px; height:22px; display:flex; align-items:center; justify-content:center; line-height:1; }
-  .tabbar button .ic svg{ width:21px; height:21px; display:block; }
+  .tabbar button .ic{ width:22px; height:22px; flex:0 0 22px; display:flex; align-items:center; justify-content:center; line-height:1; }
+  .tabbar button .ic svg{ width:21px; height:21px; flex:0 0 21px; display:block; }
+  .tabbar button span:last-child{ white-space:nowrap; line-height:1.15; font-size:9.5px; }
   .tabbar button.active{
     color:#ffffff; font-weight:600;
   }
