@@ -1,0 +1,1877 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="App Store">
+<link rel="apple-touch-icon" sizes="180x180" href="/appstore-icon.png?v=1">
+<link rel="icon" type="image/png" href="/appstore-icon.png?v=1">
+<link rel="manifest" href="/manifest.json">
+<title>App Store</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+  :root{
+    --bg:#000000; --card:#1c1c1e; --card2:#2c2c2e; --card3:#3a3a3c;
+    --txt:#ffffff; --sub:#98989f; --sub2:#6b6b70; --green:#30d158; --red:#ff453a;
+    --blue:#0a84ff; --pill:rgba(28,28,30,0.82);
+  }
+  *{ box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body{ position:fixed; inset:0; width:100%; height:100%; margin:0; padding:0; overflow:hidden; overscroll-behavior:none; touch-action:pan-y; -webkit-text-size-adjust:none; text-size-adjust:none; }
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    color:var(--txt); background:var(--bg);
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{ max-width:560px; margin:0 auto; height:100dvh; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; overscroll-behavior-y:contain; padding:max(20px, calc(12px + env(safe-area-inset-top))) 16px calc(132px + env(safe-area-inset-bottom)); }
+  .hidden{ display:none !important; }
+  button{ font-family:inherit; }
+  img{ -webkit-user-drag:none; }
+
+  /* ---- header / status bar spacing ---- */
+  .pagehead{ padding-top:max(14px, env(safe-area-inset-top)); }
+  .navrow{ display:flex; align-items:center; gap:10px; min-height:44px; }
+  .navtitle{ font-size:17px; font-weight:700; letter-spacing:-.2px; }
+  .navbtn{
+    background:var(--card); border:none; color:var(--txt); width:34px; height:34px;
+    border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:17px; cursor:pointer;
+  }
+  h1.big{ font-size:34px; font-weight:800; letter-spacing:-.6px; margin:14px 2px 12px; }
+
+  /* ---- search ---- */
+  .searchbox{
+    display:flex; align-items:center; gap:8px; background:var(--card);
+    border-radius:12px; padding:11px 12px; margin:4px 0 10px;
+  }
+  .searchbox svg{ flex:0 0 auto; opacity:.55; }
+  .searchbox input{
+    flex:1; background:transparent; border:none; outline:none; color:var(--txt);
+    font-size:17px; min-width:0;
+  }
+  .searchbox input::placeholder{ color:var(--sub2); }
+
+  /* ---- chips (country, device, recent, filter) ---- */
+  .chiprow{ display:flex; gap:8px; overflow-x:auto; padding:2px 0 8px; scrollbar-width:none; }
+  .chiprow::-webkit-scrollbar{ display:none; }
+  .chip{
+    flex:0 0 auto; display:inline-flex; align-items:center; gap:6px;
+    background:var(--card); color:var(--txt); border:none; border-radius:999px;
+    padding:9px 14px; font-size:14px; font-weight:600; cursor:pointer;
+  }
+  .chip.on{ background:#ffffff; color:#000000; }
+  .chip .dim{ color:var(--sub); }
+  .chip.on .dim{ color:#555; }
+  .chip.sm{ padding:7px 12px; font-size:13px; }
+  .recent{ color:var(--sub2); font-size:12.5px; margin:6px 2px 0; }
+
+  /* ---- section headers ---- */
+  .sechead{ display:flex; align-items:baseline; justify-content:space-between; margin:20px 4px 10px; }
+  .sechead h2{ font-size:21px; font-weight:800; letter-spacing:-.4px; margin:0; }
+  .sechead .lnk{ background:none; border:none; color:var(--blue); font-size:15px; cursor:pointer; padding:0; }
+
+  /* ---- list card ---- */
+  .card{ background:var(--card); border-radius:18px; padding:0 14px; margin-bottom:12px; }
+  .row{
+    display:flex; align-items:center; gap:12px; padding:12px 0; width:100%;
+    background:none; border:none; border-bottom:1px solid rgba(255,255,255,.07);
+    color:var(--txt); text-align:left; cursor:pointer;
+  }
+  .row:last-child{ border-bottom:none; }
+  .icon{
+    flex:0 0 56px; width:56px; height:56px; border-radius:13px; object-fit:cover;
+    background:linear-gradient(160deg,#48484a,#1c1c1e); box-shadow:0 1px 4px rgba(0,0,0,.5);
+  }
+  .icon.ph{ display:flex; align-items:center; justify-content:center; color:#8e8e93; font-size:24px; font-weight:800; }
+  .meta{ flex:1; min-width:0; display:flex; flex-direction:column; align-items:flex-start; text-align:left; }
+  .meta .nm{ font-size:16px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .meta .sb{ font-size:13.5px; color:var(--sub); margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .meta .sb .rk{ font-weight:700; color:var(--sub); }
+  .meta .sz{ font-size:12.5px; color:var(--sub2); margin-top:2px; }
+
+  /* ---- get / install pill buttons ---- */
+  .getbtn{
+    flex:0 0 auto; min-width:72px; text-align:center; border:none; cursor:pointer;
+    background:var(--card3); color:#0a84ff; font-size:15px; font-weight:700;
+    border-radius:999px; padding:7px 18px;
+  }
+  .getbtn.white{ background:#ffffff; color:#000000; }
+  .getbtn:disabled{ opacity:.4; }
+  .getbtn.busy{ color:var(--sub); }
+  .badge-ok{
+    display:inline-flex; align-items:center; gap:5px; color:var(--green);
+    font-size:13px; font-weight:600; margin-top:3px;
+  }
+  .badge-dl{
+    display:inline-flex; align-items:center; background:rgba(48,209,88,.16); color:var(--green);
+    border-radius:8px; padding:3px 8px; font-size:12px; font-weight:700; margin-top:4px;
+  }
+  .cloud{ background:none; border:none; color:var(--blue); font-size:22px; cursor:pointer; padding:6px; }
+
+  /* ---- segmented control ---- */
+  .seg{ display:flex; background:var(--card); border-radius:12px; padding:3px; margin:4px 0 12px; }
+  .seg button{
+    flex:1; border:none; background:transparent; color:var(--txt); font-size:13.5px;
+    font-weight:600; padding:8px 4px; border-radius:9px; cursor:pointer; white-space:nowrap;
+  }
+  .seg button.on{ background:var(--card3); }
+
+  /* ---- progress ---- */
+  .prog{ height:6px; background:rgba(255,255,255,.14); border-radius:4px; overflow:hidden; margin-top:7px; }
+  .prog i{ display:block; height:100%; background:#ffffff; border-radius:4px; width:0%; transition:width .6s linear; }
+  .prog.ind i{ width:38%; animation:ind 1.2s infinite linear; }
+  @keyframes ind{ 0%{ margin-left:-40%; } 100%{ margin-left:100%; } }
+  .dlstat{ font-size:12.5px; color:var(--sub); margin-top:5px; }
+  .dlstat.err{ color:var(--red); }
+
+  /* ---- forms (account) ---- */
+  .field{ margin:0 0 12px; }
+  .field label{ display:block; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--sub2); margin:0 2px 6px; }
+  .field input{
+    width:100%; padding:13px 14px; border-radius:12px; border:1px solid rgba(255,255,255,.12);
+    background:var(--card); color:var(--txt); font-size:16px; outline:none;
+  }
+  .field input:focus{ border-color:var(--blue); }
+  .btn{
+    display:block; width:100%; min-height:50px; margin:8px 0; border:none; cursor:pointer;
+    border-radius:14px; background:#ffffff; color:#000000; font-size:16px; font-weight:700;
+  }
+  .btn.dim{ background:var(--card); color:var(--txt); }
+  .btn:disabled{ opacity:.45; }
+  .note{ font-size:13.5px; color:var(--sub); line-height:1.5; margin:10px 4px; }
+  .errbox{ color:var(--red); font-size:14px; line-height:1.5; margin:8px 4px; }
+  .okbox{ color:var(--green); font-size:14px; line-height:1.5; margin:8px 4px; }
+  .spin{
+    display:inline-block; width:16px; height:16px; border:2px solid rgba(255,255,255,.25);
+    border-top-color:#fff; border-radius:50%; animation:spin .8s linear infinite; vertical-align:-3px; margin-right:8px;
+  }
+  @keyframes spin{ to{ transform:rotate(360deg); } }
+  .accrow{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:13px 2px; border-bottom:1px solid rgba(255,255,255,.07); }
+  .accrow:last-child{ border-bottom:none; }
+  .accrow .k{ font-size:15px; font-weight:600; }
+  .accrow .v{ font-size:14px; color:var(--sub); text-align:right; overflow:hidden; text-overflow:ellipsis; }
+
+  /* ---- frosted floating pill tab bar ---- */
+  .tabbar{
+    position:fixed; left:0; right:0; bottom:0; z-index:50;
+    display:flex; justify-content:center;
+    padding:0 16px calc(14px + env(safe-area-inset-bottom));
+    pointer-events:none;
+  }
+  .tabbar .inner{
+    position:relative; pointer-events:auto; display:flex; width:100%; max-width:460px;
+    background:linear-gradient(180deg, rgba(255,255,255,var(--glass-a-top,.06)) 0%, rgba(255,255,255,var(--glass-a,.02)) 55%, rgba(255,255,255,var(--glass-a-bot,.04)) 100%);
+    backdrop-filter:blur(var(--glass-blur,8px)) saturate(180%) brightness(1.06);
+    -webkit-backdrop-filter:blur(var(--glass-blur,8px)) saturate(180%) brightness(1.06);
+    border:1px solid rgba(255,255,255,.32); border-radius:999px; padding:7px 6px;
+    box-shadow:inset 0 1px 1px rgba(255,255,255,.55), inset 0 -1px 1px rgba(255,255,255,.12), 0 10px 30px rgba(0,0,0,.35);
+    touch-action:none; user-select:none; -webkit-user-select:none;
+  }
+  .tabbar .tab-pill{
+    position:absolute; top:6px; bottom:6px; left:0; border-radius:999px; pointer-events:none; z-index:0;
+    background:linear-gradient(180deg, rgba(255,255,255,.14) 0%, rgba(255,255,255,.03) 55%, rgba(255,255,255,.08) 100%);
+    border:1px solid rgba(255,255,255,.38);
+    backdrop-filter:blur(4px) brightness(1.16); -webkit-backdrop-filter:blur(4px) brightness(1.16);
+    box-shadow:inset 0 1px 1.5px rgba(255,255,255,.65), inset 0 -1px 1px rgba(255,255,255,.15), 0 3px 12px rgba(0,0,0,.22);
+    transition:transform .28s cubic-bezier(.22,1.2,.36,1), width .28s cubic-bezier(.22,1.2,.36,1), box-shadow .2s ease;
+  }
+  .tabbar .tab-pill.dragging{
+    transition:none;
+    background:linear-gradient(180deg, rgba(255,255,255,.20) 0%, rgba(255,255,255,.05) 100%);
+    border-color:rgba(255,255,255,.55);
+    box-shadow:inset 0 1px 2px rgba(255,255,255,.80), 0 6px 18px rgba(0,0,0,.30);
+  }
+  .tabbar button{
+    position:relative; z-index:1;
+    flex:1; background:none !important; border:none; color:rgba(255,255,255,.72); cursor:pointer;
+    display:flex; flex-direction:column; align-items:center; gap:3px;
+    font-size:10.5px; font-weight:600; padding:6px 2px; border-radius:999px;
+    transition:color .18s ease;
+  }
+  .tabbar button .ic{ font-size:21px; line-height:1; }
+  .tabbar button.on{ color:#ffffff; }
+
+  /* ---- toast ---- */
+  .toast{
+    position:fixed; left:50%; bottom:120px; transform:translateX(-50%);
+    background:rgba(58,58,60,.96); color:#fff; padding:11px 18px; border-radius:14px;
+    font-size:14px; z-index:80; max-width:86vw; text-align:center;
+    backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+    box-shadow:0 6px 24px rgba(0,0,0,.6);
+  }
+  .toast.bad{ background:rgba(120,40,38,.96); }
+
+  /* ---- app detail sheet ---- */
+  .sheet{ position:fixed; inset:0; z-index:60; background:rgba(0,0,0,.6); display:flex; align-items:flex-end; justify-content:center; }
+  .sheetbox{
+    width:100%; max-width:560px; background:#151516; border-radius:22px 22px 0 0;
+    padding:18px 16px calc(26px + env(safe-area-inset-bottom)); max-height:88vh; overflow-y:auto;
+    border-top:1px solid rgba(255,255,255,.10);
+  }
+  .sheetbox h3{ margin:2px 2px 10px; font-size:20px; font-weight:800; }
+  .apphead2{ display:flex; gap:14px; align-items:center; margin-bottom:12px; }
+  .apphead2 .icon{ flex-basis:76px; width:76px; height:76px; border-radius:17px; }
+  .apphead2 .meta .nm{ font-size:19px; white-space:normal; }
+  .apphead2 .meta .sb{ font-size:13.5px; }
+  .desc{ font-size:14.5px; color:#d8d8dc; line-height:1.5; max-height:110px; overflow:hidden; white-space:pre-line; }
+  .desc.open{ max-height:none; }
+  .kv{ display:flex; gap:0; margin:14px 0; border-top:1px solid rgba(255,255,255,.08); }
+  .kv > div{ flex:1; padding:10px 6px 2px; text-align:center; border-right:1px solid rgba(255,255,255,.08); }
+  .kv > div:last-child{ border-right:none; }
+  .kv b{ display:block; font-size:15px; }
+  .kv span{ font-size:11.5px; color:var(--sub2); text-transform:uppercase; letter-spacing:.04em; }
+  .empty{ text-align:center; color:var(--sub); padding:40px 12px; font-size:15px; line-height:1.5; }
+  .sb-top-wrap{ display:flex; justify-content:center; padding:calc(10px + env(safe-area-inset-top)) 16px 4px; }
+  .sb-neon-btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:10px; padding:12px 30px; border-radius:999px; cursor:pointer;
+    font-size:16px; font-weight:800; letter-spacing:.03em; color:#e6f7ff;
+    background:linear-gradient(135deg, rgba(10,132,255,.24), rgba(94,92,230,.26));
+    border:1.5px solid rgba(56,189,248,.70);
+    box-shadow:0 0 18px rgba(10,132,255,.60), 0 0 34px rgba(56,189,248,.28), inset 0 1px 1px rgba(255,255,255,.50);
+    backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+    transition:transform .12s ease, box-shadow .18s ease;
+  }
+  .sb-neon-btn:active{ transform:scale(.96); box-shadow:0 0 24px rgba(56,189,248,.85), inset 0 1px 1px rgba(255,255,255,.65); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="sb-top-wrap">
+    <button class="sb-neon-btn" id="goSidebotTop"><img src="/sidebot-icon.png?v=2" alt="" style="width:24px;height:24px;border-radius:6px;object-fit:cover;display:block"> SideBot</button>
+  </div>
+
+  <!-- ============ SEARCH ============ -->
+  <section id="tab-search">
+    <div class="pagehead">
+      <h1 class="big" data-t="searchTitle">Пошук</h1>
+      <div class="searchbox">
+        <svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5.75" stroke="#98989f" stroke-width="2"/><path d="M13 13l4.5 4.5" stroke="#98989f" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="q" type="search" data-ph="searchPh" placeholder="Назва, App ID або посилання" autocomplete="off">
+      </div>
+      <div class="chiprow" id="pickRow">
+        <button class="chip" id="ctyChip"><span>🌐</span><span id="ctyLbl">США</span><span class="dim">▾</span></button>
+        <button class="chip" id="devChip"><span>📱</span><span id="devLbl">iPhone</span><span class="dim">▾</span></button>
+        <button class="chip" id="langChip"><span>🌍</span><span id="langLbl">УКР</span><span class="dim">▾</span></button>
+      </div>
+      <div id="recentBox" class="hidden">
+        <div class="sechead" style="margin-top:8px"><h2 data-t="recentH">Недавні запити</h2><button class="lnk" id="recentClear" data-t="clearB">Очистити</button></div>
+        <div class="chiprow" id="recentRow"></div>
+        <div class="recent" data-t="recentHint"> Натисни й тримай запит, щоб видалити його.</div>
+      </div>
+      <div class="sechead"><h2 data-t="overviewH">Огляд</h2></div>
+      <div class="card">
+        <button class="row" id="goFree"><span class="icon ph">⬇️</span><span class="meta"><span class="nm" data-t="topFree">Топ безкоштовних</span><span class="sb" data-t="topFreeSub">Найпопулярніші безкоштовні</span></span><span class="dim" style="color:var(--sub2)">›</span></button>
+        <button class="row" id="goPaid"><span class="icon ph">💰</span><span class="meta"><span class="nm" data-t="topPaid">Топ платних</span><span class="sb" data-t="topPaidSub">Найпопулярніші платні</span></span><span class="dim" style="color:var(--sub2)">›</span></button>
+        <button class="row" id="goGross"><span class="icon ph">📈</span><span class="meta"><span class="nm" data-t="topGross">Найкасовіші</span><span class="sb" data-t="topGrossSub">Лідери за виручкою</span></span><span class="dim" style="color:var(--sub2)">›</span></button>
+      </div>
+      <div id="chartBox" class="hidden">
+        <div class="navrow" style="margin-top:6px">
+          <button class="navbtn" id="chartBack">‹</button>
+          <span class="navtitle" id="chartTitle"></span>
+          <span style="flex:1"></span>
+        </div>
+        <div class="seg" id="chartSeg">
+          <button data-k="free" data-t="topFree">Топ безкоштовних</button>
+          <button data-k="paid" data-t="topPaid">Топ платних</button>
+          <button data-k="grossing" data-t="topGross">Найкасовіші</button>
+        </div>
+        <div id="chartList"></div>
+      </div>
+      <div id="searchBox2" class="hidden">
+        <div id="searchList"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DOWNLOADS ============ -->
+  <section id="tab-dl" class="hidden">
+    <div class="pagehead">
+      <div class="navrow" style="justify-content:space-between">
+        <span class="navtitle" style="font-size:22px;font-weight:800" data-t="dlTitle">Завантаження</span>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="navbtn" id="dlCopyLog" title="Копіювати лог" style="font-size:16px">📋</button>
+          <button class="navbtn" id="addDl" style="font-size:22px;font-weight:600">＋</button>
+        </div>
+      </div>
+      <pre id="dlLogBox" class="hidden" style="margin-top:8px;padding:10px;border-radius:12px;background:rgba(255,255,255,.06);font-size:11px;line-height:1.35;white-space:pre-wrap;word-break:break-all;max-height:220px;overflow:auto;user-select:all;-webkit-user-select:all"></pre>
+      <div class="searchbox" style="margin-top:8px">
+        <svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5.75" stroke="#98989f" stroke-width="2"/><path d="M13 13l4.5 4.5" stroke="#98989f" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="dlq" type="search" data-ph="dlPh" placeholder="Пошук за назвою, версією або Bundle ID" autocomplete="off">
+      </div>
+      <div id="dlDirBar" class="hidden" style="margin:6px 2px 8px;padding:9px 12px;border-radius:12px;background:rgba(255,255,255,.07);display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:var(--sub);cursor:pointer">
+        <span id="dlDirPath" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+        <span style="flex:0 0 auto;color:var(--blue);font-weight:600">Відкрити ›</span>
+      </div>
+      <div id="dlList"></div>
+    </div>
+  </section>
+
+  <!-- ============ PURCHASES ============ -->
+  <section id="tab-purch" class="hidden">
+    <div class="pagehead">
+      <h1 class="big" data-t="purchTitle">Покупки</h1>
+      <div class="searchbox">
+        <svg width="17" height="17" viewBox="0 0 20 20" fill="none"><circle cx="8.5" cy="8.5" r="5.75" stroke="#98989f" stroke-width="2"/><path d="M13 13l4.5 4.5" stroke="#98989f" stroke-width="2" stroke-linecap="round"/></svg>
+        <input id="pq" type="search" data-ph="purchPh" placeholder="Пошук покупок або App ID" autocomplete="off">
+      </div>
+      <div class="seg" id="pSeg">
+        <button data-p="all" class="on" data-t="pAll">Усі</button>
+        <button data-p="1m" data-t="p1m">1 місяць</button>
+        <button data-p="6m" data-t="p6m">6 місяців</button>
+        <button data-p="1y" data-t="p1y">1 рік</button>
+      </div>
+      <div class="recent" id="pAcc"></div>
+      <div id="pList"></div>
+    </div>
+  </section>
+
+  <!-- ============ ACCOUNT ============ -->
+  <section id="tab-acc" class="hidden">
+    <div class="pagehead">
+      <h1 class="big" data-t="accTitle">Обліковий запис</h1>
+      <div id="accSigned" class="hidden">
+        <div class="card" style="padding:4px 14px">
+          <div class="accrow"><span class="k">Apple ID</span><span class="v" id="accEmail">—</span></div>
+        </div>
+        <button class="btn dim" id="accSwitch" data-t="accSwitch">Увійти з іншим Apple ID</button>
+        <button class="btn dim" id="accLogout" style="margin-top:8px;color:#ff453a">🚪 Вийти з акаунта</button>
+      </div>
+      <div id="accForm">
+        <div class="seg" id="authModeSeg" style="margin-bottom:10px">
+          <button data-am="fast" class="on">⚡ Швидкий (iPadn)</button>
+          <button data-am="ipatool">🛡 ipatool</button>
+        </div>
+        <div class="note" data-t="accNote">⚡ Швидкий вхід (1–2 с, із авто-переходом на ipatool при потребі). Пароль ніде не показується.</div>
+        <div class="recent hidden" id="sapLine" style="margin:2px 4px 8px"></div>
+        <div class="field"><label>Apple ID</label><input id="accEmailIn" type="email" placeholder="name@example.com" autocapitalize="off" autocorrect="off"></div>
+        <div class="field"><label data-t="pwL">Пароль</label><input id="accPwIn" type="password" placeholder="••••••••"></div>
+        <button class="btn" id="accLogin" data-t="signIn">Увійти</button>
+      </div>
+      <div id="accStatus"></div>
+      <div style="margin:8px 0">
+        <button class="btn dim" id="accCopyLog" style="width:100%">📋 Копіювати лог</button>
+        <pre id="accLogBox" class="hidden" style="margin-top:8px;padding:10px;border-radius:12px;background:rgba(255,255,255,.06);font-size:11px;line-height:1.35;white-space:pre-wrap;word-break:break-all;max-height:220px;overflow:auto;user-select:all;-webkit-user-select:all"></pre>
+      </div>
+      <div id="profBox" class="hidden">
+        <div class="sechead"><h2 data-t="profH">Швидкий вхід</h2></div>
+        <div class="card" style="padding:4px 14px" id="profList"></div>
+      </div>
+      <div class="sechead"><h2>Інтерфейс</h2></div>
+      <div class="card" style="padding:10px 14px;display:flex;flex-direction:column;gap:10px">
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span style="font-size:14px;font-weight:600">Загальний розмір</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button class="getbtn white" id="uiDec" style="padding:6px 12px;font-size:15px">−</button>
+            <button class="getbtn white" id="uiVal" style="padding:6px 10px;font-size:13px;min-width:54px">100%</button>
+            <button class="getbtn white" id="uiInc" style="padding:6px 12px;font-size:15px">+</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
+          <span style="font-size:14px;font-weight:600">Нижня панель</span>
+          <div style="display:flex;align-items:center;gap:6px">
+            <button class="getbtn white" id="tabDec" style="padding:6px 12px;font-size:15px">−</button>
+            <button class="getbtn white" id="tabVal" style="padding:6px 10px;font-size:13px;min-width:54px">100%</button>
+            <button class="getbtn white" id="tabInc" style="padding:6px 12px;font-size:15px">+</button>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
+          <span style="font-size:14px;font-weight:600;white-space:nowrap">Прозорість скла</span>
+          <div style="display:flex;align-items:center;gap:8px;flex:1;max-width:190px">
+            <input type="range" id="glassRange" min="0" max="90" value="5" style="width:100%;accent-color:var(--blue)">
+            <span id="glassVal" style="font-size:12px;color:var(--sub);min-width:34px;text-align:right">5%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
+
+<nav class="tabbar"><div class="inner"><div class="tab-pill" id="tabPill"></div>
+  <button data-tab="search" class="on"><span class="ic">🔍</span><span data-t="tabSearch">Пошук</span></button>
+  <button data-tab="dl"><span class="ic">⬇️</span><span data-t="tabDl">Завантаження</span></button>
+  <button data-tab="purch"><span class="ic">🛍️</span><span data-t="tabPurch">Покупки</span></button>
+  <button data-tab="acc"><span class="ic">👤</span><span data-t="tabAcc">Обліковий запис</span></button>
+</div></nav>
+
+<div id="sheet" class="sheet hidden">
+  <div class="sheetbox" id="sheetBox"></div>
+</div>
+
+<script>
+'use strict';
+/* App Store UI for SideBot (ipatool). Thin client: every list,
+   download and install is done by the bot; this page only renders.
+   Auth = the same 24h launch token the Mini App URL carries (?t=).
+   Credentials (Apple ID password, 2FA code) travel in POST bodies
+   only — never in a URL, never in localStorage. */
+
+var tg = window.Telegram && window.Telegram.WebApp ? window.Telegram.WebApp : null;
+try{ if(tg){ tg.expand(); tg.setBackgroundColor && tg.setBackgroundColor('#000000'); } }catch(e){}
+
+var API_TOKEN = (function(){
+  try{ return new URLSearchParams(location.search).get('t') || window.__LOCAL_TOKEN__ || ''; }
+  catch(e){ return window.__LOCAL_TOKEN__ || ''; }
+})();
+function el(id){ return document.getElementById(id); }
+function esc(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+/* ---------- i18n (uk default; ru / en / de) ---------- */
+var I18N = {
+uk:{
+  searchTitle:'Пошук', searchPh:'Назва, App ID або посилання', recentH:'Недавні запити',
+  clearB:'Очистити', recentHint:'Натисни й тримай запит, щоб видалити його.',
+  overviewH:'Огляд', topFree:'Топ безкоштовних', topFreeSub:'Найпопулярніші безкоштовні',
+  topPaid:'Топ платних', topPaidSub:'Найпопулярніші платні', topGross:'Найкасовіші', topGrossSub:'Лідери за виручкою',
+  tabSearch:'Пошук', tabDl:'Завантаження', tabPurch:'Покупки', tabAcc:'Обліковий запис',
+  dlTitle:'Завантаження', dlPh:'Пошук за назвою, версією або Bundle ID',
+  purchTitle:'Покупки', purchPh:'Пошук покупок або App ID', pAll:'Усі', p1m:'1 місяць', p6m:'6 місяців', p1y:'1 рік',
+  accTitle:'Обліковий запис', accNote:'Вхід через ipatool: пароль ніде не показується і не зберігається відкритим текстом. Якщо Apple попросить код — введи його тут сам; на код є 10 хвилин.',
+  pwL:'Пароль', signIn:'Увійти', profH:'Швидкий вхід', methodH:'Спосіб встановлення', methodK:'Спосіб встановлення',
+  accSwitch:'Увійти з іншим Apple ID',
+  get:'Отримати', install:'Встановити', open:'Відкрити', done:'Завершено', downloading:'Завантажую',
+  downloaded:'Завантажено', queued:'У черзі', failed:'Помилка', addTitle:'Додати завантаження',
+  addPh:'App ID або посилання на apps.apple.com', addGo:'Завантажити',
+  emptyDl:'Бібліотека порожня. Завантаж перший .ipa з Пошуку — він з’явиться тут.',
+  emptyDlHint:'Файли беруться з appstore_ipas/ та ipas/ на машині бота.',
+  emptyPurch:'Покупок не знайдено. Увійди в Apple ID на вкладці «Обліковий запис» і спробуй ще раз.',
+  emptySearch:'Нічого не знайдено. Спробуй іншу назву, App ID або посилання.',
+  noConnection:'Немає зв’язку з ботом.', loading:'Завантажую…', more:'Показати ще',
+  rank:'Місце', size:'Розмір', ver:'Версія', minsOs:'Мін. iOS', dev:'Розробник', cat:'Категорія',
+  relNotes:'Що нового', descL:'Опис', more2:'більше', less2:'згорнути', rating:'Оцінка',
+  chartFree:'Топ безкоштовних', chartPaid:'Топ платних', chartGross:'Найкасовіші',
+  chartsTitle:'Чарти', searchTitle2:'Результати пошуку',
+  errLicense:'Немає ліцензії на цей додаток. Для безкоштовного оформи ліцензію в чаті (🛒 Ліцензія і повторити) і спробуй ще раз.',
+  needAuth:'Потрібен вхід в Apple ID — вкладка «Обліковий запис».',
+  installQ:'Встановити на телефон?', installSub:'Підпис і встановлення виконує бот (продовження в чаті, якщо потрібно).',
+  deleted:'Видалено', deleteB:'Видалити', cancel:'Скасувати', redownload:'Повторно завантажити',
+  stageRunning:'Виконую вхід в Apple ID… це може тривати кілька хвилин, не закривай сторінку.',
+  stage2fa:'Apple надіслала код підтвердження. Введи 6 цифр:', codeBtn:'Підтвердити',
+  stageVerify:'Перевіряю код…', stageDone:'✅ Вхід виконано',
+  codeLeft:'Залишилось секунд: %s', authed:'Виконано вхід як %s',
+  signedInAs:'Акаунт', noAcc:'Акаунт App Store не підключено.',
+  methodRust:'Rust (zsign + install-helper)', methodSiboot:'siboot', methodSideloader:'sideloader',
+  errShortPw:'Введи Apple ID і пароль.', errBadEmail:'Це не схоже на Apple ID (email).',
+  busyAuth:'Вхід уже виконується — зачекай.',
+  sapPrep:'Завантажую SAP-рантайм… %s%', sapWarm:'Готую SAP-рантайм у браузері…',
+  sapReady:'SAP готовий — вхід без ipatool', sapOff:'SAP недоступний — вхід піде через ipatool',
+  fastOnly:'⚡ Швидкий вхід активний. Щоб завантажувати .ipa, увійди ще раз у режимі 🛡 ipatool — завантаження йдуть через нього.',
+  stageSap:'Перевіряю пристрій через SAP…', hintPrepare:'Готую швидкий вхід…',
+  hintFallback:'SAP не відповів — переходжу на ipatool…',
+  items:'об’єктів', choose:'обрати'
+},
+ru:{
+  searchTitle:'Поиск', searchPh:'Название, App ID или ссылка', recentH:'Недавние запросы',
+  clearB:'Очистить', recentHint:'Нажмите и удерживайте запрос, чтобы удалить его.',
+  overviewH:'Обзор', topFree:'Топ бесплатных', topFreeSub:'Самые популярные бесплатные',
+  topPaid:'Топ платных', topPaidSub:'Самые популярные платные', topGross:'Самые кассовые', topGrossSub:'Лидеры по выручке',
+  tabSearch:'Поиск', tabDl:'Загрузки', tabPurch:'Покупки', tabAcc:'Учётная запись',
+  dlTitle:'Загрузки', dlPh:'Поиск по названию, версии или Bundle ID',
+  purchTitle:'Покупки', purchPh:'Поиск покупок или App ID', pAll:'Все', p1m:'1 месяц', p6m:'6 месяцев', p1y:'1 год',
+  accTitle:'Учётная запись', accNote:'Вход через ipatool: пароль нигде не показывается и не хранится открытым текстом. Если Apple попросит код — введите его здесь; на код есть 10 минут.',
+  pwL:'Пароль', signIn:'Войти', profH:'Быстрый вход', methodH:'Способ установки', methodK:'Способ установки',
+  accSwitch:'Войти с другим Apple ID',
+  get:'Получить', install:'Установить', open:'Открыть', done:'Завершено', downloading:'Загружаю',
+  downloaded:'Загружено', queued:'В очереди', failed:'Ошибка', addTitle:'Добавить загрузку',
+  addPh:'App ID или ссылка на apps.apple.com', addGo:'Загрузить',
+  emptyDl:'Библиотека пуста. Скачайте первый .ipa из Поиска — он появится здесь.',
+  emptyDlHint:'Файлы берутся из appstore_ipas/ и ipas/ на машине бота.',
+  emptyPurch:'Покупок не найдено. Войдите в Apple ID на вкладке «Учётная запись» и попробуйте снова.',
+  emptySearch:'Ничего не найдено. Попробуйте другое название, App ID или ссылку.',
+  noConnection:'Нет связи с ботом.', loading:'Загружаю…', more:'Показать ещё',
+  rank:'Место', size:'Размер', ver:'Версия', minsOs:'Мин. iOS', dev:'Разработчик', cat:'Категория',
+  relNotes:'Что нового', descL:'Описание', more2:'больше', less2:'свернуть', rating:'Оценка',
+  chartFree:'Топ бесплатных', chartPaid:'Топ платных', chartGross:'Самые кассовые',
+  chartsTitle:'Чарты', searchTitle2:'Результаты поиска',
+  errLicense:'Нет лицензии на это приложение. Для бесплатного оформите лицензию в чате (🛒) и повторите.',
+  needAuth:'Нужен вход в Apple ID — вкладка «Учётная запись».',
+  installQ:'Установить на телефон?', installSub:'Подпись и установку выполняет бот (продолжение в чате, если нужно).',
+  deleted:'Удалено', deleteB:'Удалить', cancel:'Отмена', redownload:'Повторно загрузить',
+  stageRunning:'Выполняю вход в Apple ID… это может занять несколько минут, не закрывайте страницу.',
+  stage2fa:'Apple отправила код подтверждения. Введите 6 цифр:', codeBtn:'Подтвердить',
+  stageVerify:'Проверяю код…', stageDone:'✅ Вход выполнен',
+  codeLeft:'Осталось секунд: %s', authed:'Выполнен вход как %s',
+  signedInAs:'Аккаунт', noAcc:'Аккаунт App Store не подключён.',
+  methodRust:'Rust (zsign + install-helper)', methodSiboot:'siboot', methodSideloader:'sideloader',
+  errShortPw:'Введите Apple ID и пароль.', errBadEmail:'Это не похоже на Apple ID (email).',
+  busyAuth:'Вход уже выполняется — подождите.',
+  sapPrep:'Загружаю SAP-рантайм… %s%', sapWarm:'Готовлю SAP-рантайм в браузере…',
+  sapReady:'SAP готов — вход без ipatool', sapOff:'SAP недоступен — вход через ipatool',
+  fastOnly:'⚡ Быстрый вход активен. Чтобы скачивать .ipa, войди ещё раз в режиме 🛡 ipatool — загрузки идут через него.',
+  stageSap:'Проверяю устройство через SAP…', hintPrepare:'Готовлю быстрый вход…',
+  hintFallback:'SAP не ответил — перехожу на ipatool…',
+  items:'объектов', choose:'выбрать'
+},
+en:{
+  searchTitle:'Search', searchPh:'Name, App ID or link', recentH:'Recent searches',
+  clearB:'Clear', recentHint:'Touch and hold a search to delete it.',
+  overviewH:'Overview', topFree:'Top Free', topFreeSub:'The most popular free apps',
+  topPaid:'Top Paid', topPaidSub:'The most popular paid apps', topGross:'Top Grossing', topGrossSub:'Revenue leaders',
+  tabSearch:'Search', tabDl:'Downloads', tabPurch:'Purchases', tabAcc:'Account',
+  dlTitle:'Downloads', dlPh:'Search by name, version or Bundle ID',
+  purchTitle:'Purchases', purchPh:'Search purchases or App ID', pAll:'All', p1m:'1 month', p6m:'6 months', p1y:'1 year',
+  accTitle:'Account', accNote:'Sign-in via ipatool: the password is never shown or stored in plain text. If Apple asks for a code, enter it right here; you have 10 minutes.',
+  pwL:'Password', signIn:'Sign in', profH:'Quick sign-in', methodH:'Install method', methodK:'Install method',
+  accSwitch:'Sign in with another Apple ID',
+  get:'Get', install:'Install', open:'Open', done:'Finished', downloading:'Downloading',
+  downloaded:'Downloaded', queued:'Queued', failed:'Failed', addTitle:'Add a download',
+  addPh:'App ID or apps.apple.com link', addGo:'Download',
+  emptyDl:'The library is empty. Download your first .ipa from Search — it will appear here.',
+  emptyDlHint:'Files come from appstore_ipas/ and ipas/ on the bot machine.',
+  emptyPurch:'No purchases found. Sign in with your Apple ID on the Account tab and try again.',
+  emptySearch:'Nothing found. Try another name, App ID or link.',
+  noConnection:'No connection to the bot.', loading:'Loading…', more:'Show more',
+  rank:'Rank', size:'Size', ver:'Version', minsOs:'Min. iOS', dev:'Developer', cat:'Category',
+  relNotes:"What's new", descL:'Description', more2:'more', less2:'less', rating:'Rating',
+  chartFree:'Top Free', chartPaid:'Top Paid', chartGross:'Top Grossing',
+  chartsTitle:'Charts', searchTitle2:'Search results',
+  errLicense:'No licence for this app. For a free app, take the licence in chat (🛒) and retry.',
+  needAuth:'Apple ID sign-in needed — see the Account tab.',
+  installQ:'Install on the phone?', installSub:'The bot signs and installs (continues in chat if needed).',
+  deleted:'Deleted', deleteB:'Delete', cancel:'Cancel', redownload:'Download again',
+  stageRunning:'Signing in to the Apple ID… this can take minutes, keep the page open.',
+  stage2fa:'Apple sent a verification code. Enter the 6 digits:', codeBtn:'Verify',
+  stageVerify:'Verifying the code…', stageDone:'✅ Signed in',
+  codeLeft:'Seconds left: %s', authed:'Signed in as %s',
+  signedInAs:'Account', noAcc:'No App Store account connected.',
+  methodRust:'Rust (zsign + install-helper)', methodSiboot:'siboot', methodSideloader:'sideloader',
+  errShortPw:'Enter the Apple ID and password.', errBadEmail:'That does not look like an Apple ID (email).',
+  busyAuth:'A sign-in is already running — wait.',
+  sapPrep:'Downloading the SAP runtime… %s%', sapWarm:'Preparing the SAP runtime in the browser…',
+  sapReady:'SAP ready — sign-in without ipatool', sapOff:'SAP unavailable — sign-in goes through ipatool',
+  fastOnly:'⚡ Quick sign-in is active. To download .ipas, sign in once more in 🛡 ipatool mode — downloads run through it.',
+  stageSap:'Verifying the device with SAP…', hintPrepare:'Preparing the quick sign-in…',
+  hintFallback:'SAP did not answer — switching to ipatool…',
+  items:'items', choose:'pick'
+},
+de:{
+  searchTitle:'Suche', searchPh:'Name, App ID oder Link', recentH:'Letzte Suchanfragen',
+  clearB:'Löschen', recentHint:'Zum Löschen einer Suche gedrückt halten.',
+  overviewH:'Überblick', topFree:'Top kostenlos', topFreeSub:'Die beliebtesten kostenlosen Apps',
+  topPaid:'Top kostenpflichtig', topPaidSub:'Die beliebtesten kostenpflichtigen Apps', topGross:'Umsatzstärkste', topGrossSub:'Nach Umsatz',
+  tabSearch:'Suche', tabDl:'Downloads', tabPurch:'Käufe', tabAcc:'Konto',
+  dlTitle:'Downloads', dlPh:'Nach Name, Version oder Bundle-ID suchen',
+  purchTitle:'Käufe', purchPh:'Käufe oder App-ID suchen', pAll:'Alle', p1m:'1 Monat', p6m:'6 Monate', p1y:'1 Jahr',
+  accTitle:'Konto', accNote:'Anmeldung über ipatool: Das Passwort wird nie angezeigt und nie im Klartext gespeichert. Fragt Apple nach einem Code, gib ihn hier ein; du hast 10 Minuten.',
+  pwL:'Passwort', signIn:'Anmelden', profH:'Schnellanmeldung', methodH:'Installationsmethode', methodK:'Installationsmethode',
+  accSwitch:'Mit anderer Apple-ID anmelden',
+  get:'Laden', install:'Installieren', open:'Öffnen', done:'Fertig', downloading:'Lade',
+  downloaded:'Geladen', queued:'In Warteschlange', failed:'Fehler', addTitle:'Download hinzufügen',
+  addPh:'App-ID oder apps.apple.com-Link', addGo:'Herunterladen',
+  emptyDl:'Die Bibliothek ist leer. Lade die erste .ipa aus der Suche — sie erscheint hier.',
+  emptyDlHint:'Dateien kommen aus appstore_ipas/ und ipas/ auf dem Bot-Rechner.',
+  emptyPurch:'Keine Käufe gefunden. Melde dich im Tab „Konto“ mit der Apple-ID an und versuche es erneut.',
+  emptySearch:'Nichts gefunden. Andere Suche, App-ID oder Link versuchen.',
+  noConnection:'Keine Verbindung zum Bot.', loading:'Lade…', more:'Mehr anzeigen',
+  rank:'Rang', size:'Größe', ver:'Version', minsOs:'Min. iOS', dev:'Entwickler', cat:'Kategorie',
+  relNotes:'Neu', descL:'Beschreibung', more2:'mehr', less2:'weniger', rating:'Bewertung',
+  chartFree:'Top kostenlos', chartPaid:'Top kostenpflichtig', chartGross:'Umsatzstärkste',
+  chartsTitle:'Charts', searchTitle2:'Suchergebnisse',
+  errLicense:'Keine Lizenz für diese App. Hole bei einer kostenlosen App die Lizenz im Chat (🛒) und versuche es erneut.',
+  needAuth:'Apple-ID-Anmeldung nötig — siehe Tab „Konto“.',
+  installQ:'Auf dem Telefon installieren?', installSub:'Der Bot signiert und installiert (Fortsetzung im Chat falls nötig).',
+  deleted:'Gelöscht', deleteB:'Löschen', cancel:'Abbrechen', redownload:'Erneut laden',
+  stageRunning:'Anmeldung bei der Apple-ID… das kann Minuten dauern, Seite offen lassen.',
+  stage2fa:'Apple hat einen Code geschickt. Gib die 6 Ziffern ein:', codeBtn:'Prüfen',
+  stageVerify:'Prüfe den Code…', stageDone:'✅ Angemeldet',
+  codeLeft:'Sekunden übrig: %s', authed:'Angemeldet als %s',
+  signedInAs:'Konto', noAcc:'Kein App-Store-Konto verbunden.',
+  methodRust:'Rust (zsign + install-helper)', methodSiboot:'siboot', methodSideloader:'sideloader',
+  errShortPw:'Apple-ID und Passwort eingeben.', errBadEmail:'Das sieht nicht nach einer Apple-ID (E-Mail) aus.',
+  busyAuth:'Eine Anmeldung läuft bereits — warten.',
+  sapPrep:'SAP-Runtime wird geladen… %s%', sapWarm:'SAP-Runtime wird im Browser vorbereitet…',
+  sapReady:'SAP bereit — Anmeldung ohne ipatool', sapOff:'SAP nicht verfügbar — Anmeldung über ipatool',
+  fastOnly:'⚡ Schnellanmeldung ist aktiv. Zum Laden von .ipas einmal im Modus 🛡 ipatool anmelden — Downloads laufen darüber.',
+  stageSap:'Gerät wird über SAP geprüft…', hintPrepare:'Schnellanmeldung wird vorbereitet…',
+  hintFallback:'SAP antwortet nicht — Wechsel zu ipatool…',
+  items:'Einträge', choose:'wählen'
+}};
+var LANG = 'uk';
+(function(){
+  try{
+    var saved = localStorage.getItem('as_lang');
+    if(saved && I18N[saved]) LANG = saved;
+    else if(typeof curLang !== 'undefined') LANG = curLang;
+  }catch(e){}
+  try{
+    var p = new URLSearchParams(location.search);
+    var l = p.get('lang');
+    if(l && I18N[l]) { LANG = l; localStorage.setItem('as_lang', l); }
+  }catch(e){}
+})();
+function T(k){ return (I18N[LANG] && I18N[LANG][k]) || I18N.uk[k] || k; }
+function applyI18n(){
+  document.documentElement.lang = LANG;
+  var els = document.querySelectorAll('[data-t]');
+  for(var i=0;i<els.length;i++) els[i].textContent = T(els[i].getAttribute('data-t'));
+  var phs = document.querySelectorAll('[data-ph]');
+  for(var j=0;j<phs.length;j++) phs[j].placeholder = T(phs[j].getAttribute('data-ph'));
+}
+
+/* ---------- api ---------- */
+window._asNetLog = [];
+function _logNetErr(path, msg){
+  try{
+    var ts = new Date().toTimeString().slice(0,8);
+    window._asNetLog.push('[' + ts + '] ' + path + ' -> ' + msg);
+    if(window._asNetLog.length > 30) window._asNetLog.shift();
+  }catch(e){}
+}
+window.addEventListener('error', function(ev){
+  _logNetErr('JS error', (ev && ev.message ? ev.message : 'unknown') + (ev && ev.lineno ? ' @' + ev.lineno : ''));
+});
+window.addEventListener('unhandledrejection', function(ev){
+  var r = ev && ev.reason;
+  _logNetErr('JS promise', (r && r.message) ? r.message : String(r || 'rejected'));
+});
+function apiPost(path, body, timeoutMs){
+  return new Promise(function(resolve, reject){
+    var ms = timeoutMs || 30000;
+    var to = setTimeout(function(){ _logNetErr(path, 'timeout ' + ms + 'ms'); reject(new Error('timeout ' + Math.round(ms/1000) + 's')); }, ms);
+    var b = { token: API_TOKEN, initData: (tg && tg.initData) ? tg.initData : '' };
+    for(var k in body) b[k] = body[k];
+    fetch(path, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(b)})
+      .then(function(r){
+        clearTimeout(to);
+        if(r.status === 403){ _logNetErr(path, 'HTTP 403 forbidden'); reject(new Error('forbidden (403)')); return; }
+        if(!r.ok){ _logNetErr(path, 'HTTP ' + r.status); reject(new Error('http ' + r.status)); return; }
+        r.json().then(resolve, function(je){
+          var m = 'bad json: ' + ((je && je.message) || je);
+          _logNetErr(path, m);
+          reject(new Error(m));
+        });
+      }, function(e){
+        clearTimeout(to);
+        var m = (e && e.message) ? e.message : String(e || 'network error');
+        _logNetErr(path, m);
+        reject(new Error(m));
+      });
+  });
+}
+function api(cmd, body, timeoutMs){
+  var b = body || {};
+  if(!b.action) b.action = cmd;
+  return apiPost('appstore-api/' + cmd, b, timeoutMs);
+}
+
+var toastEl = null, toastTimer = null;
+function toast(msg, bad){
+  if(toastEl) toastEl.remove();
+  toastEl = document.createElement('div');
+  toastEl.className = 'toast' + (bad ? ' bad' : '');
+  toastEl.textContent = msg;
+  document.body.appendChild(toastEl);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(function(){ if(toastEl) toastEl.remove(); toastEl = null; }, bad ? 5200 : 2800);
+}
+
+/* ---------- state ---------- */
+var CTY = {
+  us:['США','🇺🇸'], ua:['Україна','🇺🇦'], de:['Німеччина','🇩🇪'], gb:['Велика Британія','🇬🇧'], pl:['Польща','🇵🇱'],
+  ca:['Канада','🇨🇦'], fr:['Франція','🇫🇷'], es:['Іспанія','🇪🇸'], it:['Італія','🇮🇹'], nl:['Нідерланди','🇳🇱'],
+  be:['Бельгія','🇧🇪'], ch:['Швейцарія','🇨🇭'], at:['Австрія','🇦🇹'], se:['Швеція','🇸🇪'], no:['Норвегія','🇳🇴'],
+  dk:['Данія','🇩🇰'], fi:['Фінляндія','🇫🇮'], ie:['Ірландія','🇮🇪'], pt:['Португалія','🇵🇹'], gr:['Греція','🇬🇷'],
+  cz:['Чехія','🇨🇿'], sk:['Словаччина','🇸🇰'], hu:['Угорщина','🇭🇺'], ro:['Румунія','🇷🇴'], bg:['Болгарія','🇧🇬'],
+  hr:['Хорватія','🇭🇷'], si:['Словенія','🇸🇮'], ee:['Естонія','🇪🇪'], lv:['Латвія','🇱🇻'], lt:['Литва','🇱🇹'],
+  md:['Молдова','🇲🇩'], ge:['Грузія','🇬🇪'], am:['Вірменія','🇦🇲'], az:['Азербайджан','🇦🇿'], kz:['Казахстан','🇰🇿'],
+  uz:['Узбекистан','🇺🇿'], kg:['Киргизстан','🇰🇬'], tj:['Таджикистан','🇹🇯'], tm:['Туркменістан','🇹🇲'],
+  tr:['Туреччина','🇹🇷'], il:['Ізраїль','🇮🇱'], ae:['ОАЕ','🇦🇪'], sa:['Саудівська Аравія','🇸🇦'], qa:['Катар','🇶🇦'],
+  kw:['Кувейт','🇰🇼'], bh:['Бахрейн','🇧🇭'], om:['Оман','🇴🇲'], jo:['Йорданія','🇯🇴'], eg:['Єгипет','🇪🇬'],
+  ma:['Марокко','🇲🇦'], tn:['Туніс','🇹🇳'], dz:['Алжир','🇩🇿'], ng:['Нігерія','🇳🇬'], ke:['Кенія','🇰🇪'],
+  za:['ПАР','🇿🇦'], gh:['Гана','🇬🇭'], sn:['Сенегал','🇸🇳'], tz:['Танзанія','🇹🇿'], ug:['Уганда','🇺🇬'],
+  au:['Австралія','🇦🇺'], nz:['Нова Зеландія','🇳🇿'], jp:['Японія','🇯🇵'], kr:['Південна Корея','🇰🇷'], cn:['Китай','🇨🇳'],
+  hk:['Гонконг','🇭🇰'], tw:['Тайвань','🇹🇼'], mo:['Макао','🇲🇴'], sg:['Сінгапур','🇸🇬'], my:['Малайзія','🇲🇾'],
+  th:['Таїланд','🇹🇭'], vn:['Вʼєтнам','🇻🇳'], id:['Індонезія','🇮🇩'], ph:['Філіппіни','🇵🇭'], in:['Індія','🇮🇳'],
+  pk:['Пакистан','🇵🇰'], lk:['Шрі-Ланка','🇱🇰'], np:['Непал','🇳🇵'], kh:['Камбоджа','🇰🇭'], la:['Лаос','🇱🇦'],
+  mn:['Монголія','🇲🇳'], br:['Бразилія','🇧🇷'], mx:['Мексика','🇲🇽'], ar:['Аргентина','🇦🇷'], cl:['Чилі','🇨🇱'],
+  co:['Колумбія','🇨🇴'], pe:['Перу','🇵🇪'], ec:['Еквадор','🇪🇨'], uy:['Уругвай','🇺🇾'], py:['Парагвай','🇵🇾'],
+  bo:['Болівія','🇧🇴'], cr:['Коста-Рика','🇨🇷'], pa:['Панама','🇵🇦'], do:['Домінікана','🇩🇴'], gt:['Гватемала','🇬🇹'],
+  hn:['Гондурас','🇭🇳'], sv:['Сальвадор','🇸🇻'], ni:['Нікарагуа','🇳🇮'], jm:['Ямайка','🇯🇲'], tt:['Тринідад і Тобаго','🇹🇹'],
+  bs:['Багами','🇧🇸'], bb:['Барбадос','🇧🇧'], ve:['Венесуела','🇻🇪'], ru:['Росія','🇷🇺'], by:['Білорусь','🇧🇾'],
+  rs:['Сербія','🇷🇸'], ba:['Боснія і Герцеговина','🇧🇦'], mk:['Північна Македонія','🇲🇰'], al:['Албанія','🇦🇱'],
+  me:['Чорногорія','🇲🇪'], xk:['Косово','🇽🇰'], is:['Ісландія','🇮🇸'], lu:['Люксембург','🇱🇺'], mt:['Мальта','🇲🇹'],
+  cy:['Кіпр','🇨🇾'], mc:['Монако','🇲🇨'], ad:['Андорра','🇦🇩'], li:['Ліхтенштейн','🇱🇮'], sm:['Сан-Марино','🇸🇲']
+};
+var LANG_META = {uk:['УКР','🇺🇦','Українська'], ru:['РУС','🇷🇺','Русский'], en:['ENG','🇬🇧','English'], de:['DEU','🇩🇪','Deutsch']};
+var state = {
+  country: 'us', device: 'iphone',
+  chartKind: 'free', chartMode: false,
+  recent: [], dlq: '', pq: '', period: 'all', method: 'rust',
+  dl: [], purch: [], auth: null, dlTimer: null, accTimer: null, sapTask: null
+};
+try{
+  state.country = localStorage.getItem('as_country') || 'us';
+  if(!CTY[state.country]) state.country = 'us';
+  state.device = localStorage.getItem('as_device') || 'iphone';
+  state.method = localStorage.getItem('as_method') || 'rust';
+  state.recent = JSON.parse(localStorage.getItem('as_recent') || '[]');
+  if(!Array.isArray(state.recent)) state.recent = [];
+}catch(e){}
+function savePrefs(){
+  try{
+    localStorage.setItem('as_country', state.country);
+    localStorage.setItem('as_device', state.device);
+    localStorage.setItem('as_method', state.method);
+    localStorage.setItem('as_recent', JSON.stringify(state.recent.slice(0, 12)));
+  }catch(e){}
+}
+function rememberQuery(q){
+  q = String(q || '').trim();
+  if(!q) return;
+  state.recent = state.recent.filter(function(x){ return x !== q; });
+  state.recent.unshift(q);
+  state.recent = state.recent.slice(0, 12);
+  savePrefs();
+  renderRecent();
+}
+function dropRecent(q){
+  state.recent = state.recent.filter(function(x){ return x !== q; });
+  savePrefs(); renderRecent();
+}
+
+/* ---------- tabs ---------- */
+function showTab(name){
+  ['search','dl','purch','acc'].forEach(function(t){
+    el('tab-' + t).classList.toggle('hidden', t !== name);
+  });
+  var bs = document.querySelectorAll('.tabbar button');
+  for(var i=0;i<bs.length;i++) bs[i].classList.toggle('on', bs[i].getAttribute('data-tab') === name);
+  if(window._syncTabPill) window._syncTabPill();
+  window.scrollTo(0, 0);
+  if(name === 'dl') refreshDownloads(true);
+  if(name === 'purch') refreshPurchases();
+  if(name === 'acc'){ refreshAccount(true); sapPrepare(); }
+  else if(SAP_PREP.timer){ clearTimeout(SAP_PREP.timer); SAP_PREP.timer = null; }
+}
+document.querySelectorAll('.tabbar button').forEach(function(b){
+  b.addEventListener('click', function(){ showTab(b.getAttribute('data-tab')); });
+});
+
+/* ---------- rendering helpers ---------- */
+function iconHtml(app, cls){
+  var u = app.icon || app.icon100 || '';
+  if(u) return '<img class="icon ' + (cls||'') + '" src="' + esc(u.replace(/\/\d+x\d+bb\.(png|jpg)/, '/200x200bb.$1')) + '" alt="" loading="lazy" onerror="this.onerror=null;this.src=\'/sidebot-icon.png?v=2\'">';
+  var letter = (app.name || app.bundle || '?').trim().charAt(0).toUpperCase();
+  return '<span class="icon ph">' + esc(letter) + '</span>';
+}
+function appRow(app, opts){
+  opts = opts || {};
+  var btnHtml = '';
+  var sub2 = [];
+  if(app.rank) sub2.push('<span class="rk">' + app.rank + '</span>');
+  if(app.category) sub2.push(esc(app.category));
+  var sub = sub2.join(' · ');
+  var size = app.sizeText ? '<div class="sz">' + esc(app.sizeText) + '</div>' : '';
+  if(opts.mode === 'chart' || opts.mode === 'search'){
+    var appJson = esc(JSON.stringify({bundle:app.bundle, appid:app.appid, name:app.name, version:app.version, icon:app.icon||app.icon100, sizeText:app.sizeText, size:app.size}));
+    btnHtml = '<button class="getbtn white" data-vers="' + esc(app.appid || app.bundle) + '" data-app=\'' + appJson + '\' style="margin-right:4px">Version</button>'
+      + '<button class="getbtn" data-get="' + esc(app.bundle || app.appid) + '" data-app=\'' + appJson + '\'>' + T('get') + '</button>';
+  } else if(opts.mode === 'purch'){
+    var pJson = esc(JSON.stringify({bundle:app.bundle, appid:app.appid, name:app.name}));
+    btnHtml = '<button class="getbtn white" data-vers="' + esc(app.appid || app.bundle) + '" data-app=\'' + pJson + '\' style="margin-right:4px">Version</button>'
+      + '<button class="cloud" data-redl="' + esc(app.bundle || '') + '" data-app=\'' + pJson + '\' title="' + T('redownload') + '">☁︎</button>';
+  }
+  var badge = '';
+  if(opts.mode === 'purch' && app.downloadedVersion){
+    badge = '<div class="badge-dl">✓ ' + T('downloaded') + ': ' + esc(app.downloadedVersion) + '</div>';
+  }
+  var dateLine = '';
+  if(opts.mode === 'purch' && app.purchasedAt){
+    var d = new Date(app.purchasedAt);
+    if(!isNaN(d)){
+      var loc = {uk:'uk-UA', ru:'ru-RU', de:'de-DE'}[LANG] || 'en-GB';
+      dateLine = '<div class="sz">' + esc(d.toLocaleDateString(loc)) + '</div>';
+    }
+  }
+  return '<div class="row" data-approw="' + esc(app.bundle || '') + '" data-appid="' + esc(app.appid || '') + '">'
+    + iconHtml(app)
+    + '<span class="meta"><span class="nm">' + esc(app.name || app.bundle || '?') + '</span>'
+    + (sub ? '<span class="sb">' + sub + '</span>' : '')
+    + (app.version ? '<span class="sb">' + esc(app.version) + '</span>' : '')
+    + size + dateLine + badge + '</span>'
+    + btnHtml + '</div>';
+}
+
+/* ---------- charts / search ---------- */
+function renderChartList(items){
+  el('chartList').innerHTML = items.length
+    ? '<div class="card">' + items.map(function(a){ return appRow(a, {mode:'chart'}); }).join('') + '</div>'
+    : '<div class="empty">' + T('emptySearch') + '</div>';
+}
+function openChart(kind){
+  state.chartKind = kind;
+  state.chartMode = true;
+  el('chartBox').classList.remove('hidden');
+  el('searchBox2').classList.add('hidden');
+  el('recentBox').classList.add('hidden');
+  var seg = el('chartSeg').querySelectorAll('button');
+  for(var i=0;i<seg.length;i++) seg[i].classList.toggle('on', seg[i].getAttribute('data-k') === kind);
+  el('chartTitle').textContent = T('chart' + kind.charAt(0).toUpperCase() + kind.slice(1)) + ' · ' + CTY[state.country][0];
+  el('chartList').innerHTML = '<div class="empty"><span class="spin"></span>' + T('loading') + '</div>';
+  api('charts', {kind: kind, country: state.country, device: state.device, limit: 30}, 40000)
+    .then(function(r){
+      if(!r.ok){ toast(r.text || T('noConnection'), true); el('chartList').innerHTML = '<div class="empty">' + esc(r.text || '') + '</div>'; return; }
+      renderChartList(r.items || []);
+    })
+    .catch(function(e){
+      el('chartList').innerHTML = '<div class="empty">' + T('noConnection') + '</div>';
+      toast(T('noConnection'), true);
+    });
+}
+function renderSearchResults(items){
+  el('searchBox2').classList.remove('hidden');
+  el('chartBox').classList.add('hidden');
+  el('recentBox').classList.add('hidden');
+  el('searchList').innerHTML = items.length
+    ? '<div class="card">' + items.map(function(a){ return appRow(a, {mode:'search'}); }).join('') + '</div>'
+    : '<div class="empty">' + T('emptySearch') + '</div>';
+}
+function runSearch(q){
+  q = String(q || '').trim();
+  if(!q) return;
+  el('searchList').innerHTML = '<div class="empty"><span class="spin"></span>' + T('loading') + '</div>';
+  el('searchBox2').classList.remove('hidden');
+  el('chartBox').classList.add('hidden');
+  el('recentBox').classList.add('hidden');
+  rememberQuery(q);
+  api('search', {query: q, country: state.country, device: state.device, limit: 25}, 45000)
+    .then(function(r){
+      if(!r.ok){ toast(r.text || T('noConnection'), true); el('searchList').innerHTML = '<div class="empty">' + esc(r.text || '') + '</div>'; return; }
+      renderSearchResults(r.items || []);
+    })
+    .catch(function(e){ var m = (e && e.message && e.message !== 'Failed to fetch') ? (' (' + e.message + ')') : ''; el('searchList').innerHTML = '<div class="empty">' + T('noConnection') + m + '</div>'; });
+}
+function renderRecent(){
+  var box = el('recentBox'), row = el('recentRow');
+  if(!state.recent.length){ box.classList.add('hidden'); return; }
+  box.classList.remove('hidden');
+  row.innerHTML = state.recent.map(function(q){
+    return '<button class="chip sm" data-rq="' + esc(q) + '">🔎 ' + esc(q.length > 22 ? q.slice(0, 22) + '…' : q) + '</button>';
+  }).join('');
+  row.querySelectorAll('[data-rq]').forEach(function(b){
+    var t = null;
+    b.addEventListener('click', function(){ runSearch(b.getAttribute('data-rq')); });
+    b.addEventListener('touchstart', function(){ t = setTimeout(function(){ dropRecent(b.getAttribute('data-rq')); t = null; }, 550); }, {passive:true});
+    b.addEventListener('touchend', function(){ if(t){ clearTimeout(t); t = null; } });
+    b.addEventListener('contextmenu', function(ev){ ev.preventDefault(); dropRecent(b.getAttribute('data-rq')); });
+  });
+}
+el('recentClear').addEventListener('click', function(){ state.recent = []; savePrefs(); renderRecent(); });
+el('goFree').addEventListener('click', function(){ openChart('free'); });
+el('goPaid').addEventListener('click', function(){ openChart('paid'); });
+el('goGross').addEventListener('click', function(){ openChart('grossing'); });
+el('chartBack').addEventListener('click', function(){
+  state.chartMode = false;
+  el('chartBox').classList.add('hidden');
+  el('recentBox').classList.toggle('hidden', !state.recent.length || el('searchBox2').classList.contains('hidden') === false);
+});
+el('chartSeg').querySelectorAll('button').forEach(function(b){
+  b.addEventListener('click', function(){ openChart(b.getAttribute('data-k')); });
+});
+el('q').addEventListener('keydown', function(e){ if(e.key === 'Enter'){ e.preventDefault(); runSearch(el('q').value); } });
+
+/* country / device / lang pickers */
+function renderPickers(){
+  var c = CTY[state.country] || [state.country.toUpperCase(),'🌐'];
+  el('ctyLbl').textContent = c[0];
+  el('devLbl').textContent = state.device === 'ipad' ? 'iPad' : 'iPhone';
+  el('ctyChip').firstChild.textContent = c[1] + ' ';
+  var lm = LANG_META[LANG] || LANG_META.uk;
+  if(el('langLbl')) el('langLbl').textContent = lm[0];
+  if(el('langChip')) el('langChip').firstChild.textContent = lm[1] + ' ';
+}
+el('ctyChip').addEventListener('click', function(){
+  var keys = Object.keys(CTY);
+  openSheet('<h3>🌍 ' + T('choose') + ' (' + keys.length + ')</h3>'
+    + '<div class="field"><input id="ctyFind" type="search" placeholder="US, UA, DE, Польща…"></div>'
+    + '<div id="ctyList" style="max-height:52vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px"></div>'
+    + '<button class="btn dim" id="ctyClose" style="margin-top:10px">' + T('cancel') + '</button>');
+  el('ctyClose').addEventListener('click', closeSheet);
+  function drawCty(q){
+    var ql = (q || '').trim().toLowerCase();
+    var box = el('ctyList');
+    if(!box) return;
+    var list = keys.filter(function(k){
+      if(!ql) return true;
+      return k.indexOf(ql) >= 0 || CTY[k][0].toLowerCase().indexOf(ql) >= 0;
+    });
+    box.innerHTML = list.map(function(k){
+      var cls = (k === state.country) ? 'btn' : 'btn dim';
+      return '<button class="' + cls + '" data-cpick="' + k + '" style="text-align:left;display:flex;justify-content:space-between">'
+        + '<span>' + CTY[k][1] + ' ' + esc(CTY[k][0]) + '</span><span style="opacity:.6;font-size:12px">' + k.toUpperCase() + '</span></button>';
+    }).join('');
+    box.querySelectorAll('[data-cpick]').forEach(function(b){
+      b.addEventListener('click', function(){
+        state.country = b.getAttribute('data-cpick');
+        savePrefs(); renderPickers(); closeSheet();
+        if(state.chartMode) openChart(state.chartKind);
+      });
+    });
+  }
+  drawCty('');
+  el('ctyFind').addEventListener('input', function(){ drawCty(el('ctyFind').value); });
+  setTimeout(function(){ var i = el('ctyFind'); if(i) i.focus(); }, 60);
+});
+if(el('langChip')){
+  el('langChip').addEventListener('click', function(){
+    var ls = ['uk', 'ru', 'en', 'de'];
+    openSheet('<h3>🌍 Мова / Language</h3>'
+      + ls.map(function(k){
+          var m = LANG_META[k];
+          var cls = (k === LANG) ? 'btn' : 'btn dim';
+          return '<button class="' + cls + '" data-lpick="' + k + '" style="text-align:left;margin-bottom:6px">' + m[1] + ' ' + m[2] + '</button>';
+        }).join('')
+      + '<button class="btn dim" id="langClose" style="margin-top:4px">' + T('cancel') + '</button>');
+    el('langClose').addEventListener('click', closeSheet);
+    el('sheetBox').querySelectorAll('[data-lpick]').forEach(function(b){
+      b.addEventListener('click', function(){
+        LANG = b.getAttribute('data-lpick') || 'uk';
+        try{ localStorage.setItem('as_lang', LANG); }catch(e){}
+        applyI18n(); renderPickers(); renderDl(); renderAccount();
+        closeSheet();
+      });
+    });
+  });
+}
+el('devChip').addEventListener('click', function(){
+  state.device = state.device === 'ipad' ? 'iphone' : 'ipad';
+  savePrefs(); renderPickers();
+  if(state.chartMode) openChart(state.chartKind);
+});
+
+/* ---------- downloads ---------- */
+function dlActionHtml(item){
+  if(item.state === 'downloading' || item.state === 'starting'){
+    var ind = (item.progress === null || item.progress === undefined) ? ' ind' : '';
+    var p = item.progress != null ? (item.progress > 1 ? item.progress : item.progress * 100) : null;
+    if(p !== null) p = Math.max(0, Math.min(100, Math.round(p)));
+    var pct = p !== null ? (p + '%') : '';
+    return '<div style="flex:0 0 130px"><div class="prog' + ind + '"><i style="width:' + (p !== null ? p : 38) + '%"></i></div>'
+      + '<div class="dlstat">' + T('downloading') + (pct ? ' ' + pct : '') + (item.phase === 'auth' ? ' · ipatool' : '') + '</div></div>';
+  }
+  if(item.state === 'failed'){
+    return '<div style="flex:0 0 140px;display:flex;flex-direction:column;align-items:flex-end;gap:4px"><div class="dlstat err" style="text-align:right">✕ ' + T('failed') + '</div><div class="dlstat err" style="text-align:right">' + esc((item.error || '').slice(0, 160)) + '</div>'
+      + '<button class="getbtn white" data-retrydl="' + esc(item.key || item.bundle || '') + '" style="padding:4px 10px;font-size:12px">↻ Повторити</button></div>';
+  }
+  return '<button class="getbtn white" data-inst="' + esc(item.file) + '">' + T('install') + '</button>'
+    + '<button class="cloud" data-shareipa="' + esc(item.file) + '" title="Поділитися .ipa" style="font-size:16px">📤</button>';
+}
+function renderDl(){
+  var q = state.dlq.trim().toLowerCase();
+  var items = state.dl.filter(function(a){
+    if(!q) return true;
+    return ((a.name || '') + ' ' + (a.bundle || '') + ' ' + (a.version || '') + ' ' + (a.file || '')).toLowerCase().indexOf(q) >= 0;
+  });
+  el('dlList').innerHTML = items.length
+    ? '<div class="recent" style="margin:2px 4px 8px">' + items.length + ' ' + T('items') + '</div><div class="card">' + items.map(function(a){
+        var badge = (a.state === 'done') ? '<div class="badge-ok">✓ ' + T('done') + '</div>' : '';
+        return '<div class="row">' + iconHtml(a)
+          + '<span class="meta"><span class="nm">' + esc(a.name || a.bundle || a.file) + '</span>'
+          + '<span class="sb">📱 ' + esc(a.version || '—') + ' · ' + esc(a.sizeText || '') + '</span>'
+          + badge + '</span>'
+          + dlActionHtml(a)
+          + '<button class="cloud" data-deldl="' + esc(a.file || '') + '" data-delkey="' + esc(a.key || a.bundle || '') + '" style="color:var(--sub2)">✕</button>'
+          + '</div>';
+      }).join('') + '</div>'
+    : '<div class="empty">' + T('emptyDl') + '<br><span style="font-size:12.5px;color:var(--sub2)">' + T('emptyDlHint') + '</span></div>';
+  el('dlList').querySelectorAll('[data-inst]').forEach(function(b){
+    b.addEventListener('click', function(){ askInstall(b.getAttribute('data-inst')); });
+  });
+  el('dlList').querySelectorAll('[data-shareipa]').forEach(function(b){
+    b.addEventListener('click', function(){ shareIpa(b.getAttribute('data-shareipa')); });
+  });
+  el('dlList').querySelectorAll('[data-retrydl]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var k = b.getAttribute('data-retrydl') || '';
+      var it = state.dl.find(function(x){ return (x.key || x.bundle || '') === k; });
+      if(it) startDownload({appid: it.appid || '', bundle: it.bundle || '', name: it.name || '', version: it.version || '', icon: it.icon || '', version_id: it.version_id || ''});
+    });
+  });
+  el('dlList').querySelectorAll('[data-deldl]').forEach(function(b){
+    b.addEventListener('click', function(){
+      var f = b.getAttribute('data-deldl') || '';
+      var k = b.getAttribute('data-delkey') || '';
+      api('delete', {file: f, key: k}, 30000).then(function(r){
+        if(r.ok){ toast(T('deleted')); refreshDownloads(true); }
+        else toast(r.text || T('failed'), true);
+      }).catch(function(){ toast(T('noConnection'), true); });
+    });
+  });
+}
+function refreshDownloads(first){
+  return api('downloads', {sap: sapState()}, 30000).then(function(r){
+    if(!r.ok) return;
+    state.dl = r.items || [];
+    if(r.ipa_dir){
+      state.ipaDir = r.ipa_dir;
+      var db = el('dlDirBar'), dp = el('dlDirPath');
+      if(db && dp){ dp.textContent = '📁 ' + r.ipa_dir; db.classList.remove('hidden'); }
+    }
+    if(r.auth){
+      if(r.auth.email) state.accEmail = r.auth.email;
+      sapHandleTask(r.auth);
+    }
+    renderDl();
+    var live = state.dl.some(function(a){ return a.state === 'downloading' || a.state === 'starting'; });
+    if(live && !state.dlTimer) state.dlTimer = setInterval(function(){
+      var still = state.dl.some(function(a){ return a.state === 'downloading' || a.state === 'starting'; });
+      if(still) refreshDownloads(); else { clearInterval(state.dlTimer); state.dlTimer = null; }
+    }, 1200);
+  }).catch(function(){});
+}
+function copyStr(txt, msg){
+  function ok(){ toast(msg || 'Скопійовано'); }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(ok).catch(function(){
+      var ta = document.createElement('textarea');
+      ta.value = txt; document.body.appendChild(ta); ta.select();
+      try{ document.execCommand('copy'); }catch(e){}
+      document.body.removeChild(ta); ok();
+    });
+  } else {
+    var ta = document.createElement('textarea');
+    ta.value = txt; document.body.appendChild(ta); ta.select();
+    try{ document.execCommand('copy'); }catch(e){}
+    document.body.removeChild(ta); ok();
+  }
+}
+function openFolderModal(folderId){
+  var fid = folderId || state.lastFolder || 'appstore_ipas';
+  state.lastFolder = fid;
+  openSheet('<h3>📁 Вміст папки</h3><div class="sub" style="margin:8px 0">Завантаження…</div><button class="btn dim" id="fldClose">' + T('cancel') + '</button>');
+  el('fldClose').onclick = closeSheet;
+  api('folder_list', {folder: fid}, 15000).then(function(r){
+    if(!r || !r.ok){
+      openSheet('<h3>📁 Вміст папки</h3><div class="sub" style="color:var(--red);margin:8px 0">' + esc((r && r.text) || 'Помилка') + '</div><button class="btn dim" id="fldClose">' + T('cancel') + '</button>');
+      el('fldClose').onclick = closeSheet;
+      return;
+    }
+    var tabs = (r.folders || []).map(function(f){
+      var act = (f.id === r.folder);
+      return '<button class="getbtn ' + (act ? '' : 'white') + '" data-fld="' + esc(f.id) + '" style="font-size:12px;padding:5px 10px">' + esc(f.id) + '</button>';
+    }).join(' ');
+    var files = r.files || [];
+    var rows = files.length ? files.map(function(f){
+      var isIpa = /\.ipa$/i.test(f.name || '');
+      return '<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.08)">'
+        + '<div style="min-width:0;flex:1">'
+        + '<div style="font-size:13px;font-weight:600;word-break:break-all">' + (isIpa ? '📦 ' : '📄 ') + esc(f.name) + '</div>'
+        + '<div style="font-size:11px;color:var(--sub)">' + esc(f.sizeText || '') + (f.mtime ? ' · ' + esc(f.mtime) : '') + '</div>'
+        + '</div>'
+        + (isIpa && r.folder !== 'ota' ? '<a class="cloud" href="' + esc(liveContainerUrl(f.name)) + '" target="_top" title="LiveContainer" style="font-size:15px;text-decoration:none">📦</a>' : '')
+        + (isIpa && r.folder !== 'ota' ? '<button class="cloud" data-fshare="' + esc(f.name) + '" style="font-size:15px">📤</button>' : '')
+        + '<button class="cloud" data-fdel="' + esc(f.name) + '" style="color:var(--red);font-size:15px">🗑</button>'
+        + '</div>';
+    }).join('') : '<div class="sub" style="padding:14px 0;text-align:center">Папка порожня</div>';
+    openSheet(
+      '<h3>📁 ' + esc(r.folder) + '</h3>'
+      + '<div style="display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 8px">' + tabs + '</div>'
+      + '<div style="display:flex;align-items:center;justify-content:space-between;gap:6px;padding:6px 9px;border-radius:9px;background:rgba(255,255,255,.06);font-size:11px;color:var(--sub);margin-bottom:8px">'
+      + '<span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(r.path || '') + ' (' + files.length + ' · ' + esc(r.totalText || '0 B') + ')</span>'
+      + '<button class="cloud" id="fldCopyPath" style="font-size:13px;flex:0 0 auto">📋</button>'
+      + '</div>'
+      + '<div style="max-height:46vh;overflow-y:auto;margin-bottom:10px">' + rows + '</div>'
+      + '<button class="btn dim" id="fldClose">' + T('cancel') + '</button>'
+    );
+    el('fldClose').onclick = closeSheet;
+    if(el('fldCopyPath')) el('fldCopyPath').onclick = function(){ copyStr(r.path || '', 'Шлях скопійовано'); };
+    el('sheetBox').querySelectorAll('[data-fld]').forEach(function(b){
+      b.onclick = function(){ openFolderModal(b.getAttribute('data-fld')); };
+    });
+    el('sheetBox').querySelectorAll('[data-fshare]').forEach(function(b){
+      b.onclick = function(){ shareIpa(b.getAttribute('data-fshare')); };
+    });
+    el('sheetBox').querySelectorAll('[data-fdel]').forEach(function(b){
+      b.onclick = function(){
+        var fn = b.getAttribute('data-fdel');
+        api('folder_delete', {folder: r.folder, file: fn}, 15000).then(function(dr){
+          if(dr && dr.ok){
+            toast('Видалено');
+            openFolderModal(r.folder);
+            refreshDownloads();
+          } else {
+            toast((dr && dr.text) || 'Помилка видалення', true);
+          }
+        });
+      };
+    });
+  });
+}
+if(el('dlDirBar')) el('dlDirBar').addEventListener('click', function(){
+  openFolderModal(state.lastFolder || 'appstore_ipas');
+});
+el('dlq').addEventListener('input', function(){ state.dlq = el('dlq').value; renderDl(); });
+el('addDl').addEventListener('click', function(){
+  openSheet('<h3>' + T('addTitle') + '</h3>'
+    + '<div class="field"><input id="addIn" type="text" placeholder="' + esc(T('addPh')) + '"></div>'
+    + '<button class="btn" id="addGo">' + T('addGo') + '</button>'
+    + '<button class="btn dim" id="addCancel">' + T('cancel') + '</button>');
+  el('addCancel').addEventListener('click', closeSheet);
+  el('addGo').addEventListener('click', function(){
+    var v = el('addIn').value.trim();
+    if(!v) return;
+    api('download', {query: v, country: state.country}, 30000).then(function(r){
+      if(r.ok){ toast(r.text || T('downloading')); closeSheet(); showTab('dl'); refreshDownloads(true); }
+      else toast(r.text || T('failed'), true);
+    }).catch(function(){ toast(T('noConnection'), true); });
+  });
+  setTimeout(function(){ var i = el('addIn'); if(i) i.focus(); }, 60);
+});
+
+/* ---------- purchases ---------- */
+function refreshPurchases(){
+  if(window._purchBusy) return;
+  window._purchBusy = true;
+  if(window._purchPollTimer){ clearTimeout(window._purchPollTimer); window._purchPollTimer = null; }
+  if(!state.purch || !state.purch.length){
+    el('pList').innerHTML = '<div class="empty"><span class="spin"></span>' + T('loading') + '</div>';
+  }
+  if(window._purchSapTimer){ clearInterval(window._purchSapTimer); window._purchSapTimer = null; }
+  window._purchSapTimer = setInterval(function(){
+    api('auth', {action:'status', sap: sapState(), light: 1}, 10000).then(function(r){
+      if(r && r.ok && r.auth) sapHandleTask(r.auth);
+    }).catch(function(){});
+  }, 1000);
+  function stopSap(){
+    window._purchBusy = false;
+    if(window._purchSapTimer){ clearInterval(window._purchSapTimer); window._purchSapTimer = null; }
+  }
+  api('purchases', {country: state.country, period: state.period, query: state.pq, sap: sapState()}, 150000)
+    .then(function(r){
+      stopSap();
+      if(!r.ok){ el('pList').innerHTML = '<div class="empty">' + esc(r.text || T('noConnection')) + '</div>'; return; }
+      state.purch = r.items || [];
+      el('pAcc').textContent = r.email ? ('Account: ' + r.email) : T('noAcc');
+      if(r.error) toast(r.error, true);
+      var banner = r.loading
+        ? '<div class="recent" style="margin:2px 4px 10px;color:var(--blue)"><span class="spin"></span> Підтягую покупки у фоні (~1–1.5 хв), можна користуватися іншими вкладками…</div>'
+        : '';
+      el('pList').innerHTML = state.purch.length
+        ? banner + '<div class="recent" style="margin:2px 4px 8px">' + state.purch.length + ' ' + T('items') + '</div><div class="card">'
+          + state.purch.map(function(a){ return appRow(a, {mode:'purch'}); }).join('') + '</div>'
+        : (banner || '<div class="empty">' + T('emptyPurch') + '</div>');
+      if(r.loading && !el('tab-purch').classList.contains('hidden')){
+        window._purchPollTimer = setTimeout(refreshPurchases, 6000);
+      }
+      el('pList').querySelectorAll('[data-redl]').forEach(function(b){
+        b.addEventListener('click', function(){
+          var app = JSON.parse(b.getAttribute('data-app'));
+          api('download', {bundle: app.bundle, appid: app.appid, name: app.name, country: state.country}, 30000)
+            .then(function(r){
+              if(r.ok){ toast(r.text || T('downloading')); showTab('dl'); refreshDownloads(true); }
+              else toast(r.text || T('failed'), true);
+            }).catch(function(){ toast(T('noConnection'), true); });
+        });
+      });
+    })
+    .catch(function(e){
+      stopSap();
+      el('pList').innerHTML = '<div class="empty">' + T('noConnection') + '<br><span style="font-size:12px;color:var(--sub2)">' + esc((e && e.message) || '') + '</span></div>';
+    });
+}
+el('pq').addEventListener('input', function(){
+  state.pq = el('pq').value;
+  clearTimeout(window._pt);
+  window._pt = setTimeout(refreshPurchases, 450);
+});
+el('pSeg').querySelectorAll('button').forEach(function(b){
+  b.addEventListener('click', function(){
+    state.period = b.getAttribute('data-p');
+    el('pSeg').querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x === b); });
+    refreshPurchases();
+  });
+});
+
+/* ---------- SAP runtime (proof computed on the phone) ---------- */
+/* iPadn's signer runs in a hidden same-origin iframe: WebKit executes
+   the Go/WASM signer and emulates Apple's store libraries there, so the
+   bot never has to run that CPU work. Commands: init, proof, provision,
+   sign — all answered over postMessage. Nothing here touches the Apple
+   ID password: it stays in the bot's login thread. */
+var SAPF = {frame: null, loading: null, loaded: false, seq: 0, wait: {},
+            ready: false, initing: null, err: '', pendingLoad: null};
+var SAP_PREP = {info: null, busy: false, timer: null, tries: 0};
+
+function sapPost(path, body, ms){
+  return apiPost(path, body, ms || 40000);
+}
+function sapEnsureFrame(){
+  if(SAPF.loaded) return Promise.resolve();
+  if(SAPF.loading) return SAPF.loading;
+  SAPF.loading = new Promise(function(resolve, reject){
+    var f = document.createElement('iframe');
+    f.setAttribute('title', 'SAP');
+    f.setAttribute('aria-hidden', 'true');
+    f.style.cssText = 'position:absolute;width:1px;height:1px;left:-3000px;top:0;border:0;opacity:0';
+    var to = setTimeout(function(){
+      SAPF.loading = null; SAPF.pendingLoad = null;
+      reject(new Error('sap frame timeout'));
+    }, 30000);
+    SAPF.pendingLoad = function(){ clearTimeout(to); resolve(); };
+    f.src = '/sap-runtime/sap-bridge.html';
+    document.body.appendChild(f);
+    SAPF.frame = f;
+  });
+  return SAPF.loading;
+}
+window.addEventListener('message', function(ev){
+  if(ev.origin !== location.origin) return;
+  var m = ev.data || {};
+  if(!m || m.sap !== true) return;
+  if(m.event === 'loaded'){
+    SAPF.loaded = true;
+    if(SAPF.pendingLoad){ var r = SAPF.pendingLoad; SAPF.pendingLoad = null; r(); }
+    return;
+  }
+  if(!m.id) return;
+  var w = SAPF.wait[m.id];
+  if(!w) return;
+  delete SAPF.wait[m.id];
+  clearTimeout(w.to);
+  if(m.ok) w.resolve(m.result || {});
+  else w.reject(new Error(m.error || 'SAP step failed'));
+});
+function sapSend(cmd, args, ms){
+  return sapEnsureFrame().then(function(){
+    return new Promise(function(resolve, reject){
+      var id = ++SAPF.seq;
+      var to = setTimeout(function(){
+        delete SAPF.wait[id];
+        reject(new Error('sap ' + cmd + ' timeout'));
+      }, ms || 120000);
+      SAPF.wait[id] = {resolve: resolve, reject: reject, to: to};
+      try{
+        SAPF.frame.contentWindow.postMessage({sap: true, id: id, cmd: cmd, args: args || {}}, location.origin);
+      }catch(e){
+        clearTimeout(to); delete SAPF.wait[id]; reject(e);
+      }
+    });
+  });
+}
+function sapInit(){
+  if(SAPF.ready) return Promise.resolve();
+  if(SAPF.initing) return SAPF.initing;
+  var _it0 = Date.now();
+  _logNetErr('sapInit', 'start');
+  SAPF.initing = sapSend('init', {token: API_TOKEN}, 300000).then(function(){
+    SAPF.ready = true; SAPF.err = ''; renderSapLine();
+    _logNetErr('sapInit', 'ready in ' + (Date.now() - _it0) + 'ms');
+    sapPost('appstore-api/auth', {action:'status', sap: sapState(), light: 1}, 10000).catch(function(){});
+    return true;
+  }, function(e){
+    SAPF.initing = null;
+    SAPF.err = String((e && e.message) || e);
+    _logNetErr('sapInit', 'ERR ' + (Date.now() - _it0) + 'ms: ' + SAPF.err);
+    renderSapLine();
+    throw e;
+  });
+  return SAPF.initing;
+}
+function sapCall(cmd, args, ms){
+  return sapInit().then(function(){ return sapSend(cmd, args, ms); });
+}
+/* Ask the bot for the runtime files and warm the iframe once they are
+   complete, so the sign-in itself does not wait for 55 MB + compile. */
+function sapPrepare(){
+  if(getAuthMode() !== 'fast') return;
+  if(SAP_PREP.busy) return;
+  SAP_PREP.busy = true;
+  sapPost('appstore-api/sap-prepare', {}, 20000).then(function(r){
+    SAP_PREP.busy = false;
+    if(r && r.ok){ SAP_PREP.info = r; renderSapLine(); }
+    if(r && r.ok && r.ready){
+      sapInit().catch(function(){});
+      return;
+    }
+    if(r && r.state === 'error') return;
+    if(SAP_PREP.tries++ > 150) return;
+    if(SAP_PREP.timer) clearTimeout(SAP_PREP.timer);
+    SAP_PREP.timer = setTimeout(sapPrepare, 2000);
+  }, function(){ SAP_PREP.busy = false; });
+}
+function renderSapLine(){
+  var box = el('sapLine');
+  if(!box) return;
+  var i = SAP_PREP.info;
+  var html = '';
+  if(SAPF.ready){
+    html = '⚡ ' + esc(T('sapReady'));
+  } else if(SAPF.err || (i && i.state === 'error')){
+    var _serr = SAPF.err || (i && i.error) || '';
+    html = '⚠️ ' + esc(T('sapOff')) + (_serr ? ' (' + esc(_serr.slice(0, 80)) + ')' : '');
+  } else if(SAPF.initing || (i && i.ready)){
+    html = '<span class="spin"></span> ' + esc(T('sapWarm'));
+  } else if(i && i.state === 'downloading'){
+    html = '<span class="spin"></span> ' + esc(T('sapPrep').replace('%s', String(i.percent || 0))) + (i.file ? ' (' + esc(i.file) + ')' : '');
+  }
+  box.innerHTML = html;
+  box.classList.toggle('hidden', !html && getAuthMode() !== 'fast');
+}
+/* One SAP step the bot asked for (it waits for the answer). */
+function sapHandleTask(a){
+  var t = a && a.sapTask;
+  if(!t || !t.id) return;
+  if(state.sapTask === t.id) return;
+  state.sapTask = t.id;
+  var _st0 = Date.now();
+  _logNetErr('sapTask#' + t.id + ':' + t.kind, 'started ready=' + (!!SAPF.ready));
+  var pr;
+  if(t.kind === 'provision'){
+    pr = sapCall('provision', {state: t.state || '', challenge: t.challenge || '', guid: t.guid || ''}, 300000);
+  } else if(t.kind === 'sign'){
+    pr = sapCall('sign', {guid: t.guid || '', body: t.body || ''}, 180000);
+  } else if(t.kind === 'kbsync'){
+    pr = sapCall('kbsync', {guid: t.guid || '', dsid: t.dsid || ''}, 180000);
+  } else {
+    pr = sapCall('proof', {state: t.state || ''}, 180000);
+  }
+  pr.then(function(res){
+    _logNetErr('sapTask#' + t.id + ':' + t.kind, 'done in ' + (Date.now() - _st0) + 'ms');
+    sapPost('appstore-api/sap-result', {id: t.id, ok: true, result: res || {}}, 120000)
+      .catch(function(){});
+  }, function(e){
+    _logNetErr('sapTask#' + t.id + ':' + t.kind, 'ERR ' + (Date.now() - _st0) + 'ms: ' + String((e && e.message) || e));
+    sapPost('appstore-api/sap-result', {id: t.id, ok: false, error: String((e && e.message) || e)}, 120000)
+      .catch(function(){});
+  });
+}
+
+/* ---------- account ---------- */
+function methodLabel(m){
+  return m === 'siboot' ? T('methodSiboot') : m === 'sideloader' ? T('methodSideloader') : T('methodRust');
+}
+function refreshAccount(force){
+  return api('auth', {action:'status', sap: sapState()}, 30000).then(function(r){
+    if(!r.ok || !r.auth) return;
+    state.auth = r.auth;
+    renderAccount();
+    sapHandleTask(r.auth);
+  }).catch(function(){});
+}
+function sapState(){
+  return {ready: !!SAPF.ready, failed: !!SAPF.err};
+}
+function renderAccount(){
+  var a = state.auth || {};
+  el('accSigned').classList.toggle('hidden', !a.authed && a.stage !== 'running' && a.stage !== '2fa' && a.stage !== 'verifying' && a.stage !== 'sap');
+  el('accForm').classList.toggle('hidden', !!a.authed);
+  if(a.email) el('accEmail').textContent = a.email;
+  var profs = a.profiles || [];
+  el('profBox').classList.toggle('hidden', !profs.length);
+  if(profs.length){
+    var curEmail = (a.email || '').toLowerCase();
+    el('profList').innerHTML = profs.map(function(p){
+      var active = a.authed && curEmail && (p.apple_id || '').toLowerCase() === curEmail;
+      var pid = p.id || p.label || p.apple_id || '';
+      return '<div class="row" style="gap:6px">'
+        + '<button data-prof="' + esc(pid) + '" style="flex:1;min-width:0;display:flex;align-items:center;gap:10px;background:none;border:0;color:inherit;text-align:left;padding:0;font:inherit;cursor:pointer">'
+        + '<span class="meta"><span class="nm">💾 ' + esc(p.label || p.apple_id) + '</span>'
+        + '<span class="sb">' + esc(p.apple_id) + (p.has_password ? '' : ' · 🔑') + '</span></span>'
+        + (active ? '<span style="color:var(--green);font-weight:800">✓</span>' : '')
+        + '</button>'
+        + '<button class="getbtn white" data-pedit="' + esc(pid) + '" data-pemail="' + esc(p.apple_id || '') + '" style="padding:6px 9px;font-size:12px" title="Редагувати">✏️</button>'
+        + '<button class="getbtn white" data-pdel="' + esc(pid) + '" data-pemail="' + esc(p.apple_id || '') + '" style="padding:6px 9px;font-size:12px;color:#ff453a" title="Видалити">🗑</button>'
+        + '</div>';
+    }).join('');
+    el('profList').querySelectorAll('[data-prof]').forEach(function(b){
+      b.addEventListener('click', function(){
+        api('auth', {action:'profile', id: b.getAttribute('data-prof'), authMode: getAuthMode()}, 30000)
+          .then(function(r){
+            if(!r.ok){ toast(r.text || T('failed'), true); return; }
+            if(r.auth){ state.auth = r.auth; renderAccount(); }
+            pollAuth();
+          }).catch(function(e){ toast(T('noConnection') + (e && e.message ? ' (' + e.message + ')' : ''), true); });
+      });
+    });
+    el('profList').querySelectorAll('[data-pedit]').forEach(function(b){
+      b.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        var pid = b.getAttribute('data-pedit');
+        var pem = b.getAttribute('data-pemail') || '';
+        openSheet(
+          '<div class="sheet-title" style="font-size:17px;font-weight:700;margin-bottom:12px">✏️ Редагувати профіль</div>'
+          + '<div class="field"><label>Apple ID</label><input id="epEmail" type="email" value="' + esc(pem) + '" autocapitalize="off" autocorrect="off"></div>'
+          + '<div class="field"><label>Новий пароль (необовʼязково)</label><input id="epPw" type="password" placeholder="Залиш порожнім, щоб не змінювати"></div>'
+          + '<div style="display:flex;gap:8px;margin-top:12px">'
+          + '<button class="btn dim" id="epCancel" style="flex:1">' + T('cancel') + '</button>'
+          + '<button class="btn" id="epSave" style="flex:1">Зберегти</button>'
+          + '</div>'
+        );
+        el('epCancel').addEventListener('click', closeSheet);
+        el('epSave').addEventListener('click', function(){
+          var em = (el('epEmail').value || '').trim();
+          var pw = el('epPw').value || '';
+          if(!em || em.indexOf('@') < 1){ toast('Вкажи коректний Apple ID', true); return; }
+          api('auth', {action:'profile_edit', id: pid, apple_id: em, password: pw}, 20000).then(function(r){
+            if(!r.ok){ toast(r.text || T('failed'), true); return; }
+            closeSheet();
+            if(r.auth){ state.auth = r.auth; renderAccount(); }
+            toast('Збережено');
+          }).catch(function(e){ toast(T('noConnection') + (e && e.message ? ' (' + e.message + ')' : ''), true); });
+        });
+      });
+    });
+    el('profList').querySelectorAll('[data-pdel]').forEach(function(b){
+      b.addEventListener('click', function(ev){
+        ev.stopPropagation();
+        var pid = b.getAttribute('data-pdel');
+        var pem = b.getAttribute('data-pemail') || pid;
+        if(!confirm('Видалити швидкий вхід ' + pem + '?')) return;
+        api('auth', {action:'profile_delete', id: pid}, 20000).then(function(r){
+          if(!r.ok){ toast(r.text || T('failed'), true); return; }
+          if(r.auth){ state.auth = r.auth; renderAccount(); }
+          toast('Видалено');
+        }).catch(function(e){ toast(T('noConnection') + (e && e.message ? ' (' + e.message + ')' : ''), true); });
+      });
+    });
+  }
+  renderAuthStatus();
+  renderSapLine();
+}
+function sapHintText(a){
+  var h = (a && a.hint) || '';
+  if(h === 'sap-proof' || h === 'sap-provision') return T('stageSap');
+  if(h === 'sap-prepare') return T('hintPrepare');
+  if(h === 'sap-fallback') return T('hintFallback');
+  if(h === 'sap-sign') return T('stageSap');
+  return T('stageRunning');
+}
+function renderAuthStatus(){
+  var a = state.auth || {};
+  var box = el('accStatus');
+  if(a.stage === 'running'){
+    box.innerHTML = '<div class="okbox"><span class="spin"></span>' + T('stageRunning') + '</div>';
+  } else if(a.stage === 'sap'){
+    box.innerHTML = '<div class="okbox"><span class="spin"></span>' + esc(sapHintText(a)) + '</div>';
+  } else if(a.stage === '2fa'){
+    if(!el('codeIn')){
+      box.innerHTML = '<div class="okbox">' + T('stage2fa') + '</div>'
+        + '<div class="field"><input id="codeIn" inputmode="numeric" maxlength="6" placeholder="••••••" style="letter-spacing:.4em;text-align:center;font-size:22px"></div>'
+        + '<div class="recent" id="codeLeft"></div>'
+        + '<button class="btn" id="codeGo">' + T('codeBtn') + '</button>';
+      el('codeGo').addEventListener('click', submitCode);
+      el('codeIn').addEventListener('keydown', function(e){ if(e.key === 'Enter') submitCode(); });
+    }
+    if(a.codeSecondsLeft != null) el('codeLeft').textContent = T('codeLeft').replace('%s', a.codeSecondsLeft);
+  } else if(a.stage === 'verifying'){
+    box.innerHTML = '<div class="okbox"><span class="spin"></span>' + T('stageVerify') + '</div>';
+  } else if(a.stage === 'done'){
+    box.innerHTML = '<div class="okbox">' + T('stageDone') + (a.email ? ' — ' + esc(a.email) : '') + '</div>'
+      + (a.ipatoolAuthed === false ? '<div class="note" style="margin-top:6px">' + esc(T('fastOnly')) + '</div>' : '');
+  } else if(a.stage === 'failed'){
+    box.innerHTML = '<div class="errbox">' + esc(a.error || T('failed')) + '</div>';
+  } else {
+    box.innerHTML = '';
+  }
+  if(a.stage !== '2fa'){
+    var c = el('codeIn');
+    if(c){ box.innerHTML = ''; }
+  }
+}
+function submitCode(){
+  var v = (el('codeIn') ? el('codeIn').value : '').trim();
+  if(!/^\d{6}$/.test(v)){ toast(T('needAuth'), true); return; }
+  api('auth', {action:'code', code: v}, 30000).then(function(r){
+    if(!r.ok){ toast(r.text || T('failed'), true); return; }
+    pollAuth();
+  }).catch(function(){ toast(T('noConnection'), true); });
+}
+function pollAuth(){
+  if(state.accTimer){ clearInterval(state.accTimer); state.accTimer = null; }
+  /* The fast path hands each SAP step to this page, so it polls faster
+     while a sign-in runs (light: no ipatool spawn per poll). */
+  var iv = getAuthMode() === 'fast' ? 1200 : 3000;
+  state.accTimer = setInterval(function(){
+    api('auth', {action:'status', sap: sapState(), light: 1}, 20000).then(function(r){
+      if(!r.ok || !r.auth) return;
+      var was = state.auth ? state.auth.stage : '';
+      state.auth = r.auth;
+      renderAccount();
+      sapHandleTask(r.auth);
+      var st = r.auth.stage;
+      if(st === 'done' && was !== 'done'){
+        toast(T('authed').replace('%s', r.auth.email || ''));
+        refreshDownloads(true);
+      }
+      if(st !== 'running' && st !== '2fa' && st !== 'verifying' && st !== 'sap'){
+        clearInterval(state.accTimer); state.accTimer = null;
+      }
+    }).catch(function(){});
+  }, iv);
+}
+function getAuthMode(){
+  try{ var m = localStorage.getItem('appstore_auth_mode'); if(m === 'ipatool') return 'ipatool'; }catch(e){}
+  return 'fast';
+}
+(function(){
+  var seg = el('authModeSeg');
+  if(!seg) return;
+  function paint(){
+    var m = getAuthMode();
+    seg.querySelectorAll('button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-am') === m); });
+  }
+  seg.querySelectorAll('button').forEach(function(b){
+    b.addEventListener('click', function(){
+      try{ localStorage.setItem('appstore_auth_mode', b.getAttribute('data-am') || 'fast'); }catch(e){}
+      paint();
+      renderSapLine();
+      if(getAuthMode() === 'fast') sapPrepare();
+    });
+  });
+  paint();
+})();
+el('accLogin').addEventListener('click', function(){
+  var email = el('accEmailIn').value.trim();
+  var pw = el('accPwIn').value;
+  if(!email || !pw){ toast(T('errShortPw'), true); return; }
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)){ toast(T('errBadEmail'), true); return; }
+  el('accLogin').disabled = true;
+  if(getAuthMode() === 'fast'){
+    sapPrepare();
+    sapInit().catch(function(){});
+  }
+  api('auth', {action:'login', email: email, password: pw, authMode: getAuthMode()}, 40000).then(function(r){
+    el('accLogin').disabled = false;
+    if(!r.ok){ toast(r.text || T('failed'), true); if(r.text === T('busyAuth')) return; return; }
+    state.auth = r.auth || state.auth;
+    renderAccount();
+    pollAuth();
+  }).catch(function(e){ el('accLogin').disabled = false; toast(T('noConnection') + (e && e.message ? ' (' + e.message + ')' : ''), true); });
+});
+function copyBotLog(boxId){
+  var net = (window._asNetLog && window._asNetLog.length) ? ('--- Browser Net Errors ---\n' + window._asNetLog.join('\n') + '\n\n') : '';
+  api('log', {}).then(function(r){
+    var txt = net + ((r && r.log) ? String(r.log) : '(empty)');
+    var box = el(boxId || 'accLogBox');
+    if(box){ box.textContent = txt; box.classList.remove('hidden'); }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(txt).then(function(){ toast('Лог скопійовано'); }, function(){ toast('Лог відкрито нижче'); });
+    } else {
+      toast('Лог відкрито нижче');
+    }
+  }).catch(function(e){
+    var txt = net + '--- log fetch failed: ' + String((e && e.message) || e) + ' ---';
+    var box = el(boxId || 'accLogBox');
+    if(box){ box.textContent = txt; box.classList.remove('hidden'); }
+    toast(String((e && e.message) || e), true);
+  });
+}
+if(el('accCopyLog')){
+  el('accCopyLog').addEventListener('click', function(){ copyBotLog('accLogBox'); });
+}
+if(el('dlCopyLog')){
+  el('dlCopyLog').addEventListener('click', function(){ copyBotLog('dlLogBox'); });
+}
+el('accSwitch').addEventListener('click', function(){
+  el('accEmailIn').value = '';
+  el('accPwIn').value = '';
+  el('accForm').classList.remove('hidden');
+  el('accSigned').classList.add('hidden');
+});
+if(el('accLogout')){
+  el('accLogout').addEventListener('click', function(){
+    api('auth', {action:'logout'}).then(function(r){
+      state.auth = (r && r.auth) || {stage:'idle', email:''};
+      el('accEmailIn').value = '';
+      el('accPwIn').value = '';
+      el('accLogin').disabled = false;
+      renderAccount();
+      renderSapLine();
+      if(getAuthMode() === 'fast') sapPrepare();
+      toast('Вийшли з акаунта');
+    }).catch(function(e){ toast(String((e && e.message) || e), true); });
+  });
+}
+
+/* ---------- install + app sheet ---------- */
+function closeSheet(){ el('sheet').classList.add('hidden'); if(el('sheetBox')) el('sheetBox').innerHTML = ''; }
+
+(function(){
+  function clamp(v, lo, hi){ return Math.max(lo, Math.min(hi, v)); }
+  function getNum(k, def){
+    try{ var n = parseInt(localStorage.getItem(k), 10); return isFinite(n) ? n : def; }catch(e){ return def; }
+  }
+  function applyScale(){
+    var ui = clamp(getNum('appstore_ui_scale', 100), 75, 135);
+    var tb = clamp(getNum('appstore_tab_scale', 100), 70, 140);
+    var gl = clamp(getNum('appstore_glass_op', 5), 0, 90);
+    var wrap = document.querySelector('.wrap');
+    if(wrap) wrap.style.zoom = (ui / 100);
+    var sb = el('sheetBox');
+    if(sb) sb.style.zoom = (ui / 100);
+    var tbi = document.querySelector('.tabbar .inner');
+    if(tbi){
+      tbi.style.zoom = (tb / 100);
+      var a = gl / 100;
+      tbi.style.setProperty('--glass-a', (a * 0.45).toFixed(3));
+      tbi.style.setProperty('--glass-a-top', Math.min(0.95, a * 0.90 + 0.03).toFixed(3));
+      tbi.style.setProperty('--glass-a-bot', Math.min(0.90, a * 0.65 + 0.015).toFixed(3));
+      tbi.style.setProperty('--glass-blur', Math.round(4 + (gl / 90) * 24) + 'px');
+    }
+    if(el('uiVal')) el('uiVal').textContent = ui + '%';
+    if(el('tabVal')) el('tabVal').textContent = tb + '%';
+    if(el('glassRange')) el('glassRange').value = gl;
+    if(el('glassVal')) el('glassVal').textContent = gl + '%';
+    if(window._syncTabPill) setTimeout(window._syncTabPill, 20);
+  }
+  function setScale(k, v, lo, hi){
+    try{ localStorage.setItem(k, String(clamp(v, lo, hi))); }catch(e){}
+    applyScale();
+  }
+  var glEl = el('glassRange');
+  if(glEl) glEl.addEventListener('input', function(){
+    var v = parseInt(this.value, 10);
+    setScale('appstore_glass_op', isFinite(v) ? v : 5, 0, 90);
+  });
+  var sbTop = el('goSidebotTop');
+  if(sbTop) sbTop.addEventListener('click', function(){
+    try{
+      if(window.parent && window.parent !== window){
+        window.parent.postMessage({closeAppStore: true}, '*');
+        return;
+      }
+    }catch(e){}
+    var m = (location.search || '').match(/[?&]t=([^&]+)/);
+    location.href = '/miniapp.html' + (m ? ('?t=' + m[1]) : '');
+  });
+  (function initLiquidDrag(){
+    var bar = document.querySelector('.tabbar .inner');
+    var pill = el('tabPill');
+    if(!bar || !pill) return;
+    function syncPill(targetBtn){
+      var btn = targetBtn || bar.querySelector('button.on') || bar.querySelector('button');
+      if(!btn) return;
+      pill.style.width = btn.offsetWidth + 'px';
+      pill.style.transform = 'translateX(' + btn.offsetLeft + 'px)';
+    }
+    window._syncTabPill = function(){ syncPill(); };
+    var dragging = false, startX = 0, moved = false, curIdx = 0;
+    function getButtons(){ return Array.prototype.slice.call(bar.querySelectorAll('button')); }
+    function clientX(e){ return (e.touches && e.touches[0]) ? e.touches[0].clientX : (e.changedTouches && e.changedTouches[0] ? e.changedTouches[0].clientX : e.clientX); }
+    bar.addEventListener('touchstart', function(e){
+      var btns = getButtons(); if(!btns.length) return;
+      dragging = true; moved = false; startX = clientX(e);
+      pill.classList.add('dragging');
+    }, {passive:true});
+    bar.addEventListener('touchmove', function(e){
+      if(!dragging) return;
+      var x = clientX(e);
+      if(Math.abs(x - startX) > 6) moved = true;
+      if(!moved) return;
+      var btns = getButtons();
+      var rect = bar.getBoundingClientRect();
+      var zoom = parseFloat(bar.style.zoom || '1') || 1;
+      var relX = (x - rect.left) / zoom;
+      var pw = btns[0].offsetWidth;
+      var minL = btns[0].offsetLeft;
+      var maxL = btns[btns.length - 1].offsetLeft;
+      var left = Math.max(minL, Math.min(maxL, relX - pw / 2));
+      pill.style.width = pw + 'px';
+      pill.style.transform = 'translateX(' + left + 'px) scale(1.06)';
+      var best = 0, bestD = 1e9;
+      for(var i=0;i<btns.length;i++){
+        var cx = btns[i].offsetLeft + btns[i].offsetWidth / 2;
+        var d = Math.abs(cx - relX);
+        if(d < bestD){ bestD = d; best = i; }
+      }
+      curIdx = best;
+      for(var i=0;i<btns.length;i++) btns[i].classList.toggle('on', i === curIdx);
+    }, {passive:true});
+    bar.addEventListener('touchend', function(){
+      if(!dragging) return;
+      dragging = false;
+      pill.classList.remove('dragging');
+      if(moved){
+        var btns = getButtons();
+        var b = btns[curIdx];
+        if(b) showTab(b.getAttribute('data-tab'));
+      } else {
+        syncPill();
+      }
+    }, {passive:true});
+    window.addEventListener('resize', function(){ syncPill(); });
+    setTimeout(function(){ syncPill(); }, 40);
+  })();
+  if(el('uiDec')) el('uiDec').addEventListener('click', function(){ setScale('appstore_ui_scale', getNum('appstore_ui_scale', 100) - 5, 75, 135); });
+  if(el('uiInc')) el('uiInc').addEventListener('click', function(){ setScale('appstore_ui_scale', getNum('appstore_ui_scale', 100) + 5, 75, 135); });
+  if(el('uiVal')) el('uiVal').addEventListener('click', function(){ setScale('appstore_ui_scale', 100, 75, 135); });
+  if(el('tabDec')) el('tabDec').addEventListener('click', function(){ setScale('appstore_tab_scale', getNum('appstore_tab_scale', 100) - 5, 70, 140); });
+  if(el('tabInc')) el('tabInc').addEventListener('click', function(){ setScale('appstore_tab_scale', getNum('appstore_tab_scale', 100) + 5, 70, 140); });
+  if(el('tabVal')) el('tabVal').addEventListener('click', function(){ setScale('appstore_tab_scale', 100, 70, 140); });
+  applyScale();
+})();
+el('sheet').addEventListener('click', function(e){ if(e.target === el('sheet')) closeSheet(); });
+function ipaDownloadUrl(file){
+  var u = '/appstore-api/ipa?file=' + encodeURIComponent(file || '');
+  if(API_TOKEN) u += '&t=' + encodeURIComponent(API_TOKEN);
+  return u;
+}
+function liveContainerUrl(file){
+  var base = (location.hostname === '127.0.0.1' || location.hostname === 'localhost') ? location.origin : 'http://127.0.0.1:8080';
+  var u = base + '/appstore-api/ipa?file=' + encodeURIComponent(file || '');
+  return 'livecontainer://install?url=' + encodeURIComponent(u);
+}
+function shareIpa(file){
+  var u = ipaDownloadUrl(file);
+  try{
+    var a = document.createElement('a');
+    a.href = u;
+    a.setAttribute('download', file || 'app.ipa');
+    a.setAttribute('target', '_top');
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(function(){ try{ a.remove(); }catch(e){} }, 1000);
+  }catch(e){
+    try{ (window.top || window).location.href = u; }catch(e2){ location.href = u; }
+  }
+}
+function askInstall(file){
+  var dlUrl = ipaDownloadUrl(file);
+  var lcUrl = liveContainerUrl(file);
+  openSheet('<h3>' + T('installQ') + '</h3>'
+    + '<button class="btn" id="instOta">📲 ' + T('install') + ' (OTA)</button>'
+    + '<a class="btn" id="instLC" href="' + esc(lcUrl) + '" target="_top" style="display:block;text-align:center;text-decoration:none;background:#1a2b44;color:#8cc8ff;border:1px solid #35588a">📦 Відкрити в LiveContainer</a>'
+    + '<a class="btn dim" id="instShare" href="' + esc(dlUrl) + '" download="' + esc(file) + '" target="_top" style="display:block;text-align:center;text-decoration:none">📤 Поділитися / Зберегти .ipa</a>'
+    + '<button class="btn dim" id="instNo">' + T('cancel') + '</button>');
+  el('instNo').addEventListener('click', closeSheet);
+  el('instOta').addEventListener('click', function(){
+    el('instOta').disabled = true;
+    api('install', {file: file, method: 'ota'}, 60000).then(function(r){
+      if(!r.ok){ el('instOta').disabled = false; toast(r.text || T('failed'), true); return; }
+      if(r.itms_url){
+        openSheet('<h3>📲 OTA встановлення</h3>'
+          + '<p class="sub">Натисни кнопку нижче, щоб iOS почав встановлення (у PWA-режимі потрібен прямий дотик).</p>'
+          + '<a class="btn" id="instGo" href="' + esc(r.itms_url) + '" style="display:block;text-align:center;text-decoration:none">📲 Підтвердити встановлення</a>'
+          + '<button class="btn dim" id="instClose">' + T('cancel') + '</button>');
+        el('instClose').addEventListener('click', closeSheet);
+        try{ location.href = r.itms_url; }catch(e){}
+      } else {
+        closeSheet();
+        toast(r.text || T('install'));
+      }
+    }).catch(function(e){ el('instOta').disabled = false; toast(T('noConnection') + (e && e.message ? ' (' + e.message + ')' : ''), true); });
+  });
+}
+function openVersions(app){
+  openSheet('<h3>📋 Версії — ' + esc(app.name || app.bundle || '') + '</h3>'
+    + '<div id="verBody"><div class="empty"><span class="spin"></span>' + T('loading') + '</div></div>'
+    + '<button class="btn dim" id="verClose" style="margin-top:10px">' + T('cancel') + '</button>');
+  el('verClose').addEventListener('click', closeSheet);
+  api('versions', {appid: app.appid || 0, bundle: app.bundle || '', country: state.country}, 35000).then(function(r){
+    var box = el('verBody');
+    if(!box) return;
+    if(!r.ok){ box.innerHTML = '<div class="empty">' + esc(r.text || T('failed')) + '</div>'; return; }
+    var vers = r.versions || [];
+    var html = '<div style="max-height:55vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px">'
+      + '<button class="btn" data-vpick="" data-vname="">🆕 Остання версія' + (app.version ? (' (' + esc(app.version) + ')') : '') + '</button>';
+    if(!vers.length){
+      html += '<div class="sub" style="text-align:center;padding:8px">Історію старих версій не знайдено</div>';
+    } else {
+      vers.forEach(function(v){
+        var dt = v.date ? (' · ' + esc(String(v.date).slice(0, 10))) : '';
+        html += '<button class="btn dim" data-vpick="' + esc(v.ext || '') + '" data-vname="' + esc(v.version || '') + '" style="text-align:left;display:flex;justify-content:space-between;align-items:center">'
+          + '<span>v' + esc(v.version || v.ext) + '<span style="color:var(--sub2);font-size:12px">' + dt + '</span></span>'
+          + '<span style="color:var(--sub2);font-size:11px">' + esc(v.ext || '') + '</span></button>';
+      });
+    }
+    html += '</div>';
+    box.innerHTML = html;
+    box.querySelectorAll('[data-vpick]').forEach(function(b){
+      b.addEventListener('click', function(){
+        var vid = b.getAttribute('data-vpick') || '';
+        var vn = b.getAttribute('data-vname') || app.version || '';
+        api('download', {bundle: app.bundle, appid: r.appid || app.appid || 0, name: app.name || '',
+                         version: vn, version_id: vid, country: state.country,
+                         icon: app.icon || '', size: app.size || 0}, 30000).then(function(dr){
+          if(dr.ok){ closeSheet(); toast(dr.text || T('downloading')); showTab('dl'); refreshDownloads(true); }
+          else toast(dr.text || T('failed'), true);
+        }).catch(function(){ toast(T('noConnection'), true); });
+      });
+    });
+  }).catch(function(e){
+    var box = el('verBody');
+    if(box) box.innerHTML = '<div class="empty">' + T('noConnection') + '<br><span style="font-size:12px;color:var(--sub2)">' + esc((e && e.message) || String(e || '')) + '</span></div>';
+  });
+}
+document.addEventListener('click', function(e){
+  var v = e.target.closest('[data-vers]');
+  if(v){
+    openVersions(JSON.parse(v.getAttribute('data-app')));
+    return;
+  }
+  var g = e.target.closest('[data-get]');
+  if(g){
+    var app = JSON.parse(g.getAttribute('data-app'));
+    api('download', {bundle: app.bundle, appid: app.appid, name: app.name, version: app.version || '',
+                     country: state.country, icon: app.icon || '', size: app.size || 0}, 30000)
+      .then(function(r){
+        if(r.ok){ toast(r.text || T('downloading')); showTab('dl'); refreshDownloads(true); }
+        else toast(r.text || T('failed'), true);
+      }).catch(function(){ toast(T('noConnection'), true); });
+    return;
+  }
+  var row = e.target.closest('[data-approw]');
+  if(row && !e.target.closest('button')){
+    openAppSheet(row.getAttribute('data-approw'), row.getAttribute('data-appid'));
+  }
+});
+function openAppSheet(bundle, appid){
+  if(!bundle && !appid) return;
+  el('sheetBox').innerHTML = '<div class="empty"><span class="spin"></span>' + T('loading') + '</div>';
+  el('sheet').classList.remove('hidden');
+  api('search', {query: appid ? String(appid) : bundle, country: state.country, device: state.device, limit: 5}, 45000)
+    .then(function(r){
+      var app = null;
+      (r.items || []).forEach(function(a){
+        if(!app && ((a.bundle === bundle) || (String(a.appid) === String(appid)))) app = a;
+      });
+      if(!app){ el('sheetBox').innerHTML = '<div class="empty">' + T('emptySearch') + '</div><button class="btn dim" id="shClose">' + T('cancel') + '</button>'; el('shClose').addEventListener('click', closeSheet); return; }
+      var rating = app.ratingCount ? ('★ ' + Number(app.rating).toFixed(1) + ' · ' + app.ratingCount) : '';
+      el('sheetBox').innerHTML =
+        '<div class="apphead2">' + iconHtml(app)
+        + '<span class="meta"><span class="nm">' + esc(app.name || app.bundle) + '</span>'
+        + '<span class="sb">' + esc(app.artist || '') + '</span>'
+        + '<span class="sb">' + esc(app.category || '') + '</span></span>'
+        + '<button class="getbtn white" id="shVers" style="margin-right:6px">Version</button>'
+        + '<button class="getbtn" id="shGet" data-b="' + esc(app.bundle) + '" data-id="' + esc(app.appid || '') + '" data-n="' + esc(app.name || '') + '" data-v="' + esc(app.version || '') + '" data-i="' + esc(app.icon || '') + '" data-s="' + esc(app.size || 0) + '">' + T('get') + '</button></div>'
+        + '<div class="kv">'
+        + '<div><b>' + esc(app.sizeText || '—') + '</b><span>' + T('size') + '</span></div>'
+        + '<div><b>' + esc(app.version || '—') + '</b><span>' + T('ver') + '</span></div>'
+        + '<div><b>' + esc(app.minOs || '—') + '</b><span>' + T('minsOs') + '</span></div>'
+        + '<div><b>' + esc(rating || '—') + '</b><span>' + T('rating') + '</span></div>'
+        + '</div>'
+        + (app.description ? '<div class="sechead" style="margin-top:6px"><h2 style="font-size:17px">' + T('descL') + '</h2></div><div class="desc" id="shDesc">' + esc(app.description.slice(0, 700)) + (app.description.length > 700 ? '…' : '') + '</div>' : '')
+        + (app.releaseNotes ? '<div class="sechead" style="margin-top:10px"><h2 style="font-size:17px">' + T('relNotes') + '</h2></div><div class="desc">' + esc(app.releaseNotes.slice(0, 400)) + '</div>' : '')
+        + '<button class="btn dim" id="shClose" style="margin-top:14px">' + T('cancel') + '</button>';
+      el('shClose').addEventListener('click', closeSheet);
+      el('shVers').addEventListener('click', function(){
+        openVersions({bundle: app.bundle, appid: app.appid, name: app.name, version: app.version, icon: app.icon, size: app.size});
+      });
+      el('shGet').addEventListener('click', function(ev){
+        var t = ev.currentTarget;
+        api('download', {bundle: t.getAttribute('data-b'), appid: parseInt(t.getAttribute('data-id')) || 0,
+                         name: t.getAttribute('data-n'), version: t.getAttribute('data-v'),
+                         country: state.country, icon: t.getAttribute('data-i'), size: parseInt(t.getAttribute('data-s')) || 0}, 30000)
+          .then(function(r){
+            if(r.ok){ closeSheet(); toast(r.text || T('downloading')); showTab('dl'); refreshDownloads(true); }
+            else toast(r.text || T('failed'), true);
+          }).catch(function(){ toast(T('noConnection'), true); });
+      });
+    })
+    .catch(function(){ el('sheetBox').innerHTML = '<div class="empty">' + T('noConnection') + '</div>'; });
+}
+function openSheet(html){
+  el('sheetBox').innerHTML = html;
+  el('sheet').classList.remove('hidden');
+}
+
+/* ---------- boot ---------- */
+applyI18n();
+renderPickers();
+renderRecent();
+showTab('search');
+refreshDownloads(true);
+refreshAccount();
+</script>
+</body>
+</html>
