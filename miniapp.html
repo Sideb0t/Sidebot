@@ -2437,9 +2437,19 @@ function sidebotIconFail(img){
 }
 function renderApps(){
   var pill = el('updPill');
-  pill.textContent = (S.updates > 0)
-    ? (S.updates === 1 ? T('updOne') : T('updMany', S.updates))
-    : T('noUpdates');
+  if(window._ghAvail && window._ghAvail.has_update){
+    pill.textContent = '🆕 Оновити SideBot (' + (window._ghAvail.remote_version || '') + ')';
+    pill.style.background = 'rgba(10,132,255,.22)';
+    pill.style.color = '#60a5fa';
+    pill.style.cursor = 'pointer';
+  } else {
+    pill.style.background = '';
+    pill.style.color = '';
+    pill.style.cursor = 'pointer';
+    pill.textContent = (S.updates > 0)
+      ? (S.updates === 1 ? T('updOne') : T('updMany', S.updates))
+      : T('noUpdates');
+  }
   var box = el('appsList');
   if(!S.apps.length){
     box.innerHTML = '<div class="card"><div class="empty">'+esc(T('noApps'))+'<br>'+esc(T('noAppsHint'))+'</div></div>';
@@ -3428,18 +3438,58 @@ if(!S.loaded){ refreshState(); }
     });
   }
   function showGhBanner(u){
+    window._ghAvail = u;
+    if(typeof renderApps === 'function') try{ renderApps(); }catch(e){}
     var b = document.getElementById('ghUpdBanner');
     if(!b){
       b = document.createElement('div');
       b.id = 'ghUpdBanner';
       b.style.cssText = 'margin:8px 16px 0;padding:10px 12px;border-radius:14px;background:rgba(10,132,255,.16);border:1px solid rgba(10,132,255,.35);display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px';
-      var hdr = document.querySelector('.hdr') || document.body.firstChild;
-      if(hdr && hdr.parentNode) hdr.parentNode.insertBefore(b, hdr.nextSibling);
+      var appWrap = document.querySelector('.app') || document.body;
+      appWrap.insertBefore(b, appWrap.firstChild);
     }
     b.innerHTML = '<span>🆕 <b>Оновлення SideBot</b> (' + (u.remote_version || '') + ')</span><button class="btn" id="ghBannerBtn" style="margin:0;width:auto;padding:6px 12px;font-size:12px">Оновити</button>';
     var bb = document.getElementById('ghBannerBtn');
     if(bb) bb.onclick = function(){ runApplyGhUpdate(bb, u); };
   }
+  var updPillEl = document.getElementById('updPill');
+  if(updPillEl){
+    updPillEl.style.cursor = 'pointer';
+    updPillEl.addEventListener('click', function(){
+      if(window._ghAvail && window._ghAvail.has_update){
+        runApplyGhUpdate(null, window._ghAvail);
+        return;
+      }
+      updPillEl.textContent = '⏳ Перевіряю оновлення...';
+      send({action:'check_update'}, function(r){
+        if(r && r.ok && r.has_update){
+          _ghAvail = r;
+          showGhBanner(r);
+          toast('🆕 Доступне оновлення ' + (r.remote_version || ''), false);
+        } else if(r && r.ok){
+          updPillEl.textContent = '✅ Остання версія (' + (r.local_version || '') + ')';
+          setTimeout(function(){ if(typeof renderApps === 'function') renderApps(); }, 2500);
+        } else {
+          if(typeof renderApps === 'function') renderApps();
+          toast('❌ ' + ((r && r.text) || 'Помилка перевірки'), true);
+        }
+      });
+    });
+  }
+  function checkGhSilent(){
+    try{
+      send({action:'check_update'}, function(r){
+        if(r && r.ok && r.has_update){
+          _ghAvail = r;
+          if(ghBtn) ghBtn.textContent = '⬆️ Оновити до ' + (r.remote_version || 'нової');
+          showGhBanner(r);
+        }
+      });
+    }catch(e){}
+  }
+  document.addEventListener('visibilitychange', function(){
+    if(!document.hidden) checkGhSilent();
+  });
   if(ghBtn){
     ghBtn.addEventListener('click', function(){
       if(_ghAvail && _ghAvail.has_update){
