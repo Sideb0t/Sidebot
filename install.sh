@@ -2,7 +2,8 @@
 set -e
 
 DIR="${SIDEBOT_DIR:-/root/telegram-iloader-minis}"
-URL="https://github.com/Vitaliicloud/SideBot/releases/latest/download/SideBot-v1.0.tar.gz"
+BASE="https://github.com/Vitaliicloud/Sidebot/releases/latest/download"
+PARTS="SideBot-v1.0.tar.gz.part0 SideBot-v1.0.tar.gz.part1"
 
 if command -v apk >/dev/null 2>&1; then
   NEED=""
@@ -15,12 +16,26 @@ pkill -9 -f telegram_iloader_bot 2>/dev/null || true
 pkill -9 -f ipatool 2>/dev/null || true
 
 mkdir -p "$DIR"
-echo "⬇️ Downloading SideBot into $DIR ..."
-if command -v curl >/dev/null 2>&1; then
-  curl -fL --progress-bar "$URL" | tar -xz -C "$DIR"
-else
-  wget -O- "$URL" | tar -xz -C "$DIR"
-fi
+
+TMPD="$(mktemp -d 2>/dev/null || echo "/tmp/sidebot.$$")"
+mkdir -p "$TMPD"
+trap 'rm -rf "$TMPD"' EXIT
+
+FILES=""
+i=0
+for p in $PARTS; do
+  i=$((i + 1))
+  echo "⬇️ Downloading $p ..."
+  if command -v curl >/dev/null 2>&1; then
+    curl -fL --progress-bar "$BASE/$p" -o "$TMPD/$i"
+  else
+    wget -O "$TMPD/$i" "$BASE/$p"
+  fi
+  FILES="$FILES $TMPD/$i"
+done
+
+echo "📦 Unpacking into $DIR ..."
+cat $FILES | tar -xz -C "$DIR"
 
 chmod +x "$DIR/start.sh" 2>/dev/null || true
 echo "✅ SideBot installed to $DIR"
