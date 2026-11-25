@@ -10581,8 +10581,8 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.1"
-SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Vitaliicloud/SideBot/main"
+SIDEBOT_VERSION = "2026.11.25.3"
+SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 
 
 def _sidebot_local_version():
@@ -18413,6 +18413,7 @@ def provision_thread(chat_id):
                 send_message(chat_id, tr("lockdown_after_sign"), reply_markup=_kb)
             if job.get("auto_install"):
                 send_message(chat_id, tr("wifi_install_auto"))
+                _install_log_line("[PROVISION] calling install_thread MINIS=%s" % MINIS_MODE)
                 if MINIS_MODE:
                     install_thread(chat_id)
                 else:
@@ -18456,6 +18457,8 @@ def provision_thread(chat_id):
                 msg += "\n" + tr("prov_failed_log")
                 send_message(chat_id, msg)
     except Exception as e:
+        import traceback as _tb
+        _install_log_line("[PROVISION] EXC: %s\n%s" % (e, _tb.format_exc()[-800:]))
         if job.get("proc") is proc:
             send_message(chat_id, tr("prov_error") % e)
     finally:
