@@ -7299,7 +7299,7 @@ def install_thread(chat_id, allow_repair=True):
                 _ok, _det = install_minis_rust(_path, _udid, _bundle)
                 _tmark("install-helper done ok=%s" % _ok)
         finally:
-            if _cell_toggled:
+            if _cell_toggled and not bool(_ms_get("skip_turn_on", True)):
                 _names = _ms_get("cell_names") if isinstance(_ms_get("cell_names"), dict) else {}
                 _sc_on = (_names.get("on") or "TurnOnData")
                 if _aj:
@@ -7313,7 +7313,7 @@ def install_thread(chat_id, allow_repair=True):
                         subprocess.run([_apple_open, "shortcuts://run-shortcut?name=" + urllib.parse.quote(_sc_on)], capture_output=True, text=True, timeout=10)
                     except Exception:
                         pass
-                time.sleep(2.5)
+                time.sleep(1.5)
         if _aj:
             with _MINIAPP_JOBS_LOCK:
                 if _aj in _MINIAPP_JOBS:
@@ -10581,7 +10581,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.3"
+SIDEBOT_VERSION = "2026.11.25.4"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 
 
