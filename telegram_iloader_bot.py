@@ -18109,13 +18109,23 @@ def provision_thread(chat_id):
     # and left the job uncleared. Same pattern as repair_thread.
     proc = None
     _dbg("provision start app=%s bundle=%s" % (job.get("app_name"), job.get("app_bundle")))
+    _install_log_line("[PROVISION] enter bundle=%s udid=%s exe=%s" % (
+        job.get("app_bundle"), job.get("udid") or "-", os.path.exists(PROVISION_EXE)))
     try:
         if not os.path.exists(PROVISION_EXE):
             _dbg("provision abort: PROVISION_EXE missing")
+            _install_log_line("[PROVISION] ERR PROVISION_EXE missing: %s" % PROVISION_EXE)
+            _aj = job.get("api_jid")
+            if _aj:
+                _miniapp_job_set(_aj, "failed", "❌ " + tr("prov_exe_missing"))
             send_message(chat_id, tr("prov_exe_missing"))
             return
         if not P12_PASSWORD:
             _dbg("provision abort: P12_PASSWORD missing")
+            _install_log_line("[PROVISION] ERR P12_PASSWORD missing")
+            _aj = job.get("api_jid")
+            if _aj:
+                _miniapp_job_set(_aj, "failed", "❌ " + tr("p12_pw_missing"))
             send_message(chat_id, tr("p12_pw_missing"))
             return
         # User Customizations: extensions prompt / remove-all mode
@@ -24224,6 +24234,10 @@ def _uc_sign_prompt(chat_id):
         return True
     _exts = _uc_ipa_extensions(job.get("ipa_path") or "")
     if not _exts:
+        return True
+    if LOCAL_ONLY or job.get("api_jid"):
+        _asked["ext"] = True
+        _install_log_line("[PROVISION] auto-keep %d appex in local/miniapp mode" % len(_exts))
         return True
     _asked["ext"] = True
     _ev = threading.Event()
