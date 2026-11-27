@@ -9335,7 +9335,7 @@ def _ms_load():
     if not isinstance(data, dict):
         return out
     _b = data.get("backend")
-    if isinstance(_b, str) and _b in ("rust", "siboot"):
+    if isinstance(_b, str) and _b in ("rust", "direct", "siboot", "sideloader", "idevice"):
         out["backend"] = _b
     for _k in ("cell", "auto_refresh", "ask_signopts"):
         if isinstance(data.get(_k), bool):
@@ -10735,7 +10735,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.55"
+SIDEBOT_VERSION = "2026.11.25.56"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 

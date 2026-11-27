@@ -480,6 +480,7 @@
         <div class="chiprow" id="extRow"></div>
         <div class="sec" data-i18n="installBackend" style="margin-top:8px">Install Backend</div>
         <div id="beCard2"></div>
+        <button class="row" id="anisetteQuickRow" style="margin-top:8px"><span style="display:inline-flex;align-items:center;gap:10px"><svg class="sb-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span>Anisette<br><span class="meta" id="anisetteQuickVal">—</span></span></span><span>›</span></button>
       </div>
     </details>
 
@@ -3208,6 +3209,11 @@ function renderSettings(){
     + '<button class="row" id="certsRow"><span style="display:inline-flex;align-items:center;gap:10px"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5.5-3.4 9.7-8 11-4.6-1.3-8-5.5-8-11V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg><span>'+esc(String(T('certsRow')||'').replace(/^[^\wА-Яа-яІіЇїЄєҐґ]+/u,''))+'<br><span class="meta">'+esc(T('certsRowMeta', S.cert.n||0))+(S.cert.a?esc(T('certActive', S.cert.a)):'')+'</span></span></span><span>›</span></button>';
   el('idsRow').addEventListener('click', function(){ send({action:'show', screen:'appids'}); });
   el('certsRow').addEventListener('click', function(){ send({action:'show', screen:'certs'}); });
+  if(el('anisetteQuickVal')) el('anisetteQuickVal').textContent = (S.anisette_url || 'https://mac-ani.jkcoxson.com').replace(/^https?:\/\//, '');
+  if(el('anisetteQuickRow') && !el('anisetteQuickRow').dataset.bound){
+    el('anisetteQuickRow').dataset.bound = '1';
+    el('anisetteQuickRow').addEventListener('click', function(){ send({action:'show', screen:'anisette'}); });
+  }
   var ADV = [
     ['advAnisette','anisette'],
     ['advPairings','pairings']
