@@ -10656,7 +10656,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.41"
+SIDEBOT_VERSION = "2026.11.25.42"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -10783,7 +10783,7 @@ def _miniapp_api_dispatch(cmd, chat_id):
             _b = cmd.get("backend") or ""
             if _b == "jkidevice":
                 _b = "rust"
-            if _b not in ("rust", "siboot", "sideloader"):
+            if _b not in ("rust", "siboot", "sideloader", "direct", "idevice"):
                 return {"ok": False,
                         "text": tr("miniapp_backend_minis")}
             job["miniapp_backend"] = _b

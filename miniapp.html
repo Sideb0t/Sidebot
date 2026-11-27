@@ -2992,6 +2992,7 @@ function renderBackend(box){
   box.querySelectorAll('.row').forEach(function(r){
     r.addEventListener('click', function(){
       S.backend = r.dataset.b;
+      renderBackend(box);
       send({action:'set_backend', backend:S.backend});
     });
   });
