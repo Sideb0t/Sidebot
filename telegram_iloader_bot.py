@@ -10250,7 +10250,7 @@ def _fast_misagent_refresh(bundles, jid=None):
     if jid:
         _miniapp_job_set(jid, "running", "⚡ Швидке оновлення профілів (%d) через misagent..." % len(_items))
     try:
-        if _ms_get("cell", False):
+        if _ms_get("cell"):
             _notify_msg = _CELL_NOTIFY_BODY.get(CUR_LANG, _CELL_NOTIFY_BODY["uk"])
             if _minis_notify("SideBot", _notify_msg):
                 time.sleep(2.0)
@@ -10873,7 +10873,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.81"
+SIDEBOT_VERSION = "2026.11.25.83"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -11768,7 +11768,7 @@ def _miniapp_api_dispatch(cmd, chat_id):
                     break
             if os.path.isfile(_sl) and _pair:
                 try:
-                    if _ms_get("cell", False):
+                    if _ms_get("cell"):
                         _notify_msg = _CELL_NOTIFY_BODY.get(CUR_LANG, _CELL_NOTIFY_BODY["uk"])
                         if _minis_notify("SideBot", _notify_msg):
                             time.sleep(2.0)
