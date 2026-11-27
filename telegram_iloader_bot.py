@@ -4207,6 +4207,18 @@ def record_installed(bundle, title, source, profile_expires=""):
     _src = dict(source or {})
     if job.get("original_path"):
         _src.setdefault("original_path", job.get("original_path"))
+    _prov_copy = ""
+    try:
+        if PROVISION_PATH and os.path.isfile(PROVISION_PATH):
+            _pd = os.path.join(BASE_DIR, "profiles")
+            os.makedirs(_pd, exist_ok=True)
+            _safe_b = re.sub(r"[^A-Za-z0-9._-]", "_", bundle)
+            _dst_p = os.path.join(_pd, _safe_b + ".mobileprovision")
+            if os.path.abspath(PROVISION_PATH) != os.path.abspath(_dst_p):
+                shutil.copyfile(PROVISION_PATH, _dst_p)
+            _prov_copy = _dst_p
+    except Exception:
+        pass
     rec = {
         "bundle": bundle,
         "title": title or bundle,
@@ -4217,6 +4229,7 @@ def record_installed(bundle, title, source, profile_expires=""):
         "signed_at": datetime.now(timezone.utc).isoformat(),
         "profile_expires": profile_expires or "",
         "signed_path": LAST_SIGNED.get("path", ""),
+        "provision_path": _prov_copy,
     }
     records.append(rec)
     save_installed(records)
@@ -10181,6 +10194,101 @@ def _miniapp_refresh_improved(before, after):
     return after[1] > before[1]
 
 
+def _find_bundle_provision(bundle):
+    if not bundle:
+        return ""
+    _safe_b = re.sub(r"[^A-Za-z0-9._-]", "_", bundle)
+    _pd = os.path.join(BASE_DIR, "profiles")
+    _cand = os.path.join(_pd, _safe_b + ".mobileprovision")
+    if os.path.isfile(_cand):
+        return _cand
+    _rec = next((r for r in load_installed() if isinstance(r, dict) and r.get("bundle") == bundle), None)
+    if _rec:
+        _pp = _rec.get("provision_path") or ""
+        if _pp and os.path.isfile(_pp):
+            return _pp
+        _sp = _rec.get("signed_path") or ""
+        if _sp and os.path.isfile(_sp):
+            try:
+                import zipfile
+                with zipfile.ZipFile(_sp, "r") as zf:
+                    for _n in zf.namelist():
+                        if _n.endswith(".app/embedded.mobileprovision"):
+                            os.makedirs(_pd, exist_ok=True)
+                            with open(_cand, "wb") as _f:
+                                _f.write(zf.read(_n))
+                            return _cand
+            except Exception:
+                pass
+    return ""
+
+
+def _fast_misagent_refresh(bundles, jid=None):
+    """SideStore-style fast refresh: push .mobileprovision files in one
+    misagent batch via `sideloader profiles` instead of re-uploading full IPAs."""
+    _sl = os.path.join(BASE_DIR, "sideloader")
+    if not os.path.isfile(_sl):
+        return set()
+    _pair = ""
+    for _pc in (
+        os.path.join(BASE_DIR, "pairing", "rp_pairing_file.plist"),
+        os.path.join(os.path.expanduser("~"), ".sideloader", "rp_pairing_file.plist"),
+        os.path.join(os.path.expanduser("~"), ".siboot", "rp_pairing_file.plist"),
+    ):
+        if os.path.isfile(_pc):
+            _pair = _pc
+            break
+    if not _pair:
+        return set()
+    _items = []
+    for _b in bundles:
+        _p = _find_bundle_provision(_b)
+        if _p:
+            _items.append((_b, _p))
+    if not _items:
+        return set()
+    if jid:
+        _miniapp_job_set(jid, "running", "⚡ Швидке оновлення профілів (%d) через misagent..." % len(_items))
+    try:
+        if _ms_get("cell", False):
+            _minis_notify(CUR_LANG)
+            _wait_end = time.time() + 8.0
+            while time.time() < _wait_end:
+                try:
+                    import socket as _sock
+                    _s = _sock.socket()
+                    _s.settimeout(0.4)
+                    if _s.connect_ex(("10.7.0.1", 49152)) == 0:
+                        _s.close()
+                        break
+                    _s.close()
+                except Exception:
+                    pass
+                time.sleep(0.4)
+    except Exception:
+        pass
+    _cmd = [_sl, "profiles", "--plain", "--pairing-file", _pair] + [p for _, p in _items]
+    try:
+        _res = subprocess.run(_cmd, capture_output=True, text=True, timeout=60)
+        _out = (_res.stdout or "") + "\n" + (_res.stderr or "")
+        print("[FAST_REFRESH] rc=%s out=%s" % (_res.returncode, _out.strip()[:300]), flush=True)
+        if _res.returncode != 0 or "PROFILES_OK" not in _out:
+            return set()
+    except Exception as _e:
+        print("[FAST_REFRESH] err=%s" % _e, flush=True)
+        return set()
+    _now_iso = datetime.now(timezone.utc).isoformat()
+    _exp_iso = (datetime.now(timezone.utc) + timedelta(days=7)).isoformat()
+    _done_set = {b for b, _ in _items}
+    _recs = load_installed()
+    for _r in _recs:
+        if isinstance(_r, dict) and _r.get("bundle") in _done_set:
+            _r["signed_at"] = _now_iso
+            _r["profile_expires"] = _exp_iso
+    save_installed(_recs)
+    return _done_set
+
+
 def _miniapp_api_refresh_worker(jid, chat_id, bundle):
     """Run one refresh/resign/reinstall flow (the same
     handle_action the chat path uses) and resolve the job from
@@ -10190,6 +10298,10 @@ def _miniapp_api_refresh_worker(jid, chat_id, bundle):
     stopped polling. job['api_jid'] marks this flow as the API
     job's."""
     _cid = chat_id or OWNER_ID
+    _fast_ok = _fast_misagent_refresh([bundle], jid=jid)
+    if bundle in _fast_ok:
+        _miniapp_job_set(jid, "done", "⚡ Оновлено через misagent: %s" % bundle)
+        return
     _before = _miniapp_refresh_snapshot(bundle)
     job["api_jid"] = jid
     try:
@@ -10256,8 +10368,13 @@ def _miniapp_refresh_all_thread(chat_id, jid):
     if not _total:
         _miniapp_job_set(jid, "failed", tr("miniapp_refresh_all_none"))
         return
-    _ok_n = 0
-    for _idx, _rec in enumerate(_due, 1):
+    _fast_ok = _fast_misagent_refresh([r.get("bundle") for r in _due if r.get("bundle")], jid=jid)
+    _ok_n = len(_fast_ok)
+    _rem = [r for r in _due if r.get("bundle") not in _fast_ok]
+    if not _rem:
+        _miniapp_job_set(jid, "done", "⚡ " + (tr("miniapp_refresh_all_done") % (_ok_n, len(_due))))
+        return
+    for _idx, _rec in enumerate(_rem, 1):
         _b = _rec.get("bundle") or ""
         if not _b:
             continue
@@ -10754,7 +10871,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.73"
+SIDEBOT_VERSION = "2026.11.25.74"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
