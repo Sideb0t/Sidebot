@@ -4219,6 +4219,30 @@ def record_installed(bundle, title, source, profile_expires=""):
             _prov_copy = _dst_p
     except Exception:
         pass
+    _signed_cache = ""
+    _url_scheme = ""
+    try:
+        _ls_p = os.path.join(BASE_DIR, "last-signed.ipa")
+        if os.path.isfile(_ls_p) and os.path.getsize(_ls_p) > 1024:
+            _sc_dir = os.path.join(BASE_DIR, "signed_cache")
+            os.makedirs(_sc_dir, exist_ok=True)
+            _safe_b = re.sub(r"[^A-Za-z0-9._-]", "_", bundle)
+            _sc_dst = os.path.join(_sc_dir, _safe_b + ".ipa")
+            shutil.copyfile(_ls_p, _sc_dst)
+            _signed_cache = _sc_dst
+            with zipfile.ZipFile(_ls_p, "r") as _zf:
+                for _zn in _zf.namelist():
+                    if _zn.startswith("Payload/") and _zn.endswith(".app/Info.plist") and _zn.count("/") == 2:
+                        import plistlib as _pl_sc
+                        _pl = _pl_sc.loads(_zf.read(_zn))
+                        for _ut in (_pl.get("CFBundleURLTypes") or []):
+                            _scs = _ut.get("CFBundleURLSchemes") or []
+                            if _scs:
+                                _url_scheme = str(_scs[0]).strip()
+                                break
+                        break
+    except Exception:
+        pass
     rec = {
         "bundle": bundle,
         "title": title or bundle,
@@ -4229,6 +4253,8 @@ def record_installed(bundle, title, source, profile_expires=""):
         "signed_at": datetime.now(timezone.utc).isoformat(),
         "profile_expires": profile_expires or "",
         "signed_path": LAST_SIGNED.get("path", ""),
+        "signed_cache": _signed_cache,
+        "url_scheme": _url_scheme,
         "provision_path": _prov_copy,
     }
     records.append(rec)
@@ -7979,6 +8005,221 @@ class _OtaHandler(http.server.SimpleHTTPRequestHandler):
             except Exception:
                 pass
             return True
+        if _path.startswith("/app-clip/") and _path.endswith(".mobileconfig"):
+            import plistlib, uuid as _uuid, urllib.parse as _up_mc
+            _b_raw = _up_mc.unquote(_path[len("/app-clip/"):-len(".mobileconfig")])
+            _rec_mc = next((r for r in load_installed() if r.get("bundle") == _b_raw), None)
+            _lbl = (_rec_mc or {}).get("title") or _b_raw or "App"
+            _lp = ENV.get("OTA_PORT", "8080").strip() or "8080"
+            _url = "http://127.0.0.1:%s/launch/%s" % (_lp, _up_mc.quote(_b_raw, safe=""))
+            _wc = {
+                "FullScreen": True,
+                "IgnoreManifestScope": True,
+                "IsRemovable": True,
+                "Label": str(_lbl)[:40],
+                "PayloadDescription": "FlekDeck Quick Switch for " + str(_lbl),
+                "PayloadDisplayName": str(_lbl) + " (SideBot)",
+                "PayloadIdentifier": "com.sidebot.appclip." + re.sub(r"[^A-Za-z0-9._-]", "_", _b_raw),
+                "PayloadType": "com.apple.webClip.managed",
+                "PayloadUUID": str(_uuid.uuid4()).upper(),
+                "PayloadVersion": 1,
+                "Precomposed": True,
+                "URL": _url,
+            }
+            _ic_bytes = None
+            try:
+                _ic_fn = _appicon_bytes_for_bundle(_b_raw) if "_appicon_bytes_for_bundle" in globals() else None
+                if _ic_fn:
+                    _ic_bytes = _ic_fn
+            except Exception:
+                _ic_bytes = None
+            if not _ic_bytes:
+                _def_ic = os.path.join(BASE_DIR, "flekdeck-icon.png")
+                if not os.path.isfile(_def_ic):
+                    _def_ic = os.path.join(BASE_DIR, "sidebot-icon.png")
+                if os.path.isfile(_def_ic):
+                    with open(_def_ic, "rb") as _icf:
+                        _ic_bytes = _icf.read()
+            if _ic_bytes:
+                _wc["Icon"] = _ic_bytes
+            _prof = {
+                "PayloadContent": [_wc],
+                "PayloadDisplayName": str(_lbl) + " Shortcut",
+                "PayloadIdentifier": "com.sidebot.appclip.prof." + re.sub(r"[^A-Za-z0-9._-]", "_", _b_raw),
+                "PayloadRemovalDisallowed": False,
+                "PayloadType": "Configuration",
+                "PayloadUUID": str(_uuid.uuid4()).upper(),
+                "PayloadVersion": 1,
+            }
+            _mc = plistlib.dumps(_prof)
+            self.send_response(200)
+            self.send_header("Content-Type", "application/x-apple-aspen-config")
+            self.send_header("Content-Disposition", 'attachment; filename="%s.mobileconfig"' % re.sub(r"[^A-Za-z0-9._-]", "_", _b_raw))
+            self.send_header("Content-Length", str(len(_mc)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            try:
+                self.wfile.write(_mc)
+            except Exception:
+                pass
+            return True
+        if _path.startswith("/launch-api/"):
+            import urllib.parse as _up_la
+            _b_raw = _up_la.unquote(_path[len("/launch-api/"):])
+            _qs = _up_la.parse_qs(urllib.parse.urlparse(self.path).query)
+            _ljob_id = (_qs.get("job") or [""])[0]
+            if _ljob_id:
+                _lj = _MINIAPP_JOBS.get(_ljob_id) or {"status": "failed", "text": "not found"}
+                _out_b = json.dumps({"ok": True, "status": _lj.get("status"), "pct": _lj.get("pct", 0), "text": _lj.get("text", ""), "scheme": _lj.get("scheme", "")}).encode("utf-8")
+            else:
+                _rec_l = next((r for r in load_installed() if r.get("bundle") == _b_raw), None)
+                if not _rec_l:
+                    _out_b = json.dumps({"ok": False, "text": "App not found"}).encode("utf-8")
+                elif not _rec_l.get("disabled"):
+                    _sch = (_rec_l.get("url_scheme") or "").strip()
+                    _out_b = json.dumps({"ok": True, "status": "done", "pct": 100, "text": "Ready!", "scheme": (_sch + "://") if _sch else ""}).encode("utf-8")
+                else:
+                    _jid_l = _miniapp_job_new("launch_swap", _b_raw)
+                    def _swap_w():
+                        _t_l = _rec_l.get("title") or _b_raw
+                        try:
+                            _recs_all = load_installed()
+                            _active_others = [x for x in _recs_all if x.get("bundle") != _b_raw and not x.get("disabled")]
+                            if MINIS_MODE and _ms_get("cell"):
+                                _nm = _CELL_NOTIFY_BODY.get(CUR_LANG, _CELL_NOTIFY_BODY["uk"])
+                                if _minis_notify("SideBot", _nm):
+                                    _miniapp_job_set(_jid_l, "running", "📶 Connecting to iPhone...", pct=15)
+                                    time.sleep(2.0)
+                                    _we = time.time() + 10.0
+                                    while time.time() < _we:
+                                        import socket as _sock
+                                        _s = _sock.socket(); _s.settimeout(0.4)
+                                        _okp = (_s.connect_ex(("10.7.0.1", 49152)) == 0)
+                                        _s.close()
+                                        if _okp: break
+                                        time.sleep(0.25)
+                            if len(_active_others) >= 2:
+                                _victim = _active_others[0]
+                                _vb = _victim.get("bundle")
+                                _vt = _victim.get("title") or _vb
+                                _miniapp_job_set(_jid_l, "running", "⏸ Swapping out " + _vt + "...", pct=30)
+                                try:
+                                    _appdata_backup_thread(None, _vb)
+                                except Exception:
+                                    pass
+                                _minis_uninstall(_vb, _victim.get("udid") or "")
+                                for _x in _recs_all:
+                                    if _x.get("bundle") == _vb:
+                                        _x["disabled"] = True
+                                save_installed(_recs_all)
+                            _sc_ipa = _rec_l.get("signed_cache") or ""
+                            _fresh = False
+                            if _sc_ipa and os.path.isfile(_sc_ipa):
+                                try:
+                                    _age = time.time() - os.path.getmtime(_sc_ipa)
+                                    _fresh = (_age < 6 * 86400)
+                                except Exception:
+                                    _fresh = False
+                            if _fresh:
+                                _miniapp_job_set(_jid_l, "running", "⚡ Fast-installing " + _t_l + "...", pct=60)
+                                _exe_ih = _minis_install_exe()
+                                _rf_ih = _minis_pairing_file(_rec_l.get("udid") or "")
+                                if _exe_ih and _rf_ih:
+                                    _r_ih = subprocess.run([_exe_ih, "--host", MINIS_PHONE_HOST, "--pairing-file", _rf_ih, "--ipa", _sc_ipa, "--timeout-secs", "180"], capture_output=True, text=True, timeout=200)
+                                    if _r_ih.returncode != 0:
+                                        raise RuntimeError((_r_ih.stderr or _r_ih.stdout or "install failed")[-200:])
+                                else:
+                                    raise RuntimeError("install-helper/pairing missing")
+                            else:
+                                _miniapp_job_set(_jid_l, "running", "🔐 Re-signing " + _t_l + "...", pct=50)
+                                _miniapp_api_reinstall_worker(_jid_l, None, _b_raw, "source")
+                            _recs_all = load_installed()
+                            for _x in _recs_all:
+                                if _x.get("bundle") == _b_raw:
+                                    _x["disabled"] = False
+                            save_installed(_recs_all)
+                            if _appdata_for(_b_raw):
+                                _miniapp_job_set(_jid_l, "running", "💾 Restoring data...", pct=88)
+                                try:
+                                    _appdata_restore_thread(None, _b_raw, 0)
+                                except Exception:
+                                    pass
+                            _sch = (_rec_l.get("url_scheme") or "").strip()
+                            if _jid_l in _MINIAPP_JOBS:
+                                _MINIAPP_JOBS[_jid_l]["scheme"] = (_sch + "://") if _sch else ""
+                            _miniapp_job_set(_jid_l, "done", "✅ " + _t_l + " ready!", pct=100)
+                        except Exception as _se:
+                            _miniapp_job_set(_jid_l, "failed", "❌ " + str(_se)[:160])
+                    threading.Thread(target=_swap_w, daemon=True).start()
+                    _out_b = json.dumps({"ok": True, "status": "started", "job": _jid_l}).encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json; charset=utf-8")
+            self.send_header("Content-Length", str(len(_out_b)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            try:
+                self.wfile.write(_out_b)
+            except Exception:
+                pass
+            return True
+        if _path.startswith("/launch/"):
+            import urllib.parse as _up_lh, html as _hl_lh
+            _b_raw = _up_lh.unquote(_path[len("/launch/"):])
+            _rec_lh = next((r for r in load_installed() if r.get("bundle") == _b_raw), None)
+            _t_lh = _hl_lh.escape((_rec_lh or {}).get("title") or _b_raw)
+            _b_esc = _hl_lh.escape(_b_raw)
+            _ic_url = "/appicon/" + _up_lh.quote(_b_raw, safe="") + ".png"
+            _page = ('''<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>''' + _t_lh + '''</title>
+<style>
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:#050811;color:#fff;font-family:-apple-system,BlinkMacSystemFont,sans-serif;display:flex;align-items:center;justify-content:center;padding:24px}
+.card{width:100%;max-width:340px;background:rgba(14,21,38,.92);border:1px solid rgba(56,189,248,.45);border-radius:28px;padding:28px 22px;text-align:center;box-shadow:0 0 38px rgba(14,165,233,.25)}
+.ic{width:84px;height:84px;border-radius:22px;object-fit:cover;box-shadow:0 8px 28px rgba(0,229,255,.35);margin-bottom:14px;border:1px solid rgba(56,189,248,.5)}
+.nm{font-size:20px;font-weight:700;margin-bottom:6px}
+.st{font-size:13px;color:#94a3b8;min-height:20px;margin-bottom:16px}
+.bar{height:8px;border-radius:999px;background:rgba(255,255,255,.08);overflow:hidden;border:1px solid rgba(56,189,248,.25)}
+.fill{height:100%;width:12%;background:linear-gradient(90deg,#0ea5e9,#22d3ee,#38bdf8);border-radius:999px;transition:width .35s ease;box-shadow:0 0 14px #22d3ee}
+.btn{display:none;margin-top:18px;padding:12px 18px;border-radius:14px;background:linear-gradient(135deg,#0284c7,#06b6d4);color:#fff;text-decoration:none;font-weight:700;font-size:14px}
+</style></head><body>
+<div class="card">
+<img class="ic" src="''' + _ic_url + '''" onerror="this.src='/sidebot-icon.png'">
+<div class="nm">''' + _t_lh + '''</div>
+<div class="st" id="st">FlekDeck Switch...</div>
+<div class="bar"><div class="fill" id="fl"></div></div>
+<a class="btn" id="ob" href="#">Open ''' + _t_lh + '''</a>
+</div>
+<script>
+var b=''' + json.dumps(_b_raw) + ''';
+var st=document.getElementById('st'),fl=document.getElementById('fl'),ob=document.getElementById('ob');
+function finish(r){
+  fl.style.width='100%';
+  st.textContent=r.text||'Ready!';
+  if(r.scheme){ ob.href=r.scheme; ob.style.display='block'; setTimeout(function(){ location.href=r.scheme; },250); }
+}
+fetch('/launch-api/'+encodeURIComponent(b)).then(function(r){return r.json();}).then(function(r){
+  if(r.status==='done'){ finish(r); return; }
+  if(r.status==='started'&&r.job){
+    var tm=setInterval(function(){
+      fetch('/launch-api/'+encodeURIComponent(b)+'?job='+encodeURIComponent(r.job)).then(function(x){return x.json();}).then(function(j){
+        if(j.pct) fl.style.width=j.pct+'%';
+        if(j.text) st.textContent=j.text;
+        if(j.status==='done'){ clearInterval(tm); finish(j); }
+        else if(j.status==='failed'){ clearInterval(tm); st.style.color='#f87171'; }
+      });
+    },700);
+  } else { st.textContent=r.text||'Error'; st.style.color='#f87171'; }
+});
+</script></body></html>''').encode("utf-8")
+            self.send_response(200)
+            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Length", str(len(_page)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            try:
+                self.wfile.write(_page)
+            except Exception:
+                pass
+            return True
         if _path in ("/sidebot.mobileconfig", "/appstore.mobileconfig"):
             import plistlib, uuid as _uuid
             _is_as = (_path == "/appstore.mobileconfig")
@@ -10866,7 +11107,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.86"
+SIDEBOT_VERSION = "2026.11.25.87"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 

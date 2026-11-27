@@ -966,7 +966,8 @@ en: {
   everyDayChip:"Daily",
   deactivateBtn:"⏸ Deactivate", reactivateBtn:"▶️ Enable",
   disabledBadge:"Disabled", daysShort:"d", lblUpdating:"Updating", lblLeft:"Left",
-  updateSidebot:"Update SideBot", syncPhoneBtn:"Check iPhone", syncPhoneOk:"Checked on iPhone: %s app(s)"
+  updateSidebot:"Update SideBot", syncPhoneBtn:"Check iPhone", syncPhoneOk:"Checked on iPhone: %s app(s)",
+  clipBtn:"📲 Shortcut (FlekDeck)"
 },
 uk: {
   news:"Новини", sources:"Джерела", browse:"Огляд",appstoreOpen:"Відкрити App Store UI", myApps:"Мої додатки", settings:"Налаштування",
@@ -1106,7 +1107,8 @@ uk: {
   everyDayChip:"Щодня",
   deactivateBtn:"⏸ Вимкнути", reactivateBtn:"▶️ Увімкнути",
   disabledBadge:"Вимкнено", daysShort:"дн", lblUpdating:"Оновлення", lblLeft:"Лишилось",
-  updateSidebot:"Оновити SideBot", syncPhoneBtn:"Звірити з iPhone", syncPhoneOk:"Знайдено на iPhone: %s дод."
+  updateSidebot:"Оновити SideBot", syncPhoneBtn:"Звірити з iPhone", syncPhoneOk:"Знайдено на iPhone: %s дод.",
+  clipBtn:"📲 Ярлик (FlekDeck)"
 },
 ru: {
   news:"Новости", sources:"Источники", browse:"Обзор",appstoreOpen:"Открыть App Store UI", myApps:"Мои приложения", settings:"Настройки",
@@ -1246,7 +1248,8 @@ ru: {
   everyDayChip:"Ежедневно",
   deactivateBtn:"⏸ Выключить", reactivateBtn:"▶️ Включить",
   disabledBadge:"Выключено", daysShort:"дн", lblUpdating:"Обновление", lblLeft:"Осталось",
-  updateSidebot:"Обновить SideBot", syncPhoneBtn:"Сверить с iPhone", syncPhoneOk:"Найдено на iPhone: %s прил."
+  updateSidebot:"Обновить SideBot", syncPhoneBtn:"Сверить с iPhone", syncPhoneOk:"Найдено на iPhone: %s прил.",
+  clipBtn:"📲 Ярлык (FlekDeck)"
 },
 de: {
   news:"News", sources:"Quellen", browse:"Stöbern",appstoreOpen:"App Store UI öffnen", myApps:"Meine Apps", settings:"Einstellungen",
@@ -1386,7 +1389,8 @@ de: {
   everyDayChip:"Täglich",
   deactivateBtn:"⏸ Deaktivieren", reactivateBtn:"▶️ Aktivieren",
   disabledBadge:"Deaktiviert", daysShort:"T", lblUpdating:"Aktualisiere", lblLeft:"Übrig",
-  updateSidebot:"SideBot aktualisieren", syncPhoneBtn:"iPhone prüfen", syncPhoneOk:"Auf iPhone gefunden: %s App(s)"
+  updateSidebot:"SideBot aktualisieren", syncPhoneBtn:"iPhone prüfen", syncPhoneOk:"Auf iPhone gefunden: %s App(s)",
+  clipBtn:"📲 Kurzbefehl (FlekDeck)"
 }
 };
 var LANG = (S.lang && I18N[S.lang]) ? S.lang : 'en';
@@ -2953,6 +2957,7 @@ function renderApps(){
               + '<button data-cmd="signopts">'+esc(String(T('signOptsBtn')||'').replace(/^[^\wА-Яа-яІіЇїЄєҐґ]+/u,''))+'</button>'
               + '<button data-cmd="appdata">'+esc(T('backupRestore'))+'</button>'
               + '<button data-cmd="deactivate">'+esc(T('deactivateBtn'))+'</button>')
+        + '<button data-cmd="clip">'+esc(T('clipBtn'))+'</button>'
         + '<button data-cmd="delete" class="danger" style="grid-column:1/-1">'+esc(T('deleteBtn'))+'</button>'
         + '</div></div>';
     });
@@ -2989,6 +2994,7 @@ function renderApps(){
         else if(c==='appdata') send({action:'appdata', bundle:a.b});
         else if(c==='deactivate') send({action:'deactivate_app', bundle:a.b});
         else if(c==='reactivate') send({action:'reactivate_app', bundle:a.b});
+        else if(c==='clip') window.open('/app-clip/'+encodeURIComponent(a.b)+'.mobileconfig?t='+encodeURIComponent(apiToken()), '_blank');
         else if(c==='delete'){
           /* In-page confirm: window.confirm/showConfirm are silently
              swallowed in Telegram's iOS WebView, which is why Delete
