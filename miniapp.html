@@ -3174,10 +3174,15 @@ function renderSettings(){
       + S.auto.log.slice(0, 5).map(function(l){ return '<div class="meta" style="font-size:11px;line-height:1.35">'+esc(l)+'</div>'; }).join('')
       + '</div>'
     : '';
+  var _curMins = (S.auto.mins != null) ? S.auto.mins : ((S.auto.hours||1)*60);
+  var _presets = [[2,'2 хв'],[30,'30 хв'],[60,'1 год'],[1440,'Щодня']];
   el('autoCard').innerHTML =
     '<button class="row" id="autoRow"><span style="display:inline-flex;align-items:center;gap:10px"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/><polyline points="12 7 12 12 15 14"/></svg><span>'+esc(String(T('autoRow')||'').replace(/^[^\wА-Яа-яІіЇїЄєҐґ]+/u,''))+'<br><span class="meta">'+esc(T('autoRowMeta'))+'</span></span></span><span class="pill '+(S.auto.on?'on':'')+'">'+(S.auto.on?'ON':'OFF')+'</span></button>'
+    + '<div class="row" style="flex-direction:column;align-items:stretch;gap:8px;cursor:default"><span style="font-size:12px;color:var(--gray)">Швидкий інтервал перевірки</span><div class="chiprow" id="autoPresetRow">'
+    + _presets.map(function(p){ return '<button class="chip'+(_curMins===p[0]?' sel':'')+'" data-am="'+p[0]+'">'+esc(p[1])+'</button>'; }).join('')
+    + '</div></div>'
     + '<div class="row" style="cursor:default"><span>'+esc(T('renewAfter'))+'<br><span class="meta">'+esc(T('renewAfterMeta'))+'</span></span><input id="autoDays" type="text" inputmode="numeric" value="'+esc(S.auto.days)+'" style="width:64px;text-align:right"></div>'
-    + '<div class="row" style="cursor:default"><span>Перевіряти кожні (хв)<br><span class="meta">Мінімум 2 хв (60 = раз на годину)</span></span><input id="autoMins" type="text" inputmode="numeric" value="'+esc(S.auto.mins != null ? S.auto.mins : ((S.auto.hours||1)*60))+'" style="width:64px;text-align:right"></div>'
+    + '<div class="row" style="cursor:default"><span>Перевіряти кожні (хв)<br><span class="meta">Мінімум 2 хв (60 = раз на годину)</span></span><input id="autoMins" type="text" inputmode="numeric" value="'+esc(_curMins)+'" style="width:64px;text-align:right"></div>'
     + '<div class="row" style="cursor:default"><span>'+esc(T('lastCheck'))+'<br><span class="meta">'+(S.auto.last ? esc(S.auto.last.slice(0,16).replace('T',' ')) : esc(T('notYet')))+(S.auto.n ? esc(T('autoRefreshed', S.auto.n)) : '')+'</span></span></div>'
     + _autoAppsHtml
     + _autoLogHtml
@@ -3187,6 +3192,19 @@ function renderSettings(){
     renderSettings();
     send({action:'toggle_autorefresh'});
   });
+  if(el('autoPresetRow')){
+    el('autoPresetRow').querySelectorAll('.chip').forEach(function(ch){
+      ch.addEventListener('click', function(){
+        var m = parseInt(ch.dataset.am, 10);
+        if(!isFinite(m)) return;
+        S.auto.mins = m;
+        S.auto.hours = Math.max(1, Math.floor(m / 60));
+        if(m === 1440) S.auto.days = 1;
+        renderSettings();
+        send({action:'set_auto', mins: m, days: S.auto.days});
+      });
+    });
+  }
   el('autoDays').addEventListener('change', function(){ send({action:'set_auto', days:el('autoDays').value}); });
   el('autoMins').addEventListener('change', function(){ send({action:'set_auto', mins:el('autoMins').value}); });
   if(el('autoNowBtn')){
