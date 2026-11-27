@@ -7256,19 +7256,33 @@ def install_thread(chat_id, allow_repair=True):
         if _ms_get("cell"):
             _names = _ms_get("cell_names") if isinstance(_ms_get("cell_names"), dict) else {}
             _sc_off = (_names.get("off") or "TurnOffData")
-            if _aj:
+            _apple_open = shutil.which("apple-open") or ("/usr/local/bin/apple-open" if os.path.exists("/usr/local/bin/apple-open") else "")
+            if _apple_open:
+                try:
+                    _sc_url = "shortcuts://run-shortcut?name=" + urllib.parse.quote(_sc_off)
+                    _dbg("minis cell-off via apple-open: %s" % _sc_url)
+                    _tmark("TurnOffData -> apple-open")
+                    subprocess.run([_apple_open, _sc_url], capture_output=True, text=True, timeout=10)
+                    _cell_toggled = True
+                    time.sleep(1.0)
+                    _deadline = time.time() + 6.0
+                    while time.time() < _deadline:
+                        try:
+                            with socket.create_connection((MINIS_PHONE_HOST, 49152), timeout=0.4):
+                                _port_ok = True
+                                break
+                        except Exception:
+                            time.sleep(0.2)
+                    _tmark("port 49152 %s" % ("OPEN!" if _port_ok else "refused (6s timeout)"))
+                except Exception as _ae:
+                    _dbg("apple-open cell-off err=%s" % _ae)
+            elif _aj:
                 _jp = _miniapp_job_get(_aj)
                 if _jp is not None:
-                    _tmark("TurnOffData -> SideBot + apple-open")
+                    _tmark("TurnOffData -> SideBot")
                     _jp["toggle"] = "off"
                     _jp["toggle_name"] = _sc_off
                     _cell_toggled = True
-                    _apple_open = shutil.which("apple-open") or ("/usr/local/bin/apple-open" if os.path.exists("/usr/local/bin/apple-open") else "")
-                    if _apple_open:
-                        try:
-                            subprocess.run([_apple_open, "shortcuts://run-shortcut?name=" + urllib.parse.quote(_sc_off)], capture_output=True, text=True, timeout=10)
-                        except Exception:
-                            pass
                     for _ in range(12):
                         if not _jp.get("toggle"):
                             break
@@ -7284,27 +7298,6 @@ def install_thread(chat_id, allow_repair=True):
                         except Exception:
                             time.sleep(0.2)
                     _tmark("port 49152 %s" % ("OPEN!" if _port_ok else "refused (6s timeout)"))
-            else:
-                _apple_open = shutil.which("apple-open") or ("/usr/local/bin/apple-open" if os.path.exists("/usr/local/bin/apple-open") else "")
-                if _apple_open:
-                    try:
-                        _sc_url = "shortcuts://run-shortcut?name=" + urllib.parse.quote(_sc_off)
-                        _dbg("minis cell-off via apple-open: %s" % _sc_url)
-                        _tmark("TurnOffData -> apple-open")
-                        subprocess.run([_apple_open, _sc_url], capture_output=True, text=True, timeout=10)
-                        _cell_toggled = True
-                        time.sleep(1.0)
-                        _deadline = time.time() + 6.0
-                        while time.time() < _deadline:
-                            try:
-                                with socket.create_connection((MINIS_PHONE_HOST, 49152), timeout=0.4):
-                                    _port_ok = True
-                                    break
-                            except Exception:
-                                time.sleep(0.2)
-                        _tmark("port 49152 %s" % ("OPEN!" if _port_ok else "refused (6s timeout)"))
-                    except Exception as _ae:
-                        _dbg("apple-open cell-off err=%s" % _ae)
         _ok, _det = False, "not started"
         try:
             if _cell_toggled and not _port_ok:
@@ -7318,17 +7311,17 @@ def install_thread(chat_id, allow_repair=True):
             if _cell_toggled and not bool(_ms_get("skip_turn_on")):
                 _names = _ms_get("cell_names") if isinstance(_ms_get("cell_names"), dict) else {}
                 _sc_on = (_names.get("on") or "TurnOnData")
-                if _aj:
-                    _jp = _miniapp_job_get(_aj)
-                    if _jp is not None:
-                        _jp["toggle"] = "on"
-                        _jp["toggle_name"] = _sc_on
                 _apple_open = shutil.which("apple-open") or ("/usr/local/bin/apple-open" if os.path.exists("/usr/local/bin/apple-open") else "")
                 if _apple_open:
                     try:
                         subprocess.run([_apple_open, "shortcuts://run-shortcut?name=" + urllib.parse.quote(_sc_on)], capture_output=True, text=True, timeout=10)
                     except Exception:
                         pass
+                elif _aj:
+                    _jp = _miniapp_job_get(_aj)
+                    if _jp is not None:
+                        _jp["toggle"] = "on"
+                        _jp["toggle_name"] = _sc_on
                 time.sleep(1.5)
         if _aj:
             with _MINIAPP_JOBS_LOCK:
@@ -10663,7 +10656,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.40"
+SIDEBOT_VERSION = "2026.11.25.41"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
