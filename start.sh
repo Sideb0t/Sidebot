@@ -203,6 +203,8 @@ for _rc in "$HOME/.profile" "$HOME/.ashrc" "$HOME/.bashrc"; do
   [ -f "$_rc" ] || touch "$_rc" 2>/dev/null || true
   grep -q 'alias sb=' "$_rc" 2>/dev/null || printf '\nalias sb="%s/start.sh --local --bg"\n' "$DIR" >> "$_rc" 2>/dev/null || true
 done
+mkdir -p /usr/local/bin 2>/dev/null || true
+printf '#!/bin/sh\nexec "%s/start.sh" --local --bg "$@"\n' "$DIR" > /usr/local/bin/sb 2>/dev/null && chmod +x /usr/local/bin/sb 2>/dev/null || true
 BOT_ARGS=""
 [ "$LOCAL_FLAG" = "1" ] && BOT_ARGS="--local"
 if [ "$BG_FLAG" = "1" ]; then
