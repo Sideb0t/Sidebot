@@ -10251,22 +10251,24 @@ def _fast_misagent_refresh(bundles, jid=None):
         _miniapp_job_set(jid, "running", "⚡ Швидке оновлення профілів (%d) через misagent..." % len(_items))
     try:
         if _ms_get("cell", False):
-            _minis_notify(CUR_LANG)
-            _wait_end = time.time() + 8.0
-            while time.time() < _wait_end:
-                try:
-                    import socket as _sock
-                    _s = _sock.socket()
-                    _s.settimeout(0.4)
-                    if _s.connect_ex(("10.7.0.1", 49152)) == 0:
+            _notify_msg = _CELL_NOTIFY_BODY.get(CUR_LANG, _CELL_NOTIFY_BODY["uk"])
+            if _minis_notify("SideBot", _notify_msg):
+                time.sleep(2.0)
+                _wait_end = time.time() + 10.0
+                while time.time() < _wait_end:
+                    try:
+                        import socket as _sock
+                        _s = _sock.socket()
+                        _s.settimeout(0.4)
+                        if _s.connect_ex(("10.7.0.1", 49152)) == 0:
+                            _s.close()
+                            break
                         _s.close()
-                        break
-                    _s.close()
-                except Exception:
-                    pass
-                time.sleep(0.4)
-    except Exception:
-        pass
+                    except Exception:
+                        pass
+                    time.sleep(0.3)
+    except Exception as _ne:
+        print("[FAST_REFRESH] notify err=%s" % _ne, flush=True)
     _cmd = [_sl, "profiles", "--plain", "--pairing-file", _pair] + [p for _, p in _items]
     try:
         _res = subprocess.run(_cmd, capture_output=True, text=True, timeout=60)
@@ -10871,7 +10873,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.80"
+SIDEBOT_VERSION = "2026.11.25.81"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -11767,16 +11769,18 @@ def _miniapp_api_dispatch(cmd, chat_id):
             if os.path.isfile(_sl) and _pair:
                 try:
                     if _ms_get("cell", False):
-                        _minis_notify(CUR_LANG)
-                        _we = time.time() + 6.0
-                        while time.time() < _we:
-                            import socket as _sock
-                            _s = _sock.socket(); _s.settimeout(0.4)
-                            _okp = (_s.connect_ex(("10.7.0.1", 49152)) == 0)
-                            _s.close()
-                            if _okp:
-                                break
-                            time.sleep(0.4)
+                        _notify_msg = _CELL_NOTIFY_BODY.get(CUR_LANG, _CELL_NOTIFY_BODY["uk"])
+                        if _minis_notify("SideBot", _notify_msg):
+                            time.sleep(2.0)
+                            _we = time.time() + 8.0
+                            while time.time() < _we:
+                                import socket as _sock
+                                _s = _sock.socket(); _s.settimeout(0.4)
+                                _okp = (_s.connect_ex(("10.7.0.1", 49152)) == 0)
+                                _s.close()
+                                if _okp:
+                                    break
+                                time.sleep(0.3)
                     _r = subprocess.run([_sl, "udid", "--plain", "--pairing-file", _pair], capture_output=True, text=True, timeout=15)
                     for _ln in (_r.stdout or "").splitlines():
                         _ln = _ln.strip()
