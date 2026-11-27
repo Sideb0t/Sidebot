@@ -10632,7 +10632,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.31"
+SIDEBOT_VERSION = "2026.11.25.33"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -12081,6 +12081,9 @@ def _miniapp_find_program(bundle):
         if (_a.get("bundleIdentifier") or "") != _bid:
             continue
         return _a, (_programs_latest(_a) or {})
+    if _bid in _FLEK_APP_CACHE:
+        _fa_c = _FLEK_APP_CACHE[_bid]
+        return _fa_c, (_programs_latest(_fa_c) or {})
     return None, None
 
 def _miniapp_job_new(kind, bundle):
@@ -22913,6 +22916,9 @@ def _programs_normalize_flat_apps(apps):
                             "buildVersion": ""}]
 
 
+_FLEK_APP_CACHE = {}
+
+
 def _programs_flek_map(entry, category):
     """Map one FlekStore API entry to an internal app record shaped
     like a repo app, so the shared detail / destination / install
@@ -22931,11 +22937,12 @@ def _programs_flek_map(entry, category):
     url = (entry.get("install_url") or "").strip()
     if not fid or not url.startswith("https://"):
         return None
-    return {
+    _rec = {
         "name": (entry.get("app_name") or "?").strip() or "?",
         "bundleIdentifier": "com.flekstore.app.%d" % fid,
         "developerName": "",
         "category": category or "",
+        "iconURL": (entry.get("app_icon") or "").strip(),
         "localizedDescription": (entry.get("app_short_description") or "").strip(),
         "subtitle": "",
         "versions": [{"version": str(entry.get("app_version") or "?"),
@@ -22943,6 +22950,8 @@ def _programs_flek_map(entry, category):
                       "buildVersion": ""}],
         "_flek_id": fid,
     }
+    _FLEK_APP_CACHE[_rec["bundleIdentifier"]] = _rec
+    return _rec
 
 
 def _programs_flek_fetch(filter_id, page, query=None):
