@@ -411,9 +411,12 @@
       <input type="text" id="q" data-i18n-ph="searchPh" placeholder="App name, developer or bundle ID…" autocomplete="off">
       <button class="btn" id="searchBtn" data-i18n="search">Search</button>
       <button class="btn" id="importBtn" style="margin-top:10px" data-i18n="importIpa">+ Import IPA</button>
-      <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;opacity:.9;cursor:pointer;user-select:none">
-        <input type="checkbox" id="importOtaChk" style="width:16px;height:16px;accent-color:#0a84ff;margin:0">
-        <span data-i18n="otaManifestLbl">📲 OTA встановлення (manifest)</span>
+      <label id="importOtaLabel" style="display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;padding:12px 14px;border-radius:14px;background:rgba(56,189,248,.08);border:1px solid rgba(56,189,248,.32);cursor:pointer;user-select:none;transition:all .2s">
+        <span style="display:inline-flex;align-items:center;gap:10px;min-width:0">
+          <svg style="width:22px;height:22px;flex:0 0 22px;stroke:var(--acc-bright,#5ceeff);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round;filter:drop-shadow(0 0 6px rgba(0,229,255,.45))" viewBox="0 0 24 24"><path d="M12 3v12"/><path d="M7 10l5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/></svg>
+          <span data-i18n="otaManifestLbl" style="font-size:14px;font-weight:700;color:#fff">OTA встановлення (manifest)</span>
+        </span>
+        <input type="checkbox" id="importOtaChk" style="width:20px;height:20px;accent-color:#00e5ff;margin:0;flex-shrink:0">
       </label>
       <input type="file" id="ipaFile" accept=".ipa" class="hidden">
       <div id="uploadBox" class="hidden" style="margin-top:10px">
@@ -922,7 +925,7 @@ en: {
   ghCheckBtn:"Check for Updates (GitHub)", updFileBtnLbl:"Update from File",
   copyBotLogLbl:"Copy Log (bot.log)", obSetupLbl:"Initial Setup",
   catLbl:"Category:", catAll:"🌐 All categories", installToLbl:"Install to:",
-  otaManifestLbl:"📲 OTA install (manifest)"
+  otaManifestLbl:"OTA install (manifest)"
 },
 uk: {
   news:"Новини", sources:"Джерела", browse:"Огляд",appstoreOpen:"Відкрити App Store UI", myApps:"Мої додатки", settings:"Налаштування",
@@ -1042,7 +1045,7 @@ uk: {
   ghCheckBtn:"Перевірити оновлення (GitHub)", updFileBtnLbl:"Оновити з файлу",
   copyBotLogLbl:"Копіювати лог (bot.log)", obSetupLbl:"Початкове налаштування (Setup)",
   catLbl:"Категорія:", catAll:"🌐 Усі категорії", installToLbl:"Встановити куди:",
-  otaManifestLbl:"📲 OTA встановлення (manifest)"
+  otaManifestLbl:"OTA встановлення (manifest)"
 },
 ru: {
   news:"Новости", sources:"Источники", browse:"Обзор",appstoreOpen:"Открыть App Store UI", myApps:"Мои приложения", settings:"Настройки",
@@ -1162,7 +1165,7 @@ ru: {
   ghCheckBtn:"Проверить обновления (GitHub)", updFileBtnLbl:"Обновить из файла",
   copyBotLogLbl:"Копировать лог (bot.log)", obSetupLbl:"Начальная настройка (Setup)",
   catLbl:"Категория:", catAll:"🌐 Все категории", installToLbl:"Установить куда:",
-  otaManifestLbl:"📲 OTA установка (manifest)"
+  otaManifestLbl:"OTA установка (manifest)"
 },
 de: {
   news:"News", sources:"Quellen", browse:"Stöbern",appstoreOpen:"App Store UI öffnen", myApps:"Meine Apps", settings:"Einstellungen",
@@ -1282,7 +1285,7 @@ de: {
   ghCheckBtn:"Nach Updates suchen (GitHub)", updFileBtnLbl:"Aus Datei aktualisieren",
   copyBotLogLbl:"Log kopieren (bot.log)", obSetupLbl:"Ersteinrichtung (Setup)",
   catLbl:"Kategorie:", catAll:"🌐 Alle Kategorien", installToLbl:"Installieren in:",
-  otaManifestLbl:"📲 OTA-Installation (Manifest)"
+  otaManifestLbl:"OTA-Installation (Manifest)"
 }
 };
 var LANG = (S.lang && I18N[S.lang]) ? S.lang : 'en';
