@@ -1453,8 +1453,12 @@ function applyState(st){
     var ad = parseInt(st.auto.days, 10), ah = parseInt(st.auto.hours, 10);
     if(isFinite(ad) && ad >= 1 && ad <= 6) S.auto.days = ad;
     if(isFinite(ah) && ah >= 1 && ah <= 24) S.auto.hours = ah;
+    var am = parseInt(st.auto.mins, 10);
+    if(isFinite(am) && am >= 2 && am <= 1440) S.auto.mins = am;
     if(typeof st.auto.last === 'string') S.auto.last = st.auto.last;
     if(typeof st.auto.n === 'number') S.auto.n = st.auto.n;
+    if(Array.isArray(st.auto.apps)) S.auto.apps = st.auto.apps;
+    if(Array.isArray(st.auto.log)) S.auto.log = st.auto.log;
   }
   if(typeof st.ask === 'boolean') S.ask = st.ask;
   if(st.ids && typeof st.ids === 'object'){
@@ -2836,8 +2840,13 @@ function renderApps(){
   el('appIdsLine').textContent = T('appIdLine', used, lim, left);
   var al = el('autoLine');
   if(al){
+    var _am = (S.auto.mins != null) ? S.auto.mins : ((S.auto.hours||1)*60);
+    var _autoTxt = T('autoOn', S.auto.days, S.auto.hours);
+    if(_am < 60){
+      _autoTxt = _autoTxt.replace(/(\d+)\s*(год|ч|h|Std\.?)/i, _am + (LANG==='uk'?' хв':LANG==='ru'?' мин':LANG==='de'?' Min':' min'));
+    }
     al.textContent = S.auto.on
-      ? (T('autoOn', S.auto.days, S.auto.hours) + (S.auto.n ? T('autoRefreshed', S.auto.n) : ''))
+      ? (_autoTxt + (S.auto.n ? T('autoRefreshed', S.auto.n) : ''))
       : T('autoOff');
   }
   tickCountdowns();
@@ -2864,7 +2873,16 @@ function tickCountdowns(){
     var h = Math.floor(s / 3600); s -= h * 3600;
     var m = Math.floor(s / 60); var ss = s - m * 60;
     var dt = new Date(exp);
-    var until = _MON[dt.getMonth()] + ' ' + dt.getDate() + ', ' + _pad2(dt.getHours()) + ':' + _pad2(dt.getMinutes());
+    var _MM = {
+      uk: ['січ','лют','бер','квіт','трав','черв','лип','серп','вер','жовт','лист','груд'],
+      ru: ['янв','фев','мар','апр','май','июн','июл','авг','сен','окт','ноя','дек'],
+      de: ['Jan','Feb','Mär','Apr','Mai','Jun','Jul','Aug','Sep','Okt','Nov','Dez'],
+      en: ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+    };
+    var _ml = (_MM[LANG] || _MM.en)[dt.getMonth()];
+    var until = (LANG === 'en')
+      ? (_ml + ' ' + dt.getDate() + ', ' + _pad2(dt.getHours()) + ':' + _pad2(dt.getMinutes()))
+      : (dt.getDate() + ' ' + _ml + ', ' + _pad2(dt.getHours()) + ':' + _pad2(dt.getMinutes()));
     node.textContent = T('cdLeft', d, _pad2(h)+':'+_pad2(m)+':'+_pad2(ss), until);
     node.className = 'appsub cdline' + (ms < 12 * 3600 * 1000 ? ' bad' : (ms < 2 * 86400 * 1000 ? ' warn' : ''));
   });
