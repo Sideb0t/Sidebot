@@ -897,7 +897,8 @@ en: {
   onViaPlist:"(on via Info.plist)", extPrompt:"Prompt User", extRemove:"Remove All",
   extKeep:"Keep All", extMain:"Use Main Profile",
   cellRow:"📶 Cellular Refresh & Install", cellRowMeta:"LocalDevVPN 10.7.0.1 + SideBot / rust over LTE / 5G",
-  cellNoteOn:"Wi-Fi OFF on iOS 27: create Apple Shortcuts \"TurnOffData\" (Cellular Data OFF + Open SideBot) and \"TurnOnData\" (Cellular Data ON + Open SideBot).",
+  cellNotifyBtn:"🔔 Test notification",
+  cellNoteOn:"Add a Shortcuts Automation: When Minis notification contains \"Installing over cellular data\" -> Run \"TurnOffData\".",
   cellNoteOff:"Refresh and Install are refused only when the bot can tell the phone is on mobile data. Turn this on before you leave Wi-Fi.",
   autoRow:"⏱ Auto-Refresh", autoRowMeta:"keep every app signed before the 7-day profile dies",
   renewAfter:"Renew after (days)", renewAfterMeta:"1–6, default 5",
@@ -1017,7 +1018,8 @@ uk: {
   onViaPlist:"(увімкнено через Info.plist)", extPrompt:"Питати", extRemove:"Прибрати всі",
   extKeep:"Лишити всі", extMain:"З головного профілю",
   cellRow:"📶 Мобільні дані: оновлення й встановлення", cellRowMeta:"LocalDevVPN 10.7.0.1 + SideBot / rust через LTE / 5G",
-  cellNoteOn:"Wi-Fi OFF на iOS 27: створи шорткати «TurnOffData» (Cellular Data OFF + Open SideBot) і «TurnOnData» (Cellular Data ON + Open SideBot).",
+  cellNotifyBtn:"🔔 Тест сповіщення",
+  cellNoteOn:"Додай у Командах автоматизацію: при сповіщенні від Minis з текстом «Встановлюю через мобільні дані» -> запустити «TurnOffData».",
   cellNoteOff:"Оновлення й встановлення блокуються лише тоді, коли бот точно знає, що телефон на мобільних даних. Увімкни перед виходом із Wi-Fi.",
   autoRow:"⏱ Автооновлення", autoRowMeta:"тримати всі додатки підписаними, поки не вмер 7-денний профіль",
   renewAfter:"Оновлювати через (днів)", renewAfterMeta:"1–6, типово 5",
@@ -1137,7 +1139,8 @@ ru: {
   onViaPlist:"(включено через Info.plist)", extPrompt:"Спрашивать", extRemove:"Убрать все",
   extKeep:"Оставить все", extMain:"Из главного профиля",
   cellRow:"📶 Мобильные данные: обновление и установка", cellRowMeta:"LocalDevVPN 10.7.0.1 + SideBot / rust через LTE / 5G",
-  cellNoteOn:"Wi-Fi OFF на iOS 27: создай шорткаты «TurnOffData» (Cellular Data OFF + Open SideBot) и «TurnOnData» (Cellular Data ON + Open SideBot).",
+  cellNotifyBtn:"🔔 Тест уведомления",
+  cellNoteOn:"Добавь в Командах автоматизацию: при уведомлении от Minis с текстом «Устанавливаю через мобильные данные» -> запустить «TurnOffData».",
   cellNoteOff:"Обновление и установка блокируются только когда бот точно знает, что телефон на мобильных данных. Включи перед выходом из Wi-Fi.",
   autoRow:"⏱ Автообновление", autoRowMeta:"держать все приложения подписанными, пока не умер 7-дневный профиль",
   renewAfter:"Обновлять через (дней)", renewAfterMeta:"1–6, обычно 5",
@@ -1257,7 +1260,8 @@ de: {
   onViaPlist:"(an via Info.plist)", extPrompt:"Nachfragen", extRemove:"Alle entfernen",
   extKeep:"Alle behalten", extMain:"Hauptprofil nutzen",
   cellRow:"📶 Mobilfunk: Erneuern & Installieren", cellRowMeta:"LocalDevVPN 10.7.0.1 + SideBot / rust über LTE / 5G",
-  cellNoteOn:"WLAN AUS unter iOS 27: lege Kurzbefehle „TurnOffData“ (Cellular Data OFF + Open SideBot) und „TurnOnData“ (Cellular Data ON + Open SideBot) an.",
+  cellNotifyBtn:"🔔 Test-Mitteilung",
+  cellNoteOn:"Kurzbefehle-Automation anlegen: Wenn Minis-Mitteilung „Installiere über mobile Daten“ enthält -> „TurnOffData“ ausführen.",
   cellNoteOff:"Erneuern und Installieren wird nur abgelehnt, wenn der Bot sicher weiß, dass das Telefon im Mobilfunk ist. Vor dem Verlassen des WLANs einschalten.",
   autoRow:"⏱ Auto-Erneuerung", autoRowMeta:"hält jede App signiert, bevor das 7-Tage-Profil stirbt",
   renewAfter:"Erneuern nach (Tagen)", renewAfterMeta:"1–6, Standard 5",
@@ -3058,7 +3062,7 @@ function renderSettings(){
     + '<button class="btn '+(getTheme()==='sidestore'?'':'ghost')+' sb-thm" data-t="sidestore" style="flex:1;padding:9px 6px;font-size:12px;display:inline-flex;align-items:center;justify-content:center;gap:6px"><img src="/sidestore-icon.png?v=1" class="sb-thm-ic" alt="">SideStore</button>'
     + '</div></div>'
     + '<button class="row" id="cellRow"><span style="display:inline-flex;align-items:center;gap:10px"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 20V4"/></svg><span>'+esc(String(T('cellRow')||'').replace(/^[^\wА-Яа-яІіЇїЄєҐґ]+/u,''))+'<br><span class="meta">'+esc(T('cellRowMeta'))+'</span></span></span><span class="pill '+(S.cell?'on':'')+'">'+(S.cell?'ON':'OFF')+'</span></button>'
-    + (S.cell ? '<div class="row" style="gap:8px;cursor:default"><button class="btn" id="btnCellOff" style="flex:1;padding:10px;font-size:13px">TurnOffData</button></div>' : '')
+    + (S.cell ? '<div class="row" style="gap:8px;cursor:default"><button class="btn" id="btnCellOff" style="flex:1;padding:10px;font-size:13px">TurnOffData</button><button class="btn" id="btnCellNotify" style="flex:1;padding:10px;font-size:13px">'+esc(T('cellNotifyBtn'))+'</button></div>' : '')
     + '<div class="row" style="gap:8px;cursor:default"><button class="btn" id="btnPairWifi" style="flex:1;padding:10px;font-size:13px">Pairing</button>'
     + '<button class="btn ghost" id="btnPairImport" style="flex:1;padding:10px;font-size:13px">Import .plist</button></div>'
     + (S.has_pairing ? '<div class="row" style="gap:8px;cursor:default"><button class="btn ghost" id="btnPairExport" style="flex:1;padding:10px;font-size:13px">Export .plist</button><button class="btn ghost" id="btnPairDel" style="flex:1;padding:10px;font-size:13px;color:#ff453a">Delete</button></div>' : '');
@@ -3079,6 +3083,11 @@ function renderSettings(){
       var u = location.origin + '/cell-off';
       if(window.Telegram && Telegram.WebApp && Telegram.WebApp.openLink) Telegram.WebApp.openLink(u);
       else window.open(u, '_blank');
+    });
+  }
+  if(el('btnCellNotify')){
+    el('btnCellNotify').addEventListener('click', function(){
+      send({action:'test_cell_notify'});
     });
   }
   if(el('btnCellOn')){

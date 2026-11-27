@@ -7253,10 +7253,50 @@ def install_thread(chat_id, allow_repair=True):
                 _miniapp_job_set(_aj, "running", _s)
         _port_ok = False
         send_message(chat_id, "\U0001f4f2 \u0412\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u044e\u044e \u0447\u0435\u0440\u0435\u0437 install-helper (Rust) \u043d\u0430 10.7.0.1... \u0422\u0440\u0438\u043c\u0430\u0439 \u0442\u0435\u043b\u0435\u0444\u043e\u043d \u0440\u043e\u0437\u0431\u043b\u043e\u043a\u043e\u0432\u0430\u043d\u0438\u043c, \u0435\u043a\u0440\u0430\u043d \u0443\u0432\u0456\u043c\u043a\u043d\u0435\u043d\u0438\u043c.")
+_CELL_NOTIFY_BODY = {
+    "uk": "Встановлюю через мобільні дані",
+    "ru": "Устанавливаю через мобильные данные",
+    "de": "Installiere über mobile Daten",
+    "en": "Installing over cellular data",
+}
+
+
+def _minis_notify(title, body):
+    _exe = shutil.which("apple-notification") or (
+        "/usr/local/bin/apple-notification" if os.path.exists("/usr/local/bin/apple-notification") else ""
+    )
+    if not _exe:
+        return False
+    try:
+        r = subprocess.run(
+            [_exe, "schedule", "--title", str(title), "--body", str(body), "--after", "1", "--compact"],
+            capture_output=True, text=True, timeout=8,
+        )
+        _dbg("apple-notification rc=%s out=%s" % (r.returncode, (r.stdout or r.stderr or "")[:120]))
+        return r.returncode == 0
+    except Exception as _ne:
+        _dbg("apple-notification err=%s" % _ne)
+        return False
+
+
         if _ms_get("cell"):
             _names = _ms_get("cell_names") if isinstance(_ms_get("cell_names"), dict) else {}
             _sc_off = (_names.get("off") or "TurnOffData")
-            if _aj:
+            _notify_msg = _CELL_NOTIFY_BODY.get(get_lang(), _CELL_NOTIFY_BODY["uk"])
+            if _minis_notify("SideBot", _notify_msg):
+                _tmark("apple-notification -> %s" % _notify_msg)
+                _cell_toggled = True
+                time.sleep(2.0)
+                _deadline = time.time() + 12.0
+                while time.time() < _deadline:
+                    try:
+                        with socket.create_connection((MINIS_PHONE_HOST, 49152), timeout=0.4):
+                            _port_ok = True
+                            break
+                    except Exception:
+                        time.sleep(0.25)
+                _tmark("port 49152 %s" % ("OPEN!" if _port_ok else "refused (12s timeout)"))
+            elif _aj:
                 _jp = _miniapp_job_get(_aj)
                 if _jp is not None:
                     _tmark("TurnOffData -> SideBot")
@@ -10640,7 +10680,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.43"
+SIDEBOT_VERSION = "2026.11.25.44"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -10763,6 +10803,10 @@ def _miniapp_api_dispatch(cmd, chat_id):
                 except Exception:
                     pass
             return {"ok": True, "reachable": _ok, "host": "%s:%d" % (_host, _hit or _port)}
+        if _action == "test_cell_notify":
+            _notify_msg = _CELL_NOTIFY_BODY.get(get_lang(), _CELL_NOTIFY_BODY["uk"])
+            _ok_n = _minis_notify("SideBot", _notify_msg)
+            return {"ok": _ok_n, "text": _notify_msg if _ok_n else "apple-notification недоступний"}
         if _action == "set_backend":
             _b = cmd.get("backend") or ""
             if _b == "jkidevice":
