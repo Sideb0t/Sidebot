@@ -339,10 +339,10 @@
       </div>
       <div id="accForm">
         <div class="seg" id="authModeSeg" style="margin-bottom:10px">
-          <button data-am="fast" class="on">⚡ Швидкий (iPadn)</button>
-          <button data-am="ipatool">🛡 ipatool</button>
+          <button data-am="fast" class="on">⚡ Швидкий</button>
+          <button data-am="ipatool">🐢 Повільний</button>
         </div>
-        <div class="note" data-t="accNote">⚡ Швидкий вхід (1–2 с, із авто-переходом на ipatool при потребі). Пароль ніде не показується.</div>
+        <div class="note" data-t="accNote">⚡ Швидкий вхід (1–2 с, із авто-переходом на повільний при потребі). Пароль ніде не показується.</div>
         <div class="recent hidden" id="sapLine" style="margin:2px 4px 8px"></div>
         <div class="field"><label>Apple ID</label><input id="accEmailIn" type="email" placeholder="name@example.com" autocapitalize="off" autocorrect="off"></div>
         <div class="field"><label data-t="pwL">Пароль</label><input id="accPwIn" type="password" placeholder="••••••••"></div>
@@ -426,7 +426,7 @@ uk:{
   tabSearch:'Пошук', tabDl:'Завантаження', tabPurch:'Покупки', tabAcc:'Обліковий запис',
   dlTitle:'Завантаження', dlPh:'Пошук за назвою, версією або Bundle ID',
   purchTitle:'Покупки', purchPh:'Пошук покупок або App ID', pAll:'Усі', p1m:'1 місяць', p6m:'6 місяців', p1y:'1 рік',
-  accTitle:'Обліковий запис', accNote:'Вхід через ipatool: пароль ніде не показується і не зберігається відкритим текстом. Якщо Apple попросить код — введи його тут сам; на код є 10 хвилин.',
+  accTitle:'Обліковий запис', accNote:'Пароль ніде не показується і не зберігається відкритим текстом. Якщо Apple попросить код — введи його тут сам; на код є 10 хвилин.',
   pwL:'Пароль', signIn:'Увійти', profH:'Швидкий вхід', methodH:'Спосіб встановлення', methodK:'Спосіб встановлення',
   accSwitch:'Увійти з іншим Apple ID',
   get:'Отримати', install:'Встановити', open:'Відкрити', done:'Завершено', downloading:'Завантажую',
@@ -454,10 +454,10 @@ uk:{
   errShortPw:'Введи Apple ID і пароль.', errBadEmail:'Це не схоже на Apple ID (email).',
   busyAuth:'Вхід уже виконується — зачекай.',
   sapPrep:'Завантажую SAP-рантайм… %s%', sapWarm:'Готую SAP-рантайм у браузері…',
-  sapReady:'SAP готовий — вхід без ipatool', sapOff:'SAP недоступний — вхід піде через ipatool',
-  fastOnly:'⚡ Швидкий вхід активний. Щоб завантажувати .ipa, увійди ще раз у режимі 🛡 ipatool — завантаження йдуть через нього.',
-  stageSap:'Перевіряю пристрій через SAP…', hintPrepare:'Готую швидкий вхід…',
-  hintFallback:'SAP не відповів — переходжу на ipatool…',
+  sapReady:'⚡ Швидкий режим готовий', sapOff:'⚡ Швидкий режим недоступний — вхід піде повільним способом',
+  fastOnly:'⚡ Швидкий вхід активний. Щоб завантажувати .ipa, увійди ще раз у режимі 🐢 Повільний — завантаження йдуть через нього.',
+  stageSap:'Перевіряю пристрій…', hintPrepare:'Готую швидкий вхід…',
+  hintFallback:'Швидкий вхід не відповів — переходжу на повільний…',
   items:'об’єктів', choose:'обрати'
 },
 ru:{
