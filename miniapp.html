@@ -464,15 +464,15 @@
       </div>
       <a id="aiOpenLink" class="btn" href="#" style="display:none;margin-top:8px;align-items:center;justify-content:center;text-decoration:none">📲 Відкрити встановлення</a>
       <div id="aiLcCertBox" class="hidden" style="margin-top:10px;padding:10px;border-radius:12px;border:1px solid rgba(56,189,248,.45);background:rgba(56,189,248,.08)">
-        <div id="aiLcCertMsg" style="font-size:13px;font-weight:600;line-height:1.35;margin-bottom:8px">Збережіть сертифікат для функціонування LiveContainer та імпортуйте його (Settings → Import Certificate).</div>
+        <div id="aiLcCertMsg" data-i18n="lcCertPrompt" style="font-size:13px;font-weight:600;line-height:1.35;margin-bottom:8px">Збережіть сертифікат для функціонування LiveContainer та імпортуйте його (Settings → Import Certificate).</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap">
-          <button type="button" id="aiLcP12Btn" class="btn" style="flex:1;min-width:130px;margin:0;padding:9px 10px;font-size:12px">Завантажити .p12</button>
-          <a id="aiLcOpenBtn" class="btn" href="livecontainer://" style="flex:1;min-width:130px;margin:0;padding:9px 10px;font-size:12px;text-align:center;text-decoration:none;background:rgba(255,255,255,.12)">Відкрити LiveContainer</a>
+          <button type="button" id="aiLcP12Btn" data-i18n="exportP12" class="btn" style="flex:1;min-width:130px;margin:0;padding:9px 10px;font-size:12px">Завантажити .p12</button>
+          <a id="aiLcOpenBtn" data-i18n="lcOpenBtn" class="btn" href="livecontainer://" style="flex:1;min-width:130px;margin:0;padding:9px 10px;font-size:12px;text-align:center;text-decoration:none;background:rgba(255,255,255,.12)">Відкрити LiveContainer</a>
         </div>
       </div>
       <div id="aiLogsWrap" class="hidden" style="margin-top:8px">
         <pre id="aiLogs" style="margin:0;padding:8px;max-height:150px;overflow-y:auto;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.1);border-radius:8px;font:11px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;color:rgba(255,255,255,.88);white-space:pre-wrap;word-break:break-word;cursor:pointer"></pre>
-        <button type="button" id="aiCopyBtn" style="margin-top:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer">📋 Копіювати лог</button>
+        <button type="button" id="aiCopyBtn" data-i18n="copyLogBtn" style="margin-top:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer">📋 Копіювати лог</button>
       </div>
     </div>
     <div class="sech"><h2 data-i18n="active">Active</h2><button class="link" id="refreshAllBtn" style="display:inline-flex;align-items:center;gap:5px"><svg class="sb-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg><span data-i18n="refreshAll">Refresh All</span></button></div>
@@ -585,11 +585,11 @@
           <a class="btn ghost" href="/sidebot-keepalive.mobileconfig" style="flex:1;text-align:center;text-decoration:none;font-size:12px;padding:10px 6px;margin:0">Keepalive іконка</a>
         </div>
         <details style="font-size:12px;color:var(--gray);line-height:1.45">
-          <summary style="cursor:pointer;color:var(--muted);font-weight:600">Інструкція AI Keepalive для Open Minis</summary>
+          <summary data-i18n="kaGuideTitle" style="cursor:pointer;color:var(--muted);font-weight:600">Інструкція AI Keepalive для Open Minis</summary>
           <div style="margin-top:6px">
-            1. Minis → Налаштування → Провайдери → Додати OpenAI.<br>
-            2. Base URL: <code>http://127.0.0.1:8080/v1</code>, API Key: <code>sidebot</code>, модель: <code>sidebot-keepalive</code>.<br>
-            3. У терміналі Minis: <code>minis-config set speech.backgroundEnabled true</code>
+            <span data-i18n="kaStep1">1. Minis → Налаштування → Провайдери → Додати OpenAI.</span><br>
+            <span data-i18n-html="kaStep2">2. Base URL: <code>http://127.0.0.1:8080/v1</code>, API Key: <code>sidebot</code>, модель: <code>sidebot-keepalive</code>.</span><br>
+            <span data-i18n-html="kaStep3">3. У терміналі Minis: <code>minis-config set speech.backgroundEnabled true</code></span>
           </div>
         </details>
       </div>
@@ -739,7 +739,7 @@
   <a id="jobOpenLink" class="btn" href="#" style="display:none;margin-top:8px;align-items:center;justify-content:center;text-decoration:none">📲 Відкрити встановлення</a>
   <div id="jobLogsWrap" class="hidden" style="margin-top:6px">
     <pre id="jobLogs" title="Натисни, щоб скопіювати лог" style="margin:0;padding:8px;max-height:150px;overflow-y:auto;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.1);border-radius:8px;font:11px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;color:rgba(255,255,255,.88);white-space:pre-wrap;word-break:break-word;cursor:pointer"></pre>
-    <button type="button" id="jobCopyBtn" style="margin-top:5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer">📋 Копіювати лог</button>
+    <button type="button" id="jobCopyBtn" data-i18n="copyLogBtn" style="margin-top:5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer">📋 Копіювати лог</button>
   </div>
   <div id="job2fa" class="hidden">
     <div id="jobHint" class="jobhint"></div>
@@ -947,7 +947,23 @@ en: {
   ghCheckBtn:"Check for Updates (GitHub)", updFileBtnLbl:"Update from File",
   copyBotLogLbl:"Copy Log (bot.log)", obSetupLbl:"Initial Setup",
   catLbl:"Category:", catAll:"🌐 All categories", installToLbl:"Install to:",
-  otaManifestLbl:"OTA install (manifest)"
+  otaManifestLbl:"OTA install (manifest)",
+  copyLogBtn:"Copy log", logCopied:"📋 Log copied", copyFailed:"Copy failed",
+  checkingBtn:"Checking...", copiedOkBtn:"✅ Copied!",
+  autoAppsStatus:"Apps status", autoNoSrc:"no source", autoDue:"due now",
+  autoLogTitle:"Auto-refresh log", autoQuickInt:"Quick check interval",
+  autoEveryMins:"Check every (min)",
+  autoEveryMinsMeta:"Minimum 2 min (60 = once an hour)", autoNowBtn:"Check & refresh now",
+  kaGuideTitle:"AI Keepalive Guide for Open Minis",
+  kaStep1:"1. Minis → Settings → Providers → Add OpenAI.",
+  kaStep2:"2. Base URL: <code>http://127.0.0.1:8080/v1</code>, API Key: <code>sidebot</code>, model: <code>sidebot-keepalive</code>.",
+  kaStep3:"3. In Minis terminal: <code>minis-config set speech.backgroundEnabled true</code>",
+  findUdidBtn:"Find", udidNotFound:"UDID not found", udidFindErr:"UDID lookup failed",
+  exportP12:"Export .p12", exportProv:"Export .mobileprovision",
+  lcCertPrompt:"Save the certificate for LiveContainer to work and import it (Settings → Import Certificate).",
+  lcOpenBtn:"Open LiveContainer", profDelAsk:"Delete?", profNewPwPh:"New password (optional)",
+  profSaveBtn:"Save changes", profUpdated:"✅ Profile updated",
+  everyDayChip:"Daily"
 },
 uk: {
   news:"Новини", sources:"Джерела", browse:"Огляд",appstoreOpen:"Відкрити App Store UI", myApps:"Мої додатки", settings:"Налаштування",
@@ -1068,7 +1084,23 @@ uk: {
   ghCheckBtn:"Перевірити оновлення (GitHub)", updFileBtnLbl:"Оновити з файлу",
   copyBotLogLbl:"Копіювати лог (bot.log)", obSetupLbl:"Початкове налаштування (Setup)",
   catLbl:"Категорія:", catAll:"🌐 Усі категорії", installToLbl:"Встановити куди:",
-  otaManifestLbl:"OTA встановлення (manifest)"
+  otaManifestLbl:"OTA встановлення (manifest)",
+  copyLogBtn:"Копіювати лог", logCopied:"📋 Лог скопійовано", copyFailed:"Не вдалося скопіювати",
+  checkingBtn:"Перевіряю...", copiedOkBtn:"✅ Скопійовано!",
+  autoAppsStatus:"Статус додатків", autoNoSrc:"без джерела", autoDue:"час оновити",
+  autoLogTitle:"Журнал автооновлення", autoQuickInt:"Швидкий інтервал перевірки",
+  autoEveryMins:"Перевіряти кожні (хв)",
+  autoEveryMinsMeta:"Мінімум 2 хв (60 = раз на годину)", autoNowBtn:"Перевірити та оновити зараз",
+  kaGuideTitle:"Інструкція AI Keepalive для Open Minis",
+  kaStep1:"1. Minis → Налаштування → Провайдери → Додати OpenAI.",
+  kaStep2:"2. Base URL: <code>http://127.0.0.1:8080/v1</code>, API Key: <code>sidebot</code>, модель: <code>sidebot-keepalive</code>.",
+  kaStep3:"3. У терміналі Minis: <code>minis-config set speech.backgroundEnabled true</code>",
+  findUdidBtn:"Знайти", udidNotFound:"UDID не знайдено", udidFindErr:"Помилка пошуку UDID",
+  exportP12:"Експорт .p12", exportProv:"Експорт .mobileprovision",
+  lcCertPrompt:"Збережіть сертифікат для функціонування LiveContainer та імпортуйте його (Settings → Import Certificate).",
+  lcOpenBtn:"Відкрити LiveContainer", profDelAsk:"Видалити?", profNewPwPh:"Новий пароль (необовʼязково)",
+  profSaveBtn:"Зберегти зміни", profUpdated:"✅ Профіль оновлено",
+  everyDayChip:"Щодня"
 },
 ru: {
   news:"Новости", sources:"Источники", browse:"Обзор",appstoreOpen:"Открыть App Store UI", myApps:"Мои приложения", settings:"Настройки",
@@ -1189,7 +1221,23 @@ ru: {
   ghCheckBtn:"Проверить обновления (GitHub)", updFileBtnLbl:"Обновить из файла",
   copyBotLogLbl:"Копировать лог (bot.log)", obSetupLbl:"Начальная настройка (Setup)",
   catLbl:"Категория:", catAll:"🌐 Все категории", installToLbl:"Установить куда:",
-  otaManifestLbl:"OTA установка (manifest)"
+  otaManifestLbl:"OTA установка (manifest)",
+  copyLogBtn:"Копировать лог", logCopied:"📋 Лог скопирован", copyFailed:"Не удалось скопировать",
+  checkingBtn:"Проверяю...", copiedOkBtn:"✅ Скопировано!",
+  autoAppsStatus:"Статус приложений", autoNoSrc:"без источника", autoDue:"пора обновить",
+  autoLogTitle:"Журнал автообновления", autoQuickInt:"Быстрый интервал проверки",
+  autoEveryMins:"Проверять каждые (мин)",
+  autoEveryMinsMeta:"Минимум 2 мин (60 = раз в час)", autoNowBtn:"Проверить и обновить сейчас",
+  kaGuideTitle:"Инструкция AI Keepalive для Open Minis",
+  kaStep1:"1. Minis → Настройки → Провайдеры → Добавить OpenAI.",
+  kaStep2:"2. Base URL: <code>http://127.0.0.1:8080/v1</code>, API Key: <code>sidebot</code>, модель: <code>sidebot-keepalive</code>.",
+  kaStep3:"3. В терминале Minis: <code>minis-config set speech.backgroundEnabled true</code>",
+  findUdidBtn:"Найти", udidNotFound:"UDID не найден", udidFindErr:"Ошибка поиска UDID",
+  exportP12:"Экспорт .p12", exportProv:"Экспорт .mobileprovision",
+  lcCertPrompt:"Сохраните сертификат для работы LiveContainer и импортируйте его (Settings → Import Certificate).",
+  lcOpenBtn:"Открыть LiveContainer", profDelAsk:"Удалить?", profNewPwPh:"Новый пароль (необязательно)",
+  profSaveBtn:"Сохранить изменения", profUpdated:"✅ Профиль обновлён",
+  everyDayChip:"Ежедневно"
 },
 de: {
   news:"News", sources:"Quellen", browse:"Stöbern",appstoreOpen:"App Store UI öffnen", myApps:"Meine Apps", settings:"Einstellungen",
@@ -1310,7 +1358,23 @@ de: {
   ghCheckBtn:"Nach Updates suchen (GitHub)", updFileBtnLbl:"Aus Datei aktualisieren",
   copyBotLogLbl:"Log kopieren (bot.log)", obSetupLbl:"Ersteinrichtung (Setup)",
   catLbl:"Kategorie:", catAll:"🌐 Alle Kategorien", installToLbl:"Installieren in:",
-  otaManifestLbl:"OTA-Installation (Manifest)"
+  otaManifestLbl:"OTA-Installation (Manifest)",
+  copyLogBtn:"Log kopieren", logCopied:"📋 Log kopiert", copyFailed:"Kopieren fehlgeschlagen",
+  checkingBtn:"Prüfe...", copiedOkBtn:"✅ Kopiert!",
+  autoAppsStatus:"App-Status", autoNoSrc:"keine Quelle", autoDue:"fällig",
+  autoLogTitle:"Auto-Refresh-Protokoll", autoQuickInt:"Schnellintervall",
+  autoEveryMins:"Prüfen alle (Min)",
+  autoEveryMinsMeta:"Mindestens 2 Min (60 = einmal pro Stunde)", autoNowBtn:"Jetzt prüfen & erneuern",
+  kaGuideTitle:"AI-Keepalive-Anleitung für Open Minis",
+  kaStep1:"1. Minis → Einstellungen → Anbieter → OpenAI hinzufügen.",
+  kaStep2:"2. Base URL: <code>http://127.0.0.1:8080/v1</code>, API Key: <code>sidebot</code>, Modell: <code>sidebot-keepalive</code>.",
+  kaStep3:"3. Im Minis-Terminal: <code>minis-config set speech.backgroundEnabled true</code>",
+  findUdidBtn:"Suchen", udidNotFound:"UDID nicht gefunden", udidFindErr:"UDID-Suche fehlgeschlagen",
+  exportP12:".p12 exportieren", exportProv:".mobileprovision exportieren",
+  lcCertPrompt:"Speichere das Zertifikat für LiveContainer und importiere es (Settings → Import Certificate).",
+  lcOpenBtn:"LiveContainer öffnen", profDelAsk:"Löschen?", profNewPwPh:"Neues Passwort (optional)",
+  profSaveBtn:"Änderungen speichern", profUpdated:"✅ Profil aktualisiert",
+  everyDayChip:"Täglich"
 }
 };
 var LANG = (S.lang && I18N[S.lang]) ? S.lang : 'en';
@@ -1325,6 +1389,10 @@ function T(k){
 }
 function applyI18n(){
   try{ document.documentElement.lang = LANG; }catch(e){}
+  document.querySelectorAll('[data-i18n-html]').forEach(function(n){
+    var k = n.getAttribute('data-i18n-html');
+    if(k && T(k)) n.innerHTML = T(k);
+  });
   document.querySelectorAll('[data-i18n]').forEach(function(n){
     n.textContent = T(n.getAttribute('data-i18n'));
   });
@@ -2054,9 +2122,9 @@ function copyJobLogs(){
     document.body.removeChild(ta);
   }catch(e){}
   if(copied){
-    toast('📋 Лог скопійовано');
+    toast(T('logCopied'));
   } else if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(txt).then(function(){ toast('📋 Лог скопійовано'); }).catch(function(){ toast('Не вдалося скопіювати', true); });
+    navigator.clipboard.writeText(txt).then(function(){ toast(T('logCopied')); }).catch(function(){ toast(T('copyFailed'), true); });
   }
 }
 if(el('jobLogs')) el('jobLogs').addEventListener('click', copyJobLogs);
@@ -2343,7 +2411,7 @@ function showDetail(cmd, text, items){
   var screenTitles = {certs:'🔏 '+T('tCerts'), appids:'🆔 '+T('tAppIds'), anisette:'🌐 '+T('advAnisette')};
   el('detailTitle').textContent = titles[cmd.action]
     || (cmd.action==='show' ? (screenTitles[cmd.screen] || cmd.screen || T('detailTitle')) : T('detailTitle'));
-  el('detailBody').textContent = (cmd.action === 'certs' || (cmd.action === 'show' && cmd.screen === 'certs')) ? '' : (text || '');
+  el('detailBody').textContent = (cmd.action === 'certs' || (cmd.action === 'show' && (cmd.screen === 'certs' || cmd.screen === 'anisette'))) ? '' : (text || '');
   var box = el('detailItems');
   box.innerHTML = '';
   (items || []).forEach(function(it){
@@ -2395,13 +2463,13 @@ function showDetail(cmd, text, items){
       var ce = document.createElement('button');
       ce.className = 'btn ghost';
       ce.style.cssText = 'flex:1;padding:9px 10px;font-size:13px;margin:0';
-      ce.textContent = 'Експорт .p12';
+      ce.textContent = T('exportP12');
       ce.addEventListener('click', function(){ dlCert('p12', 'cert.p12'); });
       btns.appendChild(ce);
       var cp = document.createElement('button');
       cp.className = 'btn ghost';
       cp.style.cssText = 'flex:1;padding:9px 10px;font-size:13px;margin:0';
-      cp.textContent = 'Експорт .mobileprovision';
+      cp.textContent = T('exportProv');
       cp.addEventListener('click', function(){ dlCert('provision', 'cert.mobileprovision'); });
       btns.appendChild(cp);
       if(!it.active){
@@ -3260,32 +3328,34 @@ function renderSettings(){
      48 h window) in the background, asking for 2FA in chat when
      Apple wants it. */
   var _autoAppsHtml = (Array.isArray(S.auto.apps) && S.auto.apps.length)
-    ? '<div class="row" style="flex-direction:column;align-items:stretch;gap:6px;cursor:default"><span style="font-size:12px;color:var(--gray)">Статус додатків</span>'
+    ? '<div class="row" style="flex-direction:column;align-items:stretch;gap:6px;cursor:default"><span style="font-size:12px;color:var(--gray)">'+esc(T('autoAppsStatus'))+'</span>'
       + S.auto.apps.map(function(a){
-          var badge = !a.src ? '<span style="color:var(--gray)">без джерела</span>'
-            : (a.due ? '<span style="color:#ff9f0a;font-weight:700">час оновити</span>' : '<span style="color:#30d158">OK</span>');
+          var badge = !a.src ? '<span style="color:var(--gray)">'+esc(T('autoNoSrc'))+'</span>'
+            : (a.due ? '<span style="color:#ff9f0a;font-weight:700">'+esc(T('autoDue'))+'</span>' : '<span style="color:#30d158">OK</span>');
           return '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;gap:8px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(a.t)+'</span><span style="flex:0 0 auto">'+esc(a.rem || '—')+' · '+badge+'</span></div>';
         }).join('')
       + '</div>'
     : '';
   var _autoLogHtml = (Array.isArray(S.auto.log) && S.auto.log.length)
-    ? '<div class="row" style="flex-direction:column;align-items:stretch;gap:4px;cursor:default"><span style="font-size:12px;color:var(--gray)">Журнал автооновлення</span>'
+    ? '<div class="row" style="flex-direction:column;align-items:stretch;gap:4px;cursor:default"><span style="font-size:12px;color:var(--gray)">'+esc(T('autoLogTitle'))+'</span>'
       + S.auto.log.slice(0, 5).map(function(l){ return '<div class="meta" style="font-size:11px;line-height:1.35">'+esc(l)+'</div>'; }).join('')
       + '</div>'
     : '';
   var _curMins = (S.auto.mins != null) ? S.auto.mins : ((S.auto.hours||1)*60);
-  var _presets = [[2,'2 хв'],[30,'30 хв'],[60,'1 год'],[1440,'Щодня']];
+  var _minUnit = (LANG==='uk'?' хв':LANG==='ru'?' мин':' min');
+  var _hrUnit = (LANG==='uk'?' год':LANG==='ru'?' ч':LANG==='de'?' Std':' h');
+  var _presets = [[2,'2'+_minUnit],[30,'30'+_minUnit],[60,'1'+_hrUnit],[1440,T('everyDayChip')]];
   el('autoCard').innerHTML =
     '<button class="row" id="autoRow"><span style="display:inline-flex;align-items:center;gap:10px"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/><polyline points="12 7 12 12 15 14"/></svg><span>'+esc(String(T('autoRow')||'').replace(/^[^\wА-Яа-яІіЇїЄєҐґ]+/u,''))+'<br><span class="meta">'+esc(T('autoRowMeta'))+'</span></span></span><span class="pill '+(S.auto.on?'on':'')+'">'+(S.auto.on?'ON':'OFF')+'</span></button>'
-    + '<div class="row" style="flex-direction:column;align-items:stretch;gap:8px;cursor:default"><span style="font-size:12px;color:var(--gray)">Швидкий інтервал перевірки</span><div class="chiprow" id="autoPresetRow">'
+    + '<div class="row" style="flex-direction:column;align-items:stretch;gap:8px;cursor:default"><span style="font-size:12px;color:var(--gray)">'+esc(T('autoQuickInt'))+'</span><div class="chiprow" id="autoPresetRow">'
     + _presets.map(function(p){ return '<button class="chip'+(_curMins===p[0]?' sel':'')+'" data-am="'+p[0]+'">'+esc(p[1])+'</button>'; }).join('')
     + '</div></div>'
     + '<div class="row" style="cursor:default"><span>'+esc(T('renewAfter'))+'<br><span class="meta">'+esc(T('renewAfterMeta'))+'</span></span><input id="autoDays" type="text" inputmode="numeric" value="'+esc(S.auto.days)+'" style="width:64px;text-align:right"></div>'
-    + '<div class="row" style="cursor:default"><span>Перевіряти кожні (хв)<br><span class="meta">Мінімум 2 хв (60 = раз на годину)</span></span><input id="autoMins" type="text" inputmode="numeric" value="'+esc(_curMins)+'" style="width:64px;text-align:right"></div>'
+    + '<div class="row" style="cursor:default"><span>'+esc(T('autoEveryMins'))+'<br><span class="meta">'+esc(T('autoEveryMinsMeta'))+'</span></span><input id="autoMins" type="text" inputmode="numeric" value="'+esc(_curMins)+'" style="width:64px;text-align:right"></div>'
     + '<div class="row" style="cursor:default"><span>'+esc(T('lastCheck'))+'<br><span class="meta">'+(S.auto.last ? esc(S.auto.last.slice(0,16).replace('T',' ')) : esc(T('notYet')))+(S.auto.n ? esc(T('autoRefreshed', S.auto.n)) : '')+'</span></span></div>'
     + _autoAppsHtml
     + _autoLogHtml
-    + '<div class="row" style="cursor:default"><button class="btn" id="autoNowBtn" style="width:100%;padding:10px;font-size:13px">Перевірити та оновити зараз</button></div>';
+    + '<div class="row" style="cursor:default"><button class="btn" id="autoNowBtn" style="width:100%;padding:10px;font-size:13px">'+esc(T('autoNowBtn'))+'</button></div>';
   el('autoRow').addEventListener('click', function(){
     S.auto.on = !S.auto.on;
     renderSettings();
@@ -3309,7 +3379,7 @@ function renderSettings(){
   if(el('autoNowBtn')){
     el('autoNowBtn').addEventListener('click', function(){
       var b = el('autoNowBtn');
-      b.disabled = true; b.textContent = 'Перевіряю...';
+      b.disabled = true; b.textContent = T('checkingBtn');
       apiCmd({action:'auto_refresh_now'}, 30000).then(function(r){
         if(r && r.state) applyState(r.state);
         toast((r && r.text) || 'Готово');
@@ -3873,8 +3943,8 @@ if(!S.loaded){ refreshState(); }
         document.body.appendChild(ov);
       }
       function doneOk(){
-        if(btn){ btn.textContent = '✅ Скопійовано!'; setTimeout(function(){ btn.textContent = orig; }, 2000); }
-        if(typeof toast === 'function') toast('✅ Лог скопійовано');
+        if(btn){ btn.textContent = T('copiedOkBtn'); setTimeout(function(){ btn.textContent = orig; }, 2000); }
+        if(typeof toast === 'function') toast(T('logCopied'));
       }
       if(navigator.clipboard && navigator.clipboard.writeText){
         navigator.clipboard.writeText(txt).then(doneOk).catch(function(){
