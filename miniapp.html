@@ -450,6 +450,13 @@
         <div id="aiFill" style="height:100%;width:0%;background:var(--accent,#0a84ff);border-radius:999px;transition:width .25s ease"></div>
       </div>
       <a id="aiOpenLink" class="btn" href="#" style="display:none;margin-top:8px;align-items:center;justify-content:center;text-decoration:none">📲 Відкрити встановлення</a>
+      <div id="aiLcCertBox" class="hidden" style="margin-top:10px;padding:10px;border-radius:12px;border:1px solid rgba(56,189,248,.45);background:rgba(56,189,248,.08)">
+        <div id="aiLcCertMsg" style="font-size:13px;font-weight:600;line-height:1.35;margin-bottom:8px">Збережіть сертифікат для функціонування LiveContainer та імпортуйте його (Settings → Import Certificate).</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <button type="button" id="aiLcP12Btn" class="btn" style="flex:1;min-width:130px;margin:0;padding:9px 10px;font-size:12px">Завантажити .p12</button>
+          <a id="aiLcOpenBtn" class="btn" href="livecontainer://" style="flex:1;min-width:130px;margin:0;padding:9px 10px;font-size:12px;text-align:center;text-decoration:none;background:rgba(255,255,255,.12)">Відкрити LiveContainer</a>
+        </div>
+      </div>
       <div id="aiLogsWrap" class="hidden" style="margin-top:8px">
         <pre id="aiLogs" style="margin:0;padding:8px;max-height:150px;overflow-y:auto;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.1);border-radius:8px;font:11px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;color:rgba(255,255,255,.88);white-space:pre-wrap;word-break:break-word;cursor:pointer"></pre>
         <button type="button" id="aiCopyBtn" style="margin-top:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer">📋 Копіювати лог</button>
@@ -2061,10 +2068,12 @@ function setAppsCard(title, pct, logs, doneState, openUrl){
 }
 
 function startJobPoll(jid, label, kind){
+  window._lastJobLabel = String(label || '');
   var useAppsCard = (kind === 'install_program' || kind === 'install_siboot' || kind === 'import');
   if(useAppsCard){
     showTab('apps');
     if(el('aiOpenLink')) el('aiOpenLink').style.display = 'none';
+    if(el('aiLcCertBox')) el('aiLcCertBox').classList.add('hidden');
     if(el('aiLogsWrap')) el('aiLogsWrap').classList.add('hidden');
     if(el('aiLogs')) el('aiLogs').textContent = '';
     setAppsCard(label, 0, [], false, '');
@@ -2140,6 +2149,36 @@ function startJobPoll(jid, label, kind){
           setTimeout(function(){ window.location.href = r.open_url; }, 120);
         } else if(_kind === 'import'){ showImportDone(r.text); }
         else { toast(r.text || T('done')); }
+        var _lcMatch = ((window._lastJobLabel || '') + ' ' + (r.text || '')).toLowerCase().indexOf('livecontainer') !== -1;
+        if(_lcMatch && !r.open_url && el('aiLcCertBox')){
+          if(!useAppsCard && el('appsInstallCard')){
+            showTab('apps');
+            setAppsCard(r.text || 'LiveContainer', 100, r.logs || [], true, '');
+          }
+          el('aiLcCertBox').classList.remove('hidden');
+          var _lcBtn = el('aiLcP12Btn');
+          if(_lcBtn && !_lcBtn._bound){
+            _lcBtn._bound = 1;
+            _lcBtn.addEventListener('click', function(){
+              fetch('/miniapp-cert-export?kind=p12&t=' + encodeURIComponent(apiToken()))
+                .then(function(res){
+                  if(!res.ok) return res.json().catch(function(){return {};}).then(function(j){ throw new Error(j.error || ('HTTP ' + res.status)); });
+                  var cd = res.headers.get('Content-Disposition') || '';
+                  var m = /filename="?([^"]+)"?/i.exec(cd);
+                  var fname = m ? m[1] : 'sidebot.p12';
+                  return res.blob().then(function(b){ return {blob:b, fname:fname}; });
+                })
+                .then(function(x){
+                  var u = URL.createObjectURL(x.blob);
+                  var a = document.createElement('a');
+                  a.href = u; a.download = x.fname;
+                  document.body.appendChild(a); a.click(); a.remove();
+                  setTimeout(function(){ URL.revokeObjectURL(u); }, 4000);
+                })
+                .catch(function(e){ toast('❌ ' + ((e && e.message) || 'Не вдалося завантажити .p12'), true); });
+            });
+          }
+        }
         if(el('refreshAllBtn')) el('refreshAllBtn').disabled = false;
         refreshState();
       }
