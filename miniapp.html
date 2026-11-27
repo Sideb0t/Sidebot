@@ -473,6 +473,7 @@
       <div id="aiLogsWrap" class="hidden" style="margin-top:8px">
         <pre id="aiLogs" style="margin:0;padding:8px;max-height:150px;overflow-y:auto;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.1);border-radius:8px;font:11px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;color:rgba(255,255,255,.88);white-space:pre-wrap;word-break:break-word;cursor:pointer"></pre>
         <button type="button" id="aiCopyBtn" data-i18n="copyLogBtn" style="margin-top:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer">📋 Копіювати лог</button>
+        <button type="button" onclick="if(window.copyBotLog)window.copyBotLog(this)" style="margin-top:6px;margin-left:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer">bot.log</button>
       </div>
     </div>
     <div class="sech"><h2 data-i18n="active">Active</h2><div style="display:flex;gap:10px;align-items:center"><button class="link" id="syncPhoneBtn" data-i18n="syncPhoneBtn" style="font-size:12px">Звірити з iPhone</button><button class="link" id="refreshAllBtn" style="display:inline-flex;align-items:center;gap:5px"><svg class="sb-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg><span data-i18n="refreshAll">Refresh All</span></button></div></div>
@@ -740,6 +741,7 @@
   <div id="jobLogsWrap" class="hidden" style="margin-top:6px">
     <pre id="jobLogs" title="Натисни, щоб скопіювати лог" style="margin:0;padding:8px;max-height:150px;overflow-y:auto;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.1);border-radius:8px;font:11px/1.35 ui-monospace,SFMono-Regular,Menlo,monospace;color:rgba(255,255,255,.88);white-space:pre-wrap;word-break:break-word;cursor:pointer"></pre>
     <button type="button" id="jobCopyBtn" data-i18n="copyLogBtn" style="margin-top:5px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer">📋 Копіювати лог</button>
+    <button type="button" onclick="if(window.copyBotLog)window.copyBotLog(this)" style="margin-top:5px;margin-left:6px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:5px 10px;font-size:12px;cursor:pointer">bot.log</button>
   </div>
   <div id="job2fa" class="hidden">
     <div id="jobHint" class="jobhint"></div>

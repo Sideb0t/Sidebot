@@ -4221,6 +4221,7 @@ def record_installed(bundle, title, source, profile_expires=""):
         pass
     _signed_cache = ""
     _url_scheme = ""
+    _signed_bundle_id = ""
     try:
         _ls_p = os.path.join(BASE_DIR, "last-signed.ipa")
         if os.path.isfile(_ls_p) and os.path.getsize(_ls_p) > 1024:
@@ -4235,6 +4236,7 @@ def record_installed(bundle, title, source, profile_expires=""):
                     if _zn.startswith("Payload/") and _zn.endswith(".app/Info.plist") and _zn.count("/") == 2:
                         import plistlib as _pl_sc
                         _pl = _pl_sc.loads(_zf.read(_zn))
+                        _signed_bundle_id = str(_pl.get("CFBundleIdentifier") or "").strip()
                         for _ut in (_pl.get("CFBundleURLTypes") or []):
                             _scs = _ut.get("CFBundleURLSchemes") or []
                             if _scs:
@@ -4245,6 +4247,7 @@ def record_installed(bundle, title, source, profile_expires=""):
         pass
     rec = {
         "bundle": bundle,
+        "signed_bundle": _signed_bundle_id,
         "title": title or bundle,
         "source": _src,
         "udid": job.get("udid", ""),
@@ -11107,7 +11110,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.87"
+SIDEBOT_VERSION = "2026.11.25.88"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -11889,18 +11892,33 @@ def _miniapp_api_dispatch(cmd, chat_id):
                                 if _okp: break
                                 time.sleep(0.3)
                     _miniapp_job_set(_jid, "running", "💾 " + _t)
+                    _real_b = _rec.get("signed_bundle") or ""
+                    if not _real_b:
+                        _pp = _rec.get("provision_path") or ""
+                        if _pp and os.path.isfile(_pp):
+                            _m_tid = re.search(r"\.([A-Z0-9]{10})\.mobileprovision$", _pp)
+                            if _m_tid:
+                                _real_b = _b + "." + _m_tid.group(1)
+                    _real_b = _real_b or _b
+                    _install_log_line("[DEACTIVATE] start bundle=%s real=%s" % (_b, _real_b))
                     try:
                         _appdata_backup_thread(chat_id, _b)
-                    except Exception:
-                        pass
+                    except Exception as _be:
+                        _install_log_line("[DEACTIVATE] backup err=%s" % _be)
                     _miniapp_job_set(_jid, "running", "🗑 " + _t)
-                    _ok_u, _det_u, _ = _minis_uninstall(_b, _rec.get("udid") or "")
-                    _all = load_installed()
-                    for _x in _all:
-                        if _x.get("bundle") == _b:
-                            _x["disabled"] = True
-                    save_installed(_all)
-                    _miniapp_job_set(_jid, "done", ("⏸ " + _t) if _ok_u else ("⏸ " + _t + " (" + str(_det_u)[:80] + ")"))
+                    _ok_u, _det_u, _ = _minis_uninstall(_real_b, _rec.get("udid") or "")
+                    if not _ok_u and _real_b != _b:
+                        _ok_u, _det_u, _ = _minis_uninstall(_b, _rec.get("udid") or "")
+                    _install_log_line("[DEACTIVATE] uninstall ok=%s det=%s" % (_ok_u, str(_det_u)[:200]))
+                    if _ok_u:
+                        _all = load_installed()
+                        for _x in _all:
+                            if _x.get("bundle") == _b:
+                                _x["disabled"] = True
+                        save_installed(_all)
+                        _miniapp_job_set(_jid, "done", "⏸ " + _t)
+                    else:
+                        _miniapp_job_set(_jid, "failed", "❌ " + _t + ": " + str(_det_u)[:120])
                 except Exception as _de:
                     _miniapp_job_set(_jid, "failed", str(_de)[:180])
             threading.Thread(target=_deact_w, daemon=True).start()
@@ -11953,7 +11971,7 @@ def _miniapp_api_dispatch(cmd, chat_id):
             if job.get("step") in _MINIAPP_BUSY_STEPS or job.get("dl_active"):
                 return {"ok": False, "text": tr("miniapp_uninstall_busy")}
             _ok_u, _det_u, _tried_u = _minis_uninstall(
-                _b, _rec.get("udid") or "")
+                _rec.get("signed_bundle") or _b, _rec.get("udid") or "")
             _feather_lib_delete_bundle(_b, keep_files=False)
             if _ok_u:
                 _txt = tr("miniapp_uninstalled") % _title
