@@ -10271,7 +10271,7 @@ def _fast_misagent_refresh(bundles, jid=None):
     try:
         _res = subprocess.run(_cmd, capture_output=True, text=True, timeout=60)
         _out = (_res.stdout or "") + "\n" + (_res.stderr or "")
-        print("[FAST_REFRESH] rc=%s out=%s" % (_res.returncode, _out.strip()[:300]), flush=True)
+        print("[FAST_REFRESH] rc=%s out=%s" % (_res.returncode, _out.strip()[-500:]), flush=True)
         if _res.returncode != 0 or "PROFILES_OK" not in _out:
             return set()
     except Exception as _e:
@@ -10871,7 +10871,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.79"
+SIDEBOT_VERSION = "2026.11.25.80"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
