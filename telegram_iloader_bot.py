@@ -9900,6 +9900,7 @@ def _miniapp_state():
             # Remote catalog icon: the page tries /appicon first and
             # falls back to this only when no local IPA icon exists.
             "i": _appicon_remote_url(_r.get("bundle") or ""),
+            "disabled": bool(_r.get("disabled")),
         })
     _cached = []
     for _s in _enabled:
@@ -10865,7 +10866,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.85"
+SIDEBOT_VERSION = "2026.11.25.86"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -11622,6 +11623,73 @@ def _miniapp_api_dispatch(cmd, chat_id):
             threading.Thread(target=_login_worker, daemon=True).start()
             return {"ok": True, "job": _jid, "status": "started"}
         # --- fast: delete app (2026-11-16: real uninstall) ----------------
+        if _action == "deactivate_app":
+            _b = cmd.get("bundle") or ""
+            _recs = load_installed()
+            _rec = next((r for r in _recs if r.get("bundle") == _b), None)
+            if _rec is None:
+                return {"ok": False, "text": tr("miniapp_not_found") % _b, "state": _miniapp_state()}
+            if job.get("step") in _MINIAPP_BUSY_STEPS or job.get("dl_active"):
+                return {"ok": False, "text": tr("miniapp_uninstall_busy")}
+            _jid = _miniapp_job_new("deactivate", _b)
+            def _deact_w():
+                _t = _rec.get("title") or _b
+                try:
+                    if MINIS_MODE and _ms_get("cell"):
+                        _nm = _CELL_NOTIFY_BODY.get(CUR_LANG, _CELL_NOTIFY_BODY["uk"])
+                        if _minis_notify("SideBot", _nm):
+                            time.sleep(2.0)
+                            _we = time.time() + 8.0
+                            while time.time() < _we:
+                                import socket as _sock
+                                _s = _sock.socket(); _s.settimeout(0.4)
+                                _okp = (_s.connect_ex(("10.7.0.1", 49152)) == 0)
+                                _s.close()
+                                if _okp: break
+                                time.sleep(0.3)
+                    _miniapp_job_set(_jid, "running", "💾 " + _t)
+                    try:
+                        _appdata_backup_thread(chat_id, _b)
+                    except Exception:
+                        pass
+                    _miniapp_job_set(_jid, "running", "🗑 " + _t)
+                    _ok_u, _det_u, _ = _minis_uninstall(_b, _rec.get("udid") or "")
+                    _all = load_installed()
+                    for _x in _all:
+                        if _x.get("bundle") == _b:
+                            _x["disabled"] = True
+                    save_installed(_all)
+                    _miniapp_job_set(_jid, "done", ("⏸ " + _t) if _ok_u else ("⏸ " + _t + " (" + str(_det_u)[:80] + ")"))
+                except Exception as _de:
+                    _miniapp_job_set(_jid, "failed", str(_de)[:180])
+            threading.Thread(target=_deact_w, daemon=True).start()
+            return {"ok": True, "job": _jid, "status": "started", "text": "⏸ " + (_rec.get("title") or _b)}
+        if _action == "reactivate_app":
+            _b = cmd.get("bundle") or ""
+            _recs = load_installed()
+            _rec = next((r for r in _recs if r.get("bundle") == _b), None)
+            if _rec is None:
+                return {"ok": False, "text": tr("miniapp_not_found") % _b, "state": _miniapp_state()}
+            if job.get("step") in _MINIAPP_BUSY_STEPS or job.get("dl_active"):
+                return {"ok": False, "text": tr("miniapp_busy")}
+            _jid = _miniapp_job_new("reinstall", _b)
+            def _react_w():
+                _miniapp_api_reinstall_worker(_jid, chat_id, _b, "source")
+                _all = load_installed()
+                _changed = False
+                for _x in _all:
+                    if _x.get("bundle") == _b and _x.get("disabled"):
+                        _x["disabled"] = False
+                        _changed = True
+                if _changed:
+                    save_installed(_all)
+                if (_MINIAPP_JOBS.get(_jid) or {}).get("status") == "done" and _appdata_for(_b):
+                    try:
+                        _appdata_restore_thread(chat_id, _b, 0)
+                    except Exception:
+                        pass
+            threading.Thread(target=_react_w, daemon=True).start()
+            return {"ok": True, "job": _jid, "status": "started", "text": "▶️ " + (_rec.get("title") or _b)}
         if _action == "delete_app":
             _b = cmd.get("bundle") or ""
             _remove_only = bool(cmd.get("remove_only"))

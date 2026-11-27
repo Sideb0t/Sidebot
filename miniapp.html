@@ -475,7 +475,7 @@
         <button type="button" id="aiCopyBtn" data-i18n="copyLogBtn" style="margin-top:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer">📋 Копіювати лог</button>
       </div>
     </div>
-    <div class="sech"><h2 data-i18n="active">Active</h2><button class="link" id="refreshAllBtn" style="display:inline-flex;align-items:center;gap:5px"><svg class="sb-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg><span data-i18n="refreshAll">Refresh All</span></button></div>
+    <div class="sech"><h2 data-i18n="active">Active</h2><div style="display:flex;gap:10px;align-items:center"><button class="link" id="syncPhoneBtn" data-i18n="syncPhoneBtn" style="font-size:12px">Звірити з iPhone</button><button class="link" id="refreshAllBtn" style="display:inline-flex;align-items:center;gap:5px"><svg class="sb-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg><span data-i18n="refreshAll">Refresh All</span></button></div></div>
     <div class="note" id="autoLine" style="margin:-6px 2px 10px"></div>
     <div id="appsList"></div>
     <div class="appids" id="appIdsLine"></div>
@@ -963,7 +963,10 @@ en: {
   lcCertPrompt:"Save the certificate for LiveContainer to work and import it (Settings → Import Certificate).",
   lcOpenBtn:"Open LiveContainer", profDelAsk:"Delete?", profNewPwPh:"New password (optional)",
   profSaveBtn:"Save changes", profUpdated:"✅ Profile updated",
-  everyDayChip:"Daily"
+  everyDayChip:"Daily",
+  deactivateBtn:"⏸ Deactivate", reactivateBtn:"▶️ Enable",
+  disabledBadge:"Disabled", daysShort:"d", lblUpdating:"Updating", lblLeft:"Left",
+  updateSidebot:"Update SideBot", syncPhoneBtn:"Check iPhone", syncPhoneOk:"Checked on iPhone: %s app(s)"
 },
 uk: {
   news:"Новини", sources:"Джерела", browse:"Огляд",appstoreOpen:"Відкрити App Store UI", myApps:"Мої додатки", settings:"Налаштування",
@@ -1100,7 +1103,10 @@ uk: {
   lcCertPrompt:"Збережіть сертифікат для функціонування LiveContainer та імпортуйте його (Settings → Import Certificate).",
   lcOpenBtn:"Відкрити LiveContainer", profDelAsk:"Видалити?", profNewPwPh:"Новий пароль (необовʼязково)",
   profSaveBtn:"Зберегти зміни", profUpdated:"✅ Профіль оновлено",
-  everyDayChip:"Щодня"
+  everyDayChip:"Щодня",
+  deactivateBtn:"⏸ Вимкнути", reactivateBtn:"▶️ Увімкнути",
+  disabledBadge:"Вимкнено", daysShort:"дн", lblUpdating:"Оновлення", lblLeft:"Лишилось",
+  updateSidebot:"Оновити SideBot", syncPhoneBtn:"Звірити з iPhone", syncPhoneOk:"Знайдено на iPhone: %s дод."
 },
 ru: {
   news:"Новости", sources:"Источники", browse:"Обзор",appstoreOpen:"Открыть App Store UI", myApps:"Мои приложения", settings:"Настройки",
@@ -1237,7 +1243,10 @@ ru: {
   lcCertPrompt:"Сохраните сертификат для работы LiveContainer и импортируйте его (Settings → Import Certificate).",
   lcOpenBtn:"Открыть LiveContainer", profDelAsk:"Удалить?", profNewPwPh:"Новый пароль (необязательно)",
   profSaveBtn:"Сохранить изменения", profUpdated:"✅ Профиль обновлён",
-  everyDayChip:"Ежедневно"
+  everyDayChip:"Ежедневно",
+  deactivateBtn:"⏸ Выключить", reactivateBtn:"▶️ Включить",
+  disabledBadge:"Выключено", daysShort:"дн", lblUpdating:"Обновление", lblLeft:"Осталось",
+  updateSidebot:"Обновить SideBot", syncPhoneBtn:"Сверить с iPhone", syncPhoneOk:"Найдено на iPhone: %s прил."
 },
 de: {
   news:"News", sources:"Quellen", browse:"Stöbern",appstoreOpen:"App Store UI öffnen", myApps:"Meine Apps", settings:"Einstellungen",
@@ -1374,7 +1383,10 @@ de: {
   lcCertPrompt:"Speichere das Zertifikat für LiveContainer und importiere es (Settings → Import Certificate).",
   lcOpenBtn:"LiveContainer öffnen", profDelAsk:"Löschen?", profNewPwPh:"Neues Passwort (optional)",
   profSaveBtn:"Änderungen speichern", profUpdated:"✅ Profil aktualisiert",
-  everyDayChip:"Täglich"
+  everyDayChip:"Täglich",
+  deactivateBtn:"⏸ Deaktivieren", reactivateBtn:"▶️ Aktivieren",
+  disabledBadge:"Deaktiviert", daysShort:"T", lblUpdating:"Aktualisiere", lblLeft:"Übrig",
+  updateSidebot:"SideBot aktualisieren", syncPhoneBtn:"iPhone prüfen", syncPhoneOk:"Auf iPhone gefunden: %s App(s)"
 }
 };
 var LANG = (S.lang && I18N[S.lang]) ? S.lang : 'en';
@@ -2888,7 +2900,7 @@ function sidebotIconFail(img){
 function renderApps(){
   var pill = el('updPill');
   if(window._ghAvail && window._ghAvail.has_update){
-    pill.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><svg class="sb-svg" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Оновити SideBot (' + esc(window._ghAvail.remote_version || '') + ')</span></span>';
+    pill.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><svg class="sb-svg" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>' + esc(T('updateSidebot')) + ' (' + esc(window._ghAvail.remote_version || '') + ')</span></span>';
     pill.style.background = 'rgba(10,132,255,.22)';
     pill.style.color = '#60a5fa';
     pill.style.cursor = 'pointer';
@@ -2922,21 +2934,25 @@ function renderApps(){
       var isRef = (window._refreshingApps === '*') || (window._refreshingApps && (window._refreshingApps === a.b || String(window._refreshingApps).indexOf(a.b) !== -1 || String(window._refreshingApps).indexOf(a.n||'') !== -1));
       var isFlash = (window._refreshedFlash === '*') || (window._refreshedFlash && (window._refreshedFlash === a.b || String(window._refreshedFlash).indexOf(a.b) !== -1 || String(window._refreshedFlash).indexOf(a.n||'') !== -1));
       var pillCls = 'exp-pill' + (isRef ? ' refreshing' : (daysLeft <= 1 ? ' crit' : (daysLeft <= 3 ? ' warn' : ''))) + (isFlash ? ' refreshed' : '');
-      var pillTxt = isRef ? '<span class="spin" style="width:11px;height:11px;border-width:2px"></span>' : (daysLeft + ' дн');
-      var expPillHtml = '<span class="exp-wrap"><span class="exp-lbl">' + (isRef ? 'Оновлення' : 'Лишилось') + '</span><span class="' + pillCls + '">' + pillTxt + '</span></span>';
-      html += '<div class="appcard"><button class="apphead" data-i="'+i+'">'
+      var pillTxt = isRef ? '<span class="spin" style="width:11px;height:11px;border-width:2px"></span>' : (a.disabled ? esc(T('disabledBadge')) : (daysLeft + ' ' + esc(T('daysShort'))));
+      var expPillHtml = '<span class="exp-wrap"><span class="exp-lbl">' + esc(isRef ? T('lblUpdating') : (a.disabled ? '' : T('lblLeft'))) + '</span><span class="' + pillCls + '"'+(a.disabled?' style="opacity:.6"':'')+'>' + pillTxt + '</span></span>';
+      var onPhoneMark = (Array.isArray(window._phoneBundles)) ? (window._phoneBundles.indexOf(a.b) !== -1 ? ' <span class="badge" style="color:#30d158">📱✓</span>' : ' <span class="badge" style="opacity:.5">—</span>') : ' <span class="badge">✓</span>';
+      html += '<div class="appcard"'+(a.disabled?' style="opacity:.72"':'')+'><button class="apphead" data-i="'+i+'">'
         + '<img class="appicon" src="'+esc(icUrl)+'" data-alt="'+esc(a.i||'')+'" alt="" onerror="sidebotIconFail(this)">'
         + '<span class="appicon appicon-fallback" style="display:none">✦</span>'
-        + '<span style="min-width:0;flex:1"><span class="appname">'+esc(a.n||a.b)+' <span class="badge">✓</span></span>'
+        + '<span style="min-width:0;flex:1"><span class="appname">'+esc(a.n||a.b)+onPhoneMark+'</span>'
         + '<span class="appsub" style="display:block">'+sub+'</span>'+cd+'</span>'
         + expPillHtml + '</button>'
         + '<div class="actgrid hidden" id="acts-'+i+'">'
-        + '<button data-cmd="refresh">'+esc(T('refresh'))+'</button>'
-        + '<button data-cmd="reinstall-source">'+esc(T('reinstallSource'))+'</button>'
-        + '<button data-cmd="info">'+esc(T('infoBtn'))+'</button>'
-        + '<button data-cmd="jit">JIT</button>'
-        + '<button data-cmd="signopts">'+esc(String(T('signOptsBtn')||'').replace(/^[^\wА-Яа-яІіЇїЄєҐґ]+/u,''))+'</button>'
-        + '<button data-cmd="appdata">'+esc(T('backupRestore'))+'</button>'
+        + (a.disabled
+            ? '<button data-cmd="reactivate" style="grid-column:1/-1;background:rgba(48,209,88,.22);color:#30d158;font-weight:700">'+esc(T('reactivateBtn'))+'</button>'
+            : '<button data-cmd="refresh">'+esc(T('refresh'))+'</button>'
+              + '<button data-cmd="reinstall-source">'+esc(T('reinstallSource'))+'</button>'
+              + '<button data-cmd="info">'+esc(T('infoBtn'))+'</button>'
+              + '<button data-cmd="jit">JIT</button>'
+              + '<button data-cmd="signopts">'+esc(String(T('signOptsBtn')||'').replace(/^[^\wА-Яа-яІіЇїЄєҐґ]+/u,''))+'</button>'
+              + '<button data-cmd="appdata">'+esc(T('backupRestore'))+'</button>'
+              + '<button data-cmd="deactivate">'+esc(T('deactivateBtn'))+'</button>')
         + '<button data-cmd="delete" class="danger" style="grid-column:1/-1">'+esc(T('deleteBtn'))+'</button>'
         + '</div></div>';
     });
@@ -2971,6 +2987,8 @@ function renderApps(){
           });
         }
         else if(c==='appdata') send({action:'appdata', bundle:a.b});
+        else if(c==='deactivate') send({action:'deactivate_app', bundle:a.b});
+        else if(c==='reactivate') send({action:'reactivate_app', bundle:a.b});
         else if(c==='delete'){
           /* In-page confirm: window.confirm/showConfirm are silently
              swallowed in Telegram's iOS WebView, which is why Delete
@@ -3077,6 +3095,22 @@ el('addBtn').addEventListener('click', function(){ el('ipaFile').click(); });
     }
   });
 })();
+if(el('syncPhoneBtn')){
+  el('syncPhoneBtn').addEventListener('click', function(){
+    var sb = el('syncPhoneBtn');
+    sb.disabled = true;
+    apiCmd({action:'installed_apps'}, 25000).then(function(r){
+      sb.disabled = false;
+      if(r && r.ok && Array.isArray(r.bundles)){
+        window._phoneBundles = r.bundles;
+        renderApps();
+        toast(T('syncPhoneOk', r.bundles.length));
+      } else {
+        toast((r && r.text) || T('failed'), true);
+      }
+    }).catch(function(){ sb.disabled = false; toast(T('noConnection'), true); });
+  });
+}
 el('refreshAllBtn').addEventListener('click', function(){
   if(!S.apps.length){ toast(T('noApps')); return; }
   askConfirm(T('refAllTitle', S.apps.length), T('refAllBody'), T('refreshAll'), function(){
