@@ -6667,9 +6667,10 @@ _UNINSTALL_PROBE = {"exe": "", "mtime": 0, "size": 0, "ok": False}
 
 
 def _minis_uninstall_supports():
-    """(exe, ok, err). ok means this helper answers an uninstall
-    help, so a real uninstall can be attempted. Cached per
-    (path, mtime, size) like the appdata probe."""
+    """(exe, ok, err). Supports sideloader uninstall OR install-helper uninstall."""
+    _sl = os.path.join(BASE_DIR, "sideloader")
+    if os.path.isfile(_sl):
+        return _sl, True, ""
     _exe = _minis_install_exe()
     if not _exe:
         return "", False, tr("miniapp_uninstall_helper_missing")
@@ -6701,15 +6702,29 @@ def _minis_uninstall_supports():
 
 
 def _minis_uninstall(bundle, udid=""):
-    """(ok, details, attempted). attempted False = this helper
-    cannot uninstall at all (details says so). attempted True and
-    ok False = the helper ran and refused/failed."""
-    _exe, _ok, _err = _minis_uninstall_supports()
-    if not _ok:
-        return False, _err or tr("miniapp_uninstall_helper_missing"), False
+    """(ok, details, attempted). Uses sideloader uninstall (InstallationProxy)
+    when available, falling back to install-helper."""
     _rf = _minis_pairing_file(udid or "")
     if not _rf:
         return False, "pairing file not found", True
+    _sl = os.path.join(BASE_DIR, "sideloader")
+    if os.path.isfile(_sl):
+        _cmd = [_sl, "uninstall", bundle, "--device", "%s:49152" % MINIS_PHONE_HOST,
+                "--pairing-file", _rf]
+        if udid:
+            _cmd += ["--udid", udid]
+        _dbg("sideloader uninstall cmd=%s" % _dbg_mask_cmd(_cmd))
+        try:
+            _r = subprocess.run(_cmd, capture_output=True, text=True, timeout=120)
+            _out = ((_r.stdout or "") + "\n" + (_r.stderr or ""))[-600:]
+            if _r.returncode == 0 and ("UNINSTALL_OK" in _out or not _out.strip()):
+                return True, _out.strip(), True
+            return False, _out.strip() or ("rc=%s" % _r.returncode), True
+        except Exception as _se:
+            return False, str(_se), True
+    _exe, _ok, _err = _minis_uninstall_supports()
+    if not _ok:
+        return False, _err or tr("miniapp_uninstall_helper_missing"), False
     _cmd = [_exe, "uninstall", "--host", MINIS_PHONE_HOST,
             "--pairing-file", _rf, "--bundle", bundle,
             "--timeout-secs", "120"]
@@ -11110,7 +11125,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.89"
+SIDEBOT_VERSION = "2026.11.25.90"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 

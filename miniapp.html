@@ -2996,7 +2996,7 @@ function renderApps(){
         else if(c==='appdata') send({action:'appdata', bundle:a.b});
         else if(c==='deactivate') send({action:'deactivate_app', bundle:a.b});
         else if(c==='reactivate') send({action:'reactivate_app', bundle:a.b});
-        else if(c==='clip') window.open('/app-clip/'+encodeURIComponent(a.b)+'.mobileconfig?t='+encodeURIComponent(apiToken()), '_blank');
+        else if(c==='clip') window.location.href = '/app-clip/'+encodeURIComponent(a.b)+'.mobileconfig?t='+encodeURIComponent(apiToken());
         else if(c==='delete'){
           /* In-page confirm: window.confirm/showConfirm are silently
              swallowed in Telegram's iOS WebView, which is why Delete
