@@ -3247,30 +3247,29 @@ function renderSettings(){
   try { _ht = JSON.parse(localStorage.getItem('sidebot_hidden_tabs') || '[]'); } catch(e) { _ht = []; }
   if(!Array.isArray(_ht)) _ht = [];
   var _TABS = [
-    ['news', T('news')],
-    ['sources', T('sources')],
-    ['browse', T('browse')],
-    ['apps', T('myApps')],
-    ['btn_refreshAll', T('refreshAll')],
-    ['btn_cellOff', '📴 TurnOffData'],
-    ['btn_cellOn', '📶 TurnOnData'],
-    ['btn_pairWifi', '🔗 Pair iPhone'],
-    ['sec_backend', T('installBackend')],
-    ['sec_lang', T('language')],
-    ['sec_gen', T('general')],
-    ['sec_ver', T('appVerification')],
-    ['sec_cell', T('cellularSection')],
-    ['sec_auto', T('autoSection')],
-    ['sec_sign', T('signingSection')],
-    ['sec_ids', T('idsSection')],
-    ['sec_ext', T('extSection')],
-    ['sec_adv', T('advancedSection')]
+    ['news', T('news'), '<svg class="sb-svg" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="2"/><line x1="7" y1="9" x2="17" y2="9"/><line x1="7" y1="13" x2="13" y2="13"/></svg>'],
+    ['sources', T('sources'), '<svg class="sb-svg" viewBox="0 0 24 24"><path d="M12 2l8 10-8 10-8-10 8-10z"/></svg>'],
+    ['browse', T('browse'), '<svg class="sb-svg" viewBox="0 0 24 24"><path d="M6 7h12l1 13H5L6 7z"/><path d="M9 7V5a3 3 0 0 1 6 0v2"/></svg>'],
+    ['apps', T('myApps'), '<svg class="sb-svg" viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="4"/><circle cx="17" cy="7" r="2.5"/></svg>'],
+    ['btn_refreshAll', T('refreshAll'), '<svg class="sb-svg" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>'],
+    ['btn_cellOff', 'TurnOffData', '<svg class="sb-svg" viewBox="0 0 24 24"><path d="M2 20h.01M7 20v-4M12 20v-8M17 20V8M22 20V4"/></svg>'],
+    ['btn_pairWifi', 'Pairing', '<svg class="sb-svg" viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>'],
+    ['sec_backend', T('installBackend'), '<svg class="sb-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg>'],
+    ['sec_lang', T('language'), '<svg class="sb-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>'],
+    ['sec_gen', T('general'), '<svg class="sb-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33"/></svg>'],
+    ['sec_ver', T('appVerification'), '<svg class="sb-svg" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5.5-3.4 9.7-8 11-4.6-1.3-8-5.5-8-11V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg>'],
+    ['sec_cell', T('cellularSection'), '<svg class="sb-svg" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg>'],
+    ['sec_auto', T('autoSection'), '<svg class="sb-svg" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg>'],
+    ['sec_sign', T('signingSection'), '<svg class="sb-svg" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>'],
+    ['sec_ids', T('idsSection'), '<svg class="sb-svg" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/></svg>'],
+    ['sec_ext', T('extSection'), '<svg class="sb-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>'],
+    ['sec_adv', T('advancedSection'), '<svg class="sb-svg" viewBox="0 0 24 24"><line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/><line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/><line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/></svg>']
   ];
   var _tc = el('tabsCard');
   if(_tc){
     _tc.innerHTML = _TABS.map(function(t){
       var off = _ht.indexOf(t[0]) >= 0;
-      return '<button class="row" data-tvis="'+t[0]+'"><span>'+esc(t[1])+'</span><span class="pill '+(off?'':'on')+'">'+(off?'OFF':'ON')+'</span></button>';
+      return '<button class="row" data-tvis="'+t[0]+'"><span style="display:inline-flex;align-items:center;gap:10px">'+(t[2]||'')+'<span>'+esc(t[1])+'</span></span><span class="pill '+(off?'':'on')+'">'+(off?'OFF':'ON')+'</span></button>';
     }).join('');
     _tc.querySelectorAll('[data-tvis]').forEach(function(b){
       b.addEventListener('click', function(){
