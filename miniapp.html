@@ -307,6 +307,7 @@
      whole screen and swallowing every tap, and Close could not hide
      it. This two-class rule always wins. */
   .detail.hidden{ display:none; }
+  .detail .resrow .btn{ width:auto; flex-shrink:0; white-space:nowrap; margin:0; }
   .detail .sheet{ display:block !important; background:#141418; border-top:1px solid rgba(255,255,255,.12); border-radius:20px 20px 0 0; width:100%; max-width:520px; margin:0 auto; max-height:82vh; overflow:auto; padding:18px 16px 28px; box-sizing:border-box; }
   html[data-theme="altstore"] .detail .sheet{ background:#111c1b; }
   html[data-theme="sidestore"] .detail .sheet{ background:#17132b; }
@@ -2208,12 +2209,68 @@ function showDetail(cmd, text, items){
   var screenTitles = {certs:'🔏 '+T('tCerts'), appids:'🆔 '+T('tAppIds'), anisette:'🌐 '+T('advAnisette')};
   el('detailTitle').textContent = titles[cmd.action]
     || (cmd.action==='show' ? (screenTitles[cmd.screen] || cmd.screen || T('detailTitle')) : T('detailTitle'));
-  el('detailBody').textContent = text || '';
+  el('detailBody').textContent = (cmd.action === 'certs' || (cmd.action === 'show' && cmd.screen === 'certs')) ? '' : (text || '');
   var box = el('detailItems');
   box.innerHTML = '';
   (items || []).forEach(function(it){
     var row = document.createElement('div');
     row.className = 'resrow';
+    if(it.cid){
+      row.style.cssText = 'display:flex;flex-direction:column;align-items:stretch;gap:10px;padding:14px;margin-bottom:10px;border-radius:16px;background:rgba(255,255,255,.06);border:1px solid '+(it.active?'var(--acc,#0a84ff)':'rgba(255,255,255,.10)');
+      var top = document.createElement('div');
+      top.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:8px';
+      var nm = document.createElement('div');
+      nm.style.cssText = 'font-weight:700;font-size:14px;color:#fff;line-height:1.35;flex:1;min-width:0';
+      nm.textContent = String(it.name || '').replace(/^✅\s*/, '');
+      top.appendChild(nm);
+      if(it.active){
+        var bdg = document.createElement('span');
+        bdg.style.cssText = 'font-size:11px;font-weight:700;color:#5ceeff;background:rgba(0,229,255,.14);border:1px solid rgba(0,229,255,.35);padding:3px 9px;border-radius:999px;white-space:nowrap;flex-shrink:0';
+        bdg.textContent = T('activeNow');
+        top.appendChild(bdg);
+      }
+      row.appendChild(top);
+      if(it.meta){
+        var mt = document.createElement('div');
+        mt.style.cssText = 'font-size:12px;color:var(--gray,#8e8e93);line-height:1.4';
+        mt.textContent = it.meta;
+        row.appendChild(mt);
+      }
+      var btns = document.createElement('div');
+      btns.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap';
+      var ce = document.createElement('button');
+      ce.className = 'btn ghost';
+      ce.style.cssText = 'flex:1;padding:9px 10px;font-size:13px;margin:0';
+      ce.textContent = 'Експорт .p12';
+      ce.addEventListener('click', function(){
+        var url = '/miniapp-cert-export?cid=' + encodeURIComponent(it.cid) + '&t=' + encodeURIComponent(T_TOKEN || '');
+        window.open(url, '_blank');
+      });
+      btns.appendChild(ce);
+      if(!it.active){
+        var ca = document.createElement('button');
+        ca.className = 'btn';
+        ca.style.cssText = 'flex:1;padding:9px 10px;font-size:13px;margin:0';
+        ca.textContent = T('setActive');
+        ca.addEventListener('click', function(){ send({action:'cert_use', cid:it.cid}); });
+        btns.appendChild(ca);
+      }
+      if(it.cid !== 'builtin'){
+        var cr = document.createElement('button');
+        cr.className = 'btn ghost';
+        cr.style.cssText = 'padding:9px 12px;font-size:13px;margin:0;color:#ff453a';
+        cr.textContent = T('removeCert');
+        cr.addEventListener('click', function(){
+          askConfirm(T('tCerts'), T('removeCertBody', it.name || ''), T('removeCert'), function(){
+            send({action:'cert_remove', cid:it.cid});
+          }, null, true);
+        });
+        btns.appendChild(cr);
+      }
+      row.appendChild(btns);
+      box.appendChild(row);
+      return;
+    }
     row.style.cssText = 'display:flex;align-items:center;justify-content:space-between;gap:10px;padding:11px 13px;margin-bottom:8px;border-radius:14px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.09)';
     var left = document.createElement('div');
     left.style.cssText = 'min-width:0;flex:1';
@@ -2272,35 +2329,6 @@ function showDetail(cmd, text, items){
           }
         });
       });
-    }
-    if(it.cid){
-      var ce = document.createElement('button');
-      ce.className = 'btn ghost rowbtn';
-      ce.textContent = 'Експорт .p12';
-      ce.addEventListener('click', function(){
-        var url = '/miniapp-cert-export?cid=' + encodeURIComponent(it.cid) + '&t=' + encodeURIComponent(T_TOKEN || '');
-        window.open(url, '_blank');
-      });
-      row.appendChild(ce);
-      var ca = document.createElement('button');
-      ca.className = 'btn ghost rowbtn';
-      ca.textContent = it.active ? T('activeNow') : T('setActive');
-      ca.disabled = !!it.active;
-      if(!it.active){
-        ca.addEventListener('click', function(){ send({action:'cert_use', cid:it.cid}); });
-      }
-      row.appendChild(ca);
-      if(it.cid !== 'builtin'){
-        var cr = document.createElement('button');
-        cr.className = 'btn ghost rowbtn';
-        cr.textContent = T('removeCert');
-        cr.addEventListener('click', function(){
-          askConfirm(T('tCerts'), T('removeCertBody', it.name || ''), T('removeCert'), function(){
-            send({action:'cert_remove', cid:it.cid});
-          }, null, true);
-        });
-        row.appendChild(cr);
-      }
     }
     box.appendChild(row);
   });
