@@ -2516,18 +2516,14 @@ function renderSources(){
    Search (≥2 chars) replaces the list; clearing the search
    restores it. + Import IPA uploads an .ipa from Files to the
    bot, which signs it through the normal prov_ipa flow. */
-var BROWSE_CATS = [
-  ['', '🌐 Усі категорії'],
-  ['games', '🎮 Ігри та аркади'],
-  ['social', '📱 Соцмережі'],
-  ['emulators', '🕹️ Емулятори'],
-  ['utilities', '🛠️ Утиліти та інструменти'],
-  ['video', '🎬 Відео та фільми'],
-  ['photo', '📸 Фото та дизайн'],
-  ['music', '🎵 Музика та аудіо'],
-  ['ai', '🤖 AI інструменти'],
-  ['other', '⚡ Інше']
-];
+var BROWSE_CAT_MAP = {
+  en: {'':'All categories', games:'Games & Arcade', social:'Social', emulators:'Emulators', utilities:'Utilities & Tools', video:'Video & Movies', photo:'Photo & Design', music:'Music & Audio', ai:'AI Tools', other:'Other'},
+  uk: {'':'Усі категорії', games:'Ігри та аркади', social:'Соцмережі', emulators:'Емулятори', utilities:'Утиліти та інструменти', video:'Відео та фільми', photo:'Фото та дизайн', music:'Музика та аудіо', ai:'AI інструменти', other:'Інше'},
+  ru: {'':'Все категории', games:'Игры и аркады', social:'Соцсети', emulators:'Эмуляторы', utilities:'Утилиты и инструменты', video:'Видео и фильмы', photo:'Фото и дизайн', music:'Музыка и аудио', ai:'AI инструменты', other:'Другое'},
+  de: {'':'Alle Kategorien', games:'Spiele & Arcade', social:'Social Media', emulators:'Emulatoren', utilities:'Dienstprogramme', video:'Video & Filme', photo:'Foto & Design', music:'Musik & Audio', ai:'AI-Tools', other:'Sonstiges'}
+};
+var BROWSE_CATS = ['','games','social','emulators','utilities','video','photo','music','ai','other'];
+function catLabel(id){ var m = BROWSE_CAT_MAP[LANG] || BROWSE_CAT_MAP.en; return m[id] || m[''] || id; }
 var browseLoaded = false, browseMode = 'list', browseOffset = 0, browseMore = false;
 var browseItems = [];
 try{ S.browseCat = localStorage.getItem('sb_browse_cat') || ''; }catch(e){ S.browseCat = ''; }
@@ -2541,11 +2537,10 @@ function renderBrowse(){
   var lbl = el('srcGroupLabel'), menu = el('srcGroupMenu');
   if(lbl && menu){
     var cur = S.browseCat || '';
-    var curItem = BROWSE_CATS.filter(function(o){ return o[0] === cur; })[0] || BROWSE_CATS[0];
-    lbl.textContent = curItem[1];
-    menu.innerHTML = BROWSE_CATS.map(function(o){
-      var act = (o[0] === cur);
-      return '<button type="button" data-srcg="'+esc(o[0])+'" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:'+(act?'rgba(10,132,255,.18)':'transparent')+';border:0;border-bottom:1px solid rgba(255,255,255,.06);color:#fff;font-size:14px;text-align:left;cursor:pointer"><span>'+esc(o[1])+'</span>'+(act?'<span style="color:#0a84ff;font-weight:700">✓</span>':'')+'</button>';
+    lbl.textContent = catLabel(cur);
+    menu.innerHTML = BROWSE_CATS.map(function(id){
+      var act = (id === cur);
+      return '<button type="button" data-srcg="'+esc(id)+'" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:'+(act?'rgba(10,132,255,.18)':'transparent')+';border:0;border-bottom:1px solid rgba(255,255,255,.06);color:#fff;font-size:14px;text-align:left;cursor:pointer"><span>'+esc(catLabel(id))+'</span>'+(act?'<span style="color:#0a84ff;font-weight:700">✓</span>':'')+'</button>';
     }).join('');
     Array.prototype.forEach.call(menu.querySelectorAll('[data-srcg]'), function(b){
       b.addEventListener('click', function(){
@@ -2569,6 +2564,11 @@ function renderBrowse(){
      no sources are enabled, so the tab is never silently empty
      because of load order. */
   if(!browseLoaded && browseMode === 'list') loadBrowseList(0);
+  else if(browseLoaded && browseMode === 'list') renderBrowseList();
+  else {
+    var sr = el('searchResults');
+    if(sr) sr.querySelectorAll('.rowbtn[data-b]').forEach(function(bt){ bt.textContent = T('installBtn'); });
+  }
 }
 function renderBrowseList(){
   var box = el('searchResults');
