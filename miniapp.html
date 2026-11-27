@@ -2772,15 +2772,11 @@ function renderApps(){
         + '<span class="appsub" style="display:block">'+sub+'</span>'+cd+'</span></button>'
         + '<div class="actgrid hidden" id="acts-'+i+'">'
         + '<button data-cmd="refresh">'+esc(T('refresh'))+'</button>'
-        + '<button data-cmd="resign">'+esc(T('resign'))+'</button>'
-        + '<button data-cmd="reinstall-cache">'+esc(T('reinstallCache'))+'</button>'
         + '<button data-cmd="reinstall-source">'+esc(T('reinstallSource'))+'</button>'
         + '<button data-cmd="info">'+esc(T('infoBtn'))+'</button>'
-        + '<button data-cmd="jit">'+esc(T('jitBtn'))+'</button>'
-        + '<button data-cmd="signopts">'+esc(T('signOptsBtn'))+'</button>'
+        + '<button data-cmd="signopts">'+esc(String(T('signOptsBtn')||'').replace(/^[^\wА-Яа-яІіЇїЄєҐґ]+/u,''))+'</button>'
         + '<button data-cmd="appdata">'+esc(T('backupRestore'))+'</button>'
         + '<button data-cmd="delete" class="danger">'+esc(T('deleteBtn'))+'</button>'
-        + '<button data-cmd="remove" class="danger">'+esc(T('removeRecordBtn'))+'</button>'
         + '</div></div>';
     });
     box.innerHTML = html;
