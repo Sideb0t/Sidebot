@@ -3144,11 +3144,28 @@ function renderSettings(){
      and re-signs apps older than M days (and anything inside the
      48 h window) in the background, asking for 2FA in chat when
      Apple wants it. */
+  var _autoAppsHtml = (Array.isArray(S.auto.apps) && S.auto.apps.length)
+    ? '<div class="row" style="flex-direction:column;align-items:stretch;gap:6px;cursor:default"><span style="font-size:12px;color:var(--gray)">Статус додатків</span>'
+      + S.auto.apps.map(function(a){
+          var badge = !a.src ? '<span style="color:var(--gray)">без джерела</span>'
+            : (a.due ? '<span style="color:#ff9f0a;font-weight:700">час оновити</span>' : '<span style="color:#30d158">OK</span>');
+          return '<div style="display:flex;justify-content:space-between;align-items:center;font-size:12px;gap:8px"><span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(a.t)+'</span><span style="flex:0 0 auto">'+esc(a.rem || '—')+' · '+badge+'</span></div>';
+        }).join('')
+      + '</div>'
+    : '';
+  var _autoLogHtml = (Array.isArray(S.auto.log) && S.auto.log.length)
+    ? '<div class="row" style="flex-direction:column;align-items:stretch;gap:4px;cursor:default"><span style="font-size:12px;color:var(--gray)">Журнал автооновлення</span>'
+      + S.auto.log.slice(0, 5).map(function(l){ return '<div class="meta" style="font-size:11px;line-height:1.35">'+esc(l)+'</div>'; }).join('')
+      + '</div>'
+    : '';
   el('autoCard').innerHTML =
     '<button class="row" id="autoRow"><span style="display:inline-flex;align-items:center;gap:10px"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/><polyline points="12 7 12 12 15 14"/></svg><span>'+esc(String(T('autoRow')||'').replace(/^[^\wА-Яа-яІіЇїЄєҐґ]+/u,''))+'<br><span class="meta">'+esc(T('autoRowMeta'))+'</span></span></span><span class="pill '+(S.auto.on?'on':'')+'">'+(S.auto.on?'ON':'OFF')+'</span></button>'
     + '<div class="row" style="cursor:default"><span>'+esc(T('renewAfter'))+'<br><span class="meta">'+esc(T('renewAfterMeta'))+'</span></span><input id="autoDays" type="text" inputmode="numeric" value="'+esc(S.auto.days)+'" style="width:64px;text-align:right"></div>'
     + '<div class="row" style="cursor:default"><span>'+esc(T('checkEvery'))+'<br><span class="meta">'+esc(T('checkEveryMeta'))+'</span></span><input id="autoHours" type="text" inputmode="numeric" value="'+esc(S.auto.hours)+'" style="width:64px;text-align:right"></div>'
-    + '<div class="row" style="cursor:default"><span>'+esc(T('lastCheck'))+'<br><span class="meta">'+(S.auto.last ? esc(S.auto.last.slice(0,16).replace('T',' ')) : esc(T('notYet')))+(S.auto.n ? esc(T('autoRefreshed', S.auto.n)) : '')+'</span></span></div>';
+    + '<div class="row" style="cursor:default"><span>'+esc(T('lastCheck'))+'<br><span class="meta">'+(S.auto.last ? esc(S.auto.last.slice(0,16).replace('T',' ')) : esc(T('notYet')))+(S.auto.n ? esc(T('autoRefreshed', S.auto.n)) : '')+'</span></span></div>'
+    + _autoAppsHtml
+    + _autoLogHtml
+    + '<div class="row" style="cursor:default"><button class="btn" id="autoNowBtn" style="width:100%;padding:10px;font-size:13px">Перевірити та оновити зараз</button></div>';
   el('autoRow').addEventListener('click', function(){
     S.auto.on = !S.auto.on;
     renderSettings();
@@ -3156,6 +3173,21 @@ function renderSettings(){
   });
   el('autoDays').addEventListener('change', function(){ send({action:'set_auto', days:el('autoDays').value}); });
   el('autoHours').addEventListener('change', function(){ send({action:'set_auto', hours:el('autoHours').value}); });
+  if(el('autoNowBtn')){
+    el('autoNowBtn').addEventListener('click', function(){
+      var b = el('autoNowBtn');
+      b.disabled = true; b.textContent = 'Перевіряю...';
+      apiCmd({action:'auto_refresh_now'}, 30000).then(function(r){
+        if(r && r.state) applyState(r.state);
+        toast((r && r.text) || 'Готово');
+      }).catch(function(){
+        toast('Помилка перевірки', true);
+      }).finally(function(){
+        var nb = el('autoNowBtn');
+        if(nb){ nb.disabled = false; nb.textContent = 'Перевірити та оновити зараз'; }
+      });
+    });
+  }
 
   /* Signing (2026-11-14): the sheet's saved defaults + the
      ask-first switch. */

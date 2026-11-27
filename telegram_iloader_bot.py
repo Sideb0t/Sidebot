@@ -9312,6 +9312,7 @@ MINIAPP_SETTINGS_DEFAULTS = {
     "sign_opts": {},
     "last_check": "",
     "last_auto": {},
+    "auto_log": [],
     "jit_last": "",
     # SideBot UI language (2026-11-16): empty means "follow the bot's
     # chat language", so the two never disagree on first launch.
@@ -9353,6 +9354,8 @@ def _ms_load():
     if isinstance(data.get("last_auto"), dict):
         out["last_auto"] = {str(k)[:120]: str(v)[:40]
                             for k, v in list(data["last_auto"].items())[:50]}
+    if isinstance(data.get("auto_log"), list):
+        out["auto_log"] = [str(x)[:160] for x in data["auto_log"][:15]]
     if isinstance(data.get("jit_last"), str):
         out["jit_last"] = data["jit_last"][:40]
     if isinstance(data.get("language"), str) and data["language"] in LANGS:
@@ -9911,7 +9914,9 @@ def _miniapp_state():
                      "days": int(_ms.get("auto_refresh_days") or 5),
                      "hours": int(_ms.get("auto_check_hours") or 1),
                      "last": str(_ms.get("last_check") or ""),
-                     "n": len(_ms.get("last_auto") or {})},
+                     "n": len(_ms.get("last_auto") or {}),
+                     "log": list(_ms.get("auto_log") or [])[:10],
+                     "apps": _miniapp_auto_detail(_ms)},
             "ask": bool(_ms.get("ask_signopts")),
             "ids": _appids_for_state(_cur, _ids_used, _ids_left),
             "cert": {"n": len(_c_items),
@@ -10725,7 +10730,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.52"
+SIDEBOT_VERSION = "2026.11.25.53"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -10934,6 +10939,9 @@ def _miniapp_api_dispatch(cmd, chat_id):
                     _miniapp_job_set(_jid, "error", str(_pe))
             threading.Thread(target=_pc, daemon=True).start()
             return {"ok": True, "job": _jid, "status": "started"}
+        if _action == "auto_refresh_now":
+            _res_msg = _auto_refresh_once(force=True)
+            return {"ok": True, "text": _res_msg or "Перевірку завершено", "state": _miniapp_state()}
         if _action in ("set_auto", "toggle_autorefresh"):
             d = _ms_load()
             if _action == "toggle_autorefresh":
@@ -19311,7 +19319,42 @@ def _miniapp_auto_due(now=None, days=None):
     return [r for _, r in out]
 
 
-def _auto_refresh_once():
+def _miniapp_auto_detail(ms=None):
+    ms = ms or _ms_load()
+    now = datetime.now(timezone.utc)
+    days = int(ms.get("auto_refresh_days") or 5)
+    age_cut = now - timedelta(days=days)
+    out = []
+    for rec in load_installed():
+        if not isinstance(rec, dict) or not rec.get("bundle"):
+            continue
+        b = str(rec.get("bundle") or "")
+        t = str(rec.get("title") or b)[:40]
+        exp = _parse_expiry(rec.get("profile_expires") or "")
+        signed = _parse_expiry(rec.get("signed_at") or "")
+        src_ok = _refresh_source_ok(rec)
+        rem_s = ""
+        if exp is not None:
+            sec = int((exp - now).total_seconds())
+            if sec <= 0:
+                rem_s = "прострочено"
+            else:
+                d = sec // 86400
+                h = (sec % 86400) // 3600
+                rem_s = "%dd %dh" % (d, h)
+        due = bool(src_ok and ((exp is not None and exp <= now + timedelta(hours=48)) or (signed is not None and signed <= age_cut)))
+        out.append({"b": b, "t": t, "rem": rem_s, "due": due, "src": bool(src_ok)})
+    return out
+
+
+def _auto_log_add(ms, msg):
+    ts = datetime.now().strftime("%d.%m %H:%M")
+    lst = list(ms.get("auto_log") or [])
+    lst.insert(0, "[%s] %s" % (ts, str(msg)[:130]))
+    ms["auto_log"] = lst[:15]
+
+
+def _auto_refresh_once(force=False):
     """One scheduler pass: trigger the normal refresh flow for the
     first due app. 2FA stays interactive: the provision flow asks
     for the code in Telegram, exactly as on a manual /refresh.
@@ -19322,35 +19365,46 @@ def _auto_refresh_once():
     do not need Wi-Fi."""
     if MINIS_MODE:
         _ms = _ms_load()
-        if not _ms.get("auto_refresh"):
-            return
+        if not _ms.get("auto_refresh") and not force:
+            return "Автооновлення вимкнено"
         _now = datetime.now(timezone.utc)
         _hours = int(_ms.get("auto_check_hours") or 1)
         _last_check = _parse_expiry(_ms.get("last_check") or "")
-        if _last_check is not None and (_now - _last_check) < timedelta(hours=_hours):
-            return
+        if not force and _last_check is not None and (_now - _last_check) < timedelta(hours=_hours):
+            return "Ще не настав час перевірки"
         _ms["last_check"] = _now.isoformat()
-        _ms_save(_ms)
         if job.get("step") in _MINIAPP_BUSY_STEPS or job.get("dl_active") \
                 or job.get("api_jid"):
-            return
+            _auto_log_add(_ms, "Пропущено: зараз іде інше завдання")
+            _ms_save(_ms)
+            return "Зараз виконується інше завдання"
         _last = dict(_ms.get("last_auto") or {})
         _days = int(_ms.get("auto_refresh_days") or 5)
-        for rec in _miniapp_auto_due(_now, _days)[:3]:
+        _due_list = _miniapp_auto_due(_now, _days)
+        if not _due_list:
+            _auto_log_add(_ms, "Перевірка OK: усі додатки свіжі (нічого оновлювати)")
+            _ms_save(_ms)
+            return "✅ Усі додатки свіжі — оновлювати нічого не потрібно"
+        for rec in _due_list[:3]:
             _b = rec.get("bundle", "")
             if not _b:
                 continue
             _la = _parse_expiry(_last.get(_b) or "")
-            if _la is not None and (_now - _la) < timedelta(hours=20):
+            if not force and _la is not None and (_now - _la) < timedelta(hours=20):
                 continue
             _last[_b] = _now.isoformat()
             _ms["last_auto"] = _last
+            _title = rec.get("title", _b)
+            _auto_log_add(_ms, "Запуск оновлення: %s" % _title)
             _ms_save(_ms)
             send_message(OWNER_ID, tr("miniapp_auto_started") % (
-                rec.get("title", _b),
+                _title,
                 (rec.get("profile_expires", "") or "")[:10], _days))
             handle_action(OWNER_ID, "refresh_install:" + _b, "reply", None)
-            return
+            return "🔄 Запущено автооновлення для " + _title
+        _auto_log_add(_ms, "Перевірка OK: %d у черзі, але вже оновлювались <20г" % len(_due_list))
+        _ms_save(_ms)
+        return "⏳ Черга вже оновлювалась менше 20 годин тому"
         return
     st = load_ai_settings()
     if not st.get("auto_refresh", True):
@@ -35544,13 +35598,13 @@ def main():
         print("SideBot Local Mode started (Minis: %s, phone %s:%d)." % (MINIS_MODE, MINIS_PHONE_HOST, MINIS_PHONE_PORT), flush=True)
     else:
         print("Telegram iloader bot started (Minis: %s, phone %s:%d). Owner: %s" % (MINIS_MODE, MINIS_PHONE_HOST, MINIS_PHONE_PORT, OWNER_ID), flush=True)
+    threading.Thread(target=_auto_refresh_loop, daemon=True).start()
     if not LOCAL_ONLY:
         try:
             api("deleteWebhook", drop_pending_updates="true")
         except Exception as e:
             print("deleteWebhook failed (webhook may already be gone): %s" % e, flush=True)
         threading.Thread(target=register_bot_commands, daemon=True).start()
-        threading.Thread(target=_auto_refresh_loop, daemon=True).start()
         threading.Thread(target=_tools_update_loop, daemon=True).start()
     threading.Thread(target=_ensure_alpine_gcompat, daemon=True).start()
     # Full Tailscale: the local OTA server must be up from the
