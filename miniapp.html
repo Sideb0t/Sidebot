@@ -2774,9 +2774,10 @@ function renderApps(){
         + '<button data-cmd="refresh">'+esc(T('refresh'))+'</button>'
         + '<button data-cmd="reinstall-source">'+esc(T('reinstallSource'))+'</button>'
         + '<button data-cmd="info">'+esc(T('infoBtn'))+'</button>'
+        + '<button data-cmd="jit">JIT</button>'
         + '<button data-cmd="signopts">'+esc(String(T('signOptsBtn')||'').replace(/^[^\wА-Яа-яІіЇїЄєҐґ]+/u,''))+'</button>'
         + '<button data-cmd="appdata">'+esc(T('backupRestore'))+'</button>'
-        + '<button data-cmd="delete" class="danger">'+esc(T('deleteBtn'))+'</button>'
+        + '<button data-cmd="delete" class="danger" style="grid-column:1/-1">'+esc(T('deleteBtn'))+'</button>'
         + '</div></div>';
     });
     box.innerHTML = html;
