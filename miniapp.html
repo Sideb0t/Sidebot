@@ -357,6 +357,15 @@
   .ob-btn.skip{ background:transparent; color:rgba(255,255,255,.55); font-size:14px; padding:10px; }
   .sb-svg{ width:16px; height:16px; flex:0 0 16px; stroke:var(--acc-bright,#5ceeff); fill:none; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; vertical-align:middle; }
   .sb-thm-ic{ width:18px; height:18px; border-radius:5px; object-fit:cover; flex-shrink:0; }
+  :root{ --fs:1; }
+  #uiScaleInner h1{ font-size:calc(28px * var(--fs)); }
+  #uiScaleInner h2{ font-size:calc(18px * var(--fs)); }
+  #uiScaleInner .sec{ font-size:calc(12px * var(--fs)); }
+  #uiScaleInner .row{ font-size:calc(15px * var(--fs)); }
+  #uiScaleInner .btn{ font-size:calc(15px * var(--fs)); }
+  #uiScaleInner .meta, #uiScaleInner .note{ font-size:calc(12px * var(--fs)); }
+  #uiScaleInner .chip{ font-size:calc(13px * var(--fs)); }
+  #uiScaleInner input, #uiScaleInner select{ font-size:calc(14px * var(--fs)); }
 </style>
 </head>
 <body>
@@ -2877,10 +2886,18 @@ el('srcSheet').addEventListener('click', function(e){ if(e.target === el('srcShe
 el('srcUrl').addEventListener('keydown', function(e){ if(e.key === 'Enter') submitAddSource(); });
 
 var BACKENDS = [['sideloader','backendSideloader'],['rust','backendRust'],['siboot','backendSiboot'],['direct','backendDirect'],['idevice','backendIdevice']];
+var BACKEND_SVGS = {
+  sideloader: '<svg class="sb-svg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>',
+  rust: '<svg class="sb-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/></svg>',
+  siboot: '<svg class="sb-svg" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5.5-3.4 9.7-8 11-4.6-1.3-8-5.5-8-11V6l8-4z"/></svg>',
+  direct: '<svg class="sb-svg" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg>',
+  idevice: '<svg class="sb-svg" viewBox="0 0 24 24"><rect x="7" y="2" width="10" height="20" rx="2"/><line x1="12" y1="18" x2="12" y2="18.01"/></svg>'
+};
 function renderBackend(box){
   box.innerHTML = BACKENDS.map(function(b){
     var sel = S.backend===b[0];
-    return '<button class="row" data-b="'+b[0]+'"><span>'+esc(T(b[1]))+'</span><span class="'+(sel?'check':'')+'">'+(sel?'✓':'')+'</span></button>';
+    var label = String(T(b[1]) || '').replace(/^[\uD800-\uDBFF][\uDC00-\uDFFF]\s*|^[\u2600-\u27BF]\s*/g, '');
+    return '<button class="row" data-b="'+b[0]+'"><span style="display:inline-flex;align-items:center;gap:8px">'+(BACKEND_SVGS[b[0]]||'')+'<span>'+esc(label)+'</span></span><span class="'+(sel?'check':'')+'">'+(sel?'✓':'')+'</span></button>';
   }).join('');
   box.querySelectorAll('.row').forEach(function(r){
     r.addEventListener('click', function(){
@@ -3234,7 +3251,8 @@ if(!S.loaded){ refreshState(); }
       wrap.style.zoom = ''; wrap.style.transform = ''; wrap.style.width = ''; wrap.style.height = ''; wrap.style.maxWidth = ''; wrap.style.margin = ''; wrap.style.marginBottom = '';
     }
     if(inner){
-      inner.style.fontSize = (fs === 100) ? '' : ((16 * fs / 100).toFixed(2) + 'px');
+      document.documentElement.style.setProperty('--fs', (fs / 100).toFixed(3));
+      inner.style.fontSize = '';
       if(ui === 100){
         inner.style.transform = '';
         inner.style.transformOrigin = '';
