@@ -2108,6 +2108,10 @@ function startJobPoll(jid, label, kind){
           || (r.toggle === 'off' ? S.cellNames.off : S.cellNames.on));
       }
       if(r.status === 'running'){
+        if(r.open_url && !handledToggles[jid + ':open:' + r.open_url]){
+          handledToggles[jid + ':open:' + r.open_url] = 1;
+          try{ window.location.href = r.open_url; }catch(e){}
+        }
         if(!useAppsCard){ el('jobMain').classList.remove('hidden'); el('job2fa').classList.add('hidden'); if(r.text) el('jobText').textContent = r.text; }
         return;
       }
@@ -3064,6 +3068,7 @@ function renderSettings(){
     + '</div></div>'
     + '<button class="row" id="cellRow"><span style="display:inline-flex;align-items:center;gap:10px"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M2 20h.01"/><path d="M7 20v-4"/><path d="M12 20v-8"/><path d="M17 20V8"/><path d="M22 20V4"/></svg><span>'+esc(String(T('cellRow')||'').replace(/^[^\wА-Яа-яІіЇїЄєҐґ]+/u,''))+'<br><span class="meta">'+esc(T('cellRowMeta'))+'</span></span></span><span class="pill '+(S.cell?'on':'')+'">'+(S.cell?'ON':'OFF')+'</span></button>'
     + (S.cell ? '<div class="row" style="gap:8px;cursor:default"><button class="btn" id="btnCellOff" style="flex:1;padding:10px;font-size:13px">TurnOffData</button><button class="btn" id="btnCellNotify" style="flex:1;padding:10px;font-size:13px">'+esc(T('cellNotifyBtn'))+'</button></div>' : '')
+    + '<div class="row" style="gap:8px;cursor:default"><button class="btn" id="btnVpnOn" style="flex:1;padding:10px;font-size:13px">LocalDevVPN ON</button><button class="btn ghost" id="btnVpnOff" style="flex:1;padding:10px;font-size:13px">LocalDevVPN OFF</button></div>'
     + '<div class="row" style="gap:8px;cursor:default"><button class="btn" id="btnPairWifi" style="flex:1;padding:10px;font-size:13px">Pairing</button>'
     + '<button class="btn ghost" id="btnPairImport" style="flex:1;padding:10px;font-size:13px">Import .plist</button></div>'
     + (S.has_pairing ? '<div class="row" style="gap:8px;cursor:default"><button class="btn ghost" id="btnPairExport" style="flex:1;padding:10px;font-size:13px">Export .plist</button><button class="btn ghost" id="btnPairDel" style="flex:1;padding:10px;font-size:13px;color:#ff453a">Delete</button></div>' : '');
@@ -3089,6 +3094,16 @@ function renderSettings(){
   if(el('btnCellNotify')){
     el('btnCellNotify').addEventListener('click', function(){
       send({action:'test_cell_notify'});
+    });
+  }
+  if(el('btnVpnOn')){
+    el('btnVpnOn').addEventListener('click', function(){
+      window.location.href = 'localdevvpn://enable?scheme=minis';
+    });
+  }
+  if(el('btnVpnOff')){
+    el('btnVpnOff').addEventListener('click', function(){
+      window.location.href = 'localdevvpn://disable?scheme=minis';
     });
   }
   if(el('btnCellOn')){

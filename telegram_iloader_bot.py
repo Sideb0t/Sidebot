@@ -7357,6 +7357,34 @@ def install_thread(chat_id, allow_repair=True):
                     except Exception as _ae:
                         _dbg("apple-open cell-off err=%s" % _ae)
         _ok, _det = False, "not started"
+        if not _port_ok:
+            try:
+                with socket.create_connection((MINIS_PHONE_HOST, 49152), timeout=0.4):
+                    _port_ok = True
+            except Exception:
+                _port_ok = False
+        if not _port_ok and not _cell_toggled:
+            _vpn_url = "localdevvpn://enable?scheme=minis"
+            _tmark("LocalDevVPN -> enable")
+            if _aj:
+                _jp = _miniapp_job_get(_aj)
+                if _jp is not None:
+                    _jp["open_url"] = _vpn_url
+            _apple_open = shutil.which("apple-open") or ("/usr/local/bin/apple-open" if os.path.exists("/usr/local/bin/apple-open") else "")
+            if _apple_open:
+                try:
+                    subprocess.run([_apple_open, _vpn_url], capture_output=True, text=True, timeout=6)
+                except Exception:
+                    pass
+            _deadline = time.time() + 8.0
+            while time.time() < _deadline:
+                try:
+                    with socket.create_connection((MINIS_PHONE_HOST, 49152), timeout=0.4):
+                        _port_ok = True
+                        break
+                except Exception:
+                    time.sleep(0.25)
+            _tmark("port 49152 %s" % ("OPEN!" if _port_ok else "refused (8s timeout)"))
         if _cell_toggled and not _port_ok:
             _tmark("abort: port 10.7.0.1:49152 unreachable")
             _det = "Порт 10.7.0.1:49152 недоступний (перевір LocalDevVPN)"
@@ -10697,7 +10725,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.51"
+SIDEBOT_VERSION = "2026.11.25.52"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
