@@ -9308,6 +9308,7 @@ MINIAPP_SETTINGS_DEFAULTS = {
     "auto_refresh": True,
     "auto_refresh_days": 5,
     "auto_check_hours": 1,
+    "auto_check_mins": 60,
     "ask_signopts": False,
     "sign_opts": {},
     "last_check": "",
@@ -9340,13 +9341,16 @@ def _ms_load():
         if isinstance(data.get(_k), bool):
             out[_k] = data[_k]
     for _k, _lo, _hi in (("auto_refresh_days", 1, MINIAPP_AUTO_DAYS_MAX),
-                         ("auto_check_hours", 1, 24)):
+                         ("auto_check_hours", 1, 24),
+                         ("auto_check_mins", 2, 1440)):
         try:
             _v = int(data.get(_k))
         except Exception:
             continue
         if _lo <= _v <= _hi:
             out[_k] = _v
+    if "auto_check_mins" not in data and "auto_check_hours" in data:
+        out["auto_check_mins"] = max(2, int(out.get("auto_check_hours") or 1) * 60)
     if isinstance(data.get("sign_opts"), dict):
         out["sign_opts"] = _miniapp_signopts_clean(data["sign_opts"])
     if isinstance(data.get("last_check"), str):
@@ -9913,6 +9917,7 @@ def _miniapp_state():
             "auto": {"on": bool(_ms.get("auto_refresh")),
                      "days": int(_ms.get("auto_refresh_days") or 5),
                      "hours": int(_ms.get("auto_check_hours") or 1),
+                     "mins": int(_ms.get("auto_check_mins") or (int(_ms.get("auto_check_hours") or 1) * 60)),
                      "last": str(_ms.get("last_check") or ""),
                      "n": len(_ms.get("last_auto") or {}),
                      "log": list(_ms.get("auto_log") or [])[:10],
@@ -10730,7 +10735,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.53"
+SIDEBOT_VERSION = "2026.11.25.54"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -10949,7 +10954,8 @@ def _miniapp_api_dispatch(cmd, chat_id):
             if isinstance(cmd.get("value"), bool):
                 d["auto_refresh"] = cmd["value"]
             for _k, _lo, _hi in (("days", 1, MINIAPP_AUTO_DAYS_MAX),
-                                 ("hours", 1, 24)):
+                                 ("hours", 1, 24),
+                                 ("mins", 2, 1440)):
                 if cmd.get(_k) is None:
                     continue
                 try:
@@ -10959,7 +10965,14 @@ def _miniapp_api_dispatch(cmd, chat_id):
                 if not (_lo <= _v <= _hi):
                     return {"ok": False,
                             "text": tr("miniapp_auto_bad")}
-                d["auto_refresh_days" if _k == "days" else "auto_check_hours"] = _v
+                if _k == "days":
+                    d["auto_refresh_days"] = _v
+                elif _k == "mins":
+                    d["auto_check_mins"] = _v
+                    d["auto_check_hours"] = max(1, _v // 60)
+                else:
+                    d["auto_check_hours"] = _v
+                    d["auto_check_mins"] = _v * 60
             _ms_save(d)
             _atxt = (tr("miniapp_auto_on") % (
                 d.get("auto_refresh_days"), d.get("auto_check_hours"))
@@ -19368,9 +19381,9 @@ def _auto_refresh_once(force=False):
         if not _ms.get("auto_refresh") and not force:
             return "Автооновлення вимкнено"
         _now = datetime.now(timezone.utc)
-        _hours = int(_ms.get("auto_check_hours") or 1)
+        _mins = int(_ms.get("auto_check_mins") or (int(_ms.get("auto_check_hours") or 1) * 60))
         _last_check = _parse_expiry(_ms.get("last_check") or "")
-        if not force and _last_check is not None and (_now - _last_check) < timedelta(hours=_hours):
+        if not force and _last_check is not None and (_now - _last_check) < timedelta(minutes=_mins):
             return "Ще не настав час перевірки"
         _ms["last_check"] = _now.isoformat()
         if job.get("step") in _MINIAPP_BUSY_STEPS or job.get("dl_active") \
@@ -19429,17 +19442,19 @@ def _auto_refresh_once(force=False):
 
 
 def _auto_refresh_loop():
-    """Hourly housekeeping. On Minis it must run there too: the
-    page's Auto-Refresh switch is useless if nothing checks the
-    dates, and the loop's own interval gate is what keeps it
-    light (one check per auto_check_hours, default 1)."""
-    time.sleep(120)
+    """Housekeeping loop. Sleeps 30s when fast interval (<10m) is set,
+    otherwise up to 600s."""
+    time.sleep(15)
     while True:
         try:
             _auto_refresh_once()
         except Exception:
             pass
-        time.sleep(600)
+        try:
+            _m = int(_ms_load().get("auto_check_mins") or 60)
+        except Exception:
+            _m = 60
+        time.sleep(30 if _m <= 10 else 600)
 
 
 def _finish_add_profile(chat_id, udid):

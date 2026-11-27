@@ -3161,7 +3161,7 @@ function renderSettings(){
   el('autoCard').innerHTML =
     '<button class="row" id="autoRow"><span style="display:inline-flex;align-items:center;gap:10px"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/><polyline points="12 7 12 12 15 14"/></svg><span>'+esc(String(T('autoRow')||'').replace(/^[^\wА-Яа-яІіЇїЄєҐґ]+/u,''))+'<br><span class="meta">'+esc(T('autoRowMeta'))+'</span></span></span><span class="pill '+(S.auto.on?'on':'')+'">'+(S.auto.on?'ON':'OFF')+'</span></button>'
     + '<div class="row" style="cursor:default"><span>'+esc(T('renewAfter'))+'<br><span class="meta">'+esc(T('renewAfterMeta'))+'</span></span><input id="autoDays" type="text" inputmode="numeric" value="'+esc(S.auto.days)+'" style="width:64px;text-align:right"></div>'
-    + '<div class="row" style="cursor:default"><span>'+esc(T('checkEvery'))+'<br><span class="meta">'+esc(T('checkEveryMeta'))+'</span></span><input id="autoHours" type="text" inputmode="numeric" value="'+esc(S.auto.hours)+'" style="width:64px;text-align:right"></div>'
+    + '<div class="row" style="cursor:default"><span>Перевіряти кожні (хв)<br><span class="meta">Мінімум 2 хв (60 = раз на годину)</span></span><input id="autoMins" type="text" inputmode="numeric" value="'+esc(S.auto.mins != null ? S.auto.mins : ((S.auto.hours||1)*60))+'" style="width:64px;text-align:right"></div>'
     + '<div class="row" style="cursor:default"><span>'+esc(T('lastCheck'))+'<br><span class="meta">'+(S.auto.last ? esc(S.auto.last.slice(0,16).replace('T',' ')) : esc(T('notYet')))+(S.auto.n ? esc(T('autoRefreshed', S.auto.n)) : '')+'</span></span></div>'
     + _autoAppsHtml
     + _autoLogHtml
@@ -3172,7 +3172,7 @@ function renderSettings(){
     send({action:'toggle_autorefresh'});
   });
   el('autoDays').addEventListener('change', function(){ send({action:'set_auto', days:el('autoDays').value}); });
-  el('autoHours').addEventListener('change', function(){ send({action:'set_auto', hours:el('autoHours').value}); });
+  el('autoMins').addEventListener('change', function(){ send({action:'set_auto', mins:el('autoMins').value}); });
   if(el('autoNowBtn')){
     el('autoNowBtn').addEventListener('click', function(){
       var b = el('autoNowBtn');
