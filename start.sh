@@ -203,8 +203,19 @@ BOT_ARGS=""
 [ "$LOCAL_FLAG" = "1" ] && BOT_ARGS="--local"
 if [ "$BG_FLAG" = "1" ]; then
   nohup python3 "$DIR/telegram_iloader_bot.py" $BOT_ARGS >> /tmp/bot.log 2>&1 &
-  echo "✅ SideBot started in background (PID $!)"
-  [ "$LOCAL_ONLY" = "1" ] && echo "🌐 Open in Safari: http://127.0.0.1:8080/miniapp.html"
+  _PID=$!
+  _VER="$(python3 -c 'import json;print(json.load(open("'"$DIR"'/version.json"))["version"])' 2>/dev/null || echo '?')"
+  _VPN="$(python3 -c 'import socket;s=socket.socket();s.settimeout(0.4);print("OPEN" if not s.connect_ex(("10.7.0.1",49152)) else "CLOSED")' 2>/dev/null || echo '?')"
+  _PAIR="NO"; ([ -f "$DIR/pairing/rp_pairing_file.plist" ] || ls "$DIR/pairing"/*.remote.plist >/dev/null 2>&1) && _PAIR="OK"
+  echo "✅ SideBot v${_VER} started in background (PID ${_PID})"
+  if [ "$LOCAL_ONLY" = "1" ]; then
+    echo "🌐 SideBot:  http://127.0.0.1:8080/sidebot.html"
+    echo "🛍️ AppStore: http://127.0.0.1:8080/appstore.html"
+    echo "📲 Icon SB:  http://127.0.0.1:8080/sidebot.mobileconfig"
+    echo "📲 Icon AS:  http://127.0.0.1:8080/appstore.mobileconfig"
+    echo "🔌 Tunnel:   10.7.0.1:49152 (${_VPN}) | Pairing: ${_PAIR}"
+    echo "📜 Logs:     tail -f /tmp/bot.log"
+  fi
   exit 0
 fi
 echo "🤖 Starting SideBot..."
