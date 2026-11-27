@@ -10871,7 +10871,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.75"
+SIDEBOT_VERSION = "2026.11.25.76"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -21977,7 +21977,7 @@ _BOTUPDATE_BUSY_STEPS = ("prov_running", "prov_2fa_waiting", "pair_running",
 # Exact allowlisted files (relative to the bot folder / archive root).
 _BOTUPDATE_FILES = {
     "telegram_iloader_bot.py", "miniapp.html", "appstore.html",
-    "ipatool", "start.sh", "appstore-icon.png",
+    "ipatool", "sideloader", "start.sh", "appstore-icon.png",
     "Sidebot+keepalive.shortcut", "sidebot-keepalive-webclip.mobileconfig",
     "stage_install.py", "direct_tunnel.py", "probe_handshake.py",
     "start-bot.sh", "build.sh", "setup-linux.sh", "install-linux.sh",
