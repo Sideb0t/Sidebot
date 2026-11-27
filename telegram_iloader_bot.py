@@ -6709,8 +6709,8 @@ def _minis_uninstall(bundle, udid=""):
         return False, "pairing file not found", True
     _sl = os.path.join(BASE_DIR, "sideloader")
     if os.path.isfile(_sl):
-        _cmd = [_sl, "uninstall", bundle, "--device", "%s:49152" % MINIS_PHONE_HOST,
-                "--pairing-file", _rf]
+        _cmd = [_sl, "uninstall", bundle, "--device-ip", MINIS_PHONE_HOST,
+                "--port", "49152", "--pairing-file", _rf, "--plain"]
         if udid:
             _cmd += ["--udid", udid]
         _dbg("sideloader uninstall cmd=%s" % _dbg_mask_cmd(_cmd))
@@ -11125,7 +11125,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.91"
+SIDEBOT_VERSION = "2026.11.25.92"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
