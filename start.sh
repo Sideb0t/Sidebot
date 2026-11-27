@@ -199,6 +199,10 @@ grep -q '^OTA_PORT=' "$ENV_FILE" 2>/dev/null || printf 'OTA_PORT=8080\n' >> "$EN
 
 pkill -9 -f telegram_iloader_bot.py 2>/dev/null || true
 sleep 0.3
+for _rc in "$HOME/.profile" "$HOME/.ashrc" "$HOME/.bashrc"; do
+  [ -f "$_rc" ] || touch "$_rc" 2>/dev/null || true
+  grep -q 'alias sb=' "$_rc" 2>/dev/null || printf '\nalias sb="%s/start.sh --local --bg"\n' "$DIR" >> "$_rc" 2>/dev/null || true
+done
 BOT_ARGS=""
 [ "$LOCAL_FLAG" = "1" ] && BOT_ARGS="--local"
 if [ "$BG_FLAG" = "1" ]; then
@@ -214,6 +218,7 @@ if [ "$BG_FLAG" = "1" ]; then
     echo "📲 Icon SB:  http://127.0.0.1:8080/sidebot.mobileconfig"
     echo "📲 Icon AS:  http://127.0.0.1:8080/appstore.mobileconfig"
     echo "🔌 Tunnel:   10.7.0.1:49152 (${_VPN}) | Pairing: ${_PAIR}"
+    echo "⚡ Quick:    sb  (or minis://)"
     echo "📜 Logs:     tail -f /tmp/bot.log"
   fi
   exit 0
