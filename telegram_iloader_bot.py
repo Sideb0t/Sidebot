@@ -7262,21 +7262,38 @@ _CELL_NOTIFY_BODY = {
 
 
 def _minis_notify(title, body):
+    _ok, _ = _minis_notify_ex(title, body)
+    return _ok
+
+
+def _minis_notify_ex(title, body):
     _exe = shutil.which("apple-notification") or (
         "/usr/local/bin/apple-notification" if os.path.exists("/usr/local/bin/apple-notification") else ""
     )
     if not _exe:
-        return False
+        return False, "apple-notification not found"
     try:
         r = subprocess.run(
             [_exe, "schedule", "--title", str(title), "--body", str(body), "--after", "1", "--compact"],
             capture_output=True, text=True, timeout=8,
         )
-        _dbg("apple-notification rc=%s out=%s" % (r.returncode, (r.stdout or r.stderr or "")[:120]))
-        return r.returncode == 0
+        _raw = (r.stdout or r.stderr or "").strip()
+        _dbg("apple-notification rc=%s out=%s" % (r.returncode, _raw[:200]))
+        try:
+            _j = json.loads(_raw.splitlines()[-1]) if _raw else {}
+        except Exception:
+            _j = {}
+        if isinstance(_j, dict) and _j.get("ok") is True:
+            return True, "OK"
+        if isinstance(_j, dict) and isinstance(_j.get("error"), dict):
+            _em = _j["error"].get("message") or _j["error"].get("code") or _raw
+            return False, str(_em)[:160]
+        if r.returncode == 0 and not _raw:
+            return True, "OK"
+        return (r.returncode == 0), (_raw[:160] or ("rc=%s" % r.returncode))
     except Exception as _ne:
         _dbg("apple-notification err=%s" % _ne)
-        return False
+        return False, str(_ne)[:160]
 
 
         if _ms_get("cell"):
@@ -10680,7 +10697,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.44"
+SIDEBOT_VERSION = "2026.11.25.45"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -10805,8 +10822,8 @@ def _miniapp_api_dispatch(cmd, chat_id):
             return {"ok": True, "reachable": _ok, "host": "%s:%d" % (_host, _hit or _port)}
         if _action == "test_cell_notify":
             _notify_msg = _CELL_NOTIFY_BODY.get(get_lang(), _CELL_NOTIFY_BODY["uk"])
-            _ok_n = _minis_notify("SideBot", _notify_msg)
-            return {"ok": _ok_n, "text": _notify_msg if _ok_n else "apple-notification недоступний"}
+            _ok_n, _det_n = _minis_notify_ex("SideBot", _notify_msg)
+            return {"ok": _ok_n, "text": (_notify_msg if _ok_n else ("Помилка: " + _det_n))}
         if _action == "set_backend":
             _b = cmd.get("backend") or ""
             if _b == "jkidevice":
