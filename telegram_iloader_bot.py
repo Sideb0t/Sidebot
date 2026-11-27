@@ -10871,7 +10871,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.74"
+SIDEBOT_VERSION = "2026.11.25.75"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -11753,6 +11753,41 @@ def _miniapp_api_dispatch(cmd, chat_id):
             return {"ok": True, "job": _jid, "status": "started",
                     "text": tr("miniapp_api_refresh_started") % _b}
         # --- long: refresh all ---
+        if _action == "detect_udid":
+            _sl = os.path.join(BASE_DIR, "sideloader")
+            _pair = ""
+            for _pc in (
+                os.path.join(BASE_DIR, "pairing", "rp_pairing_file.plist"),
+                os.path.join(os.path.expanduser("~"), ".sideloader", "rp_pairing_file.plist"),
+                os.path.join(os.path.expanduser("~"), ".siboot", "rp_pairing_file.plist"),
+            ):
+                if os.path.isfile(_pc):
+                    _pair = _pc
+                    break
+            if os.path.isfile(_sl) and _pair:
+                try:
+                    if _ms_get("cell", False):
+                        _minis_notify(CUR_LANG)
+                        _we = time.time() + 6.0
+                        while time.time() < _we:
+                            import socket as _sock
+                            _s = _sock.socket(); _s.settimeout(0.4)
+                            _okp = (_s.connect_ex(("10.7.0.1", 49152)) == 0)
+                            _s.close()
+                            if _okp:
+                                break
+                            time.sleep(0.4)
+                    _r = subprocess.run([_sl, "udid", "--plain", "--pairing-file", _pair], capture_output=True, text=True, timeout=15)
+                    for _ln in (_r.stdout or "").splitlines():
+                        _ln = _ln.strip()
+                        if re.fullmatch(r"[0-9A-Fa-f]{8}-[0-9A-Fa-f]{16}|[0-9A-Fa-f]{40}", _ln):
+                            return {"ok": True, "udid": _ln}
+                except Exception:
+                    pass
+            _u = _resolve_udid("")
+            if _u:
+                return {"ok": True, "udid": _u}
+            return {"ok": False, "text": "Не вдалося знайти UDID (перевір LocalDevVPN і pairing)."}
         if _action == "refresh_all":
             _ok, _why = _miniapp_cell_gate()
             if not _ok:

@@ -649,7 +649,7 @@
       <div class="field"><label for="profLabel" data-i18n="profileName">Profile name</label><input id="profLabel" type="text" autocomplete="off" maxlength="30" data-i18n-ph="profileNamePh" placeholder="e.g. Main"></div>
       <div class="field"><label for="profAppleId" data-i18n="appleId">Apple ID</label><input id="profAppleId" type="email" autocomplete="username" maxlength="100" placeholder="name@example.com"></div>
       <div class="field"><label for="profPassword" data-i18n="password">Password</label><input id="profPassword" type="password" autocomplete="current-password" maxlength="200" placeholder="Apple ID password"></div>
-      <div class="field"><label for="profUdid">UDID пристрою</label><input id="profUdid" type="text" autocomplete="off" maxlength="64" placeholder="00008140-..."></div>
+      <div class="field"><label for="profUdid">UDID пристрою</label><div style="display:flex;gap:8px;align-items:center"><input id="profUdid" type="text" autocomplete="off" maxlength="64" placeholder="00008140-..." style="flex:1"><button type="button" class="btn" id="profUdidFindBtn" style="width:auto;margin:0;padding:10px 12px;font-size:12px;white-space:nowrap">Знайти</button></div></div>
       <div id="profFormErr" class="err hidden"></div>
       <button class="btn" id="profSubmitBtn" data-i18n="addProfile">Add profile</button>
       <button class="btn ghost" id="profBackBtn" style="margin-top:10px" data-i18n="back">Back</button>
@@ -1615,6 +1615,25 @@ function showProfForm(){
   el('profPassword').value = '';
   el('profPassword').placeholder = 'Apple ID password';
   if(el('profUdid')) el('profUdid').value = (typeof S !== 'undefined' && S.device_udid) || '';
+  if(el('profUdidFindBtn') && !el('profUdidFindBtn')._bound){
+    el('profUdidFindBtn')._bound = 1;
+    el('profUdidFindBtn').addEventListener('click', function(){
+      var b = el('profUdidFindBtn');
+      b.disabled = true; b.textContent = '...';
+      apiCmd({action:'detect_udid'}, 20000).then(function(r){
+        b.disabled = false; b.textContent = 'Знайти';
+        if(r && r.ok && r.udid){
+          if(el('profUdid')) el('profUdid').value = r.udid;
+          toast('✅ UDID: ' + r.udid);
+        } else {
+          toast('❌ ' + ((r && r.text) || 'UDID не знайдено'), true);
+        }
+      }).catch(function(){
+        b.disabled = false; b.textContent = 'Знайти';
+        toast('❌ Помилка пошуку UDID', true);
+      });
+    });
+  }
   el('profSubmitBtn').textContent = T('addProfile');
   el('profLabel').focus();
 }
