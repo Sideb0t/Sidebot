@@ -1726,12 +1726,12 @@ function paintSo(){
 }
 function fillSignOpts(so, dylibsInfo){
   so = so || {};
-  el('soName').value = soPreset.name || so.display_name || '';
-  /* Bundle ID only from the app being installed: a saved default
-     would quietly install a different IPA under the old identity. */
+  el('soName').value = soPreset.name || '';
+  /* Bundle ID, name, version, min iOS only from the app being installed:
+     a saved default would quietly rename/overwrite a different IPA. */
   el('soBundle').value = soPreset.bundle || '';
-  el('soVersion').value = so.version || '';
-  el('soMinIos').value = so.min_ios || '';
+  el('soVersion').value = soPreset.version || '';
+  el('soMinIos').value = '';
   soState.rm_extensions = !!so.rm_extensions;
   soState.enable_files = !!so.enable_files;
   soState.weak_dylib = !!so.weak_dylib;

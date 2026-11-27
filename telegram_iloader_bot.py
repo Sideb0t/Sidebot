@@ -9325,12 +9325,13 @@ def _miniapp_signopts_merge(cmd_opts):
     # the IPA itself (Enable Files follows the bundle) and would
     # overwrite the user's explicit choice; the import flow re-applies
     # exactly these keys after the prefill.
+    _per_app_keys = ("custom_bundle_id", "display_name", "version", "min_ios")
     job["sign_opts_mini"] = dict(_so)
     d = _ms_load()
-    # The Bundle ID is NOT kept as a default: the next import would
-    # otherwise be installed under the previous app's identifier
-    # without the user noticing.
-    d["sign_opts"] = {k: v for k, v in _so.items() if k != "custom_bundle_id"}
+    # Per-app fields (Bundle ID, display name, version, min iOS) are NOT
+    # kept as defaults: otherwise the next app would be renamed/re-ID'd
+    # to the previous app (e.g. LiveContainer) without the user noticing.
+    d["sign_opts"] = {k: v for k, v in _so.items() if k not in _per_app_keys}
     _ms_save(d)
     return _so
 
@@ -10404,13 +10405,17 @@ def _miniapp_run_import_flow(jid, chat_id, tmpdir, ipa_path, filename, ota=False
         job["via"] = "reply"
         _apply_ipa_info(ipa_path, filename)
         job["ipa_info"] = _inspect_ipa(ipa_path)
-        job["sign_opts"] = _prefill_sign_opts(
-            job.get("ipa_info"), job.get("sign_opts") or {})
+        _prev_so = dict(job.get("sign_opts") or {})
         _mini_so = job.get("sign_opts_mini")
+        for _ak in ("custom_bundle_id", "display_name", "version", "min_ios"):
+            if not (isinstance(_mini_so, dict) and _mini_so.get(_ak)):
+                _prev_so.pop(_ak, None)
+        job["sign_opts"] = _prefill_sign_opts(job.get("ipa_info"), _prev_so)
         if isinstance(_mini_so, dict) and _mini_so:
             _merged = dict(job["sign_opts"] or {})
             _merged.update(_mini_so)
             job["sign_opts"] = _merged
+        job["sign_opts_mini"] = None
         job["apple_id"] = _prof.get("apple_id", "")
         job["udid"] = _prof.get("udid", "")
         job["apple_password"] = _pw
@@ -10581,7 +10586,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.11"
+SIDEBOT_VERSION = "2026.11.25.12"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
