@@ -10454,7 +10454,19 @@ def _miniapp_siboot_program_worker(jid, chat_id, bundle):
     job["udid"] = _prof.get("udid", "")
     job["profile_id"] = _prof.get("id")
     job["api_jid"] = jid
-    _miniapp_job_set(jid, "running", "⚙️ Запускаю SideBot (sideloader)...")
+    if MINIS_MODE and _ms_get("cell"):
+        _notify_msg = _CELL_NOTIFY_BODY.get(CUR_LANG, _CELL_NOTIFY_BODY["uk"])
+        if _minis_notify("SideBot", _notify_msg):
+            _miniapp_job_set(jid, "running", "📶 Чекаю відкриття 10.7.0.1:49152...")
+            time.sleep(2.0)
+            _dl = time.time() + 12.0
+            while time.time() < _dl:
+                try:
+                    with socket.create_connection((MINIS_PHONE_HOST, 49152), timeout=0.4):
+                        break
+                except Exception:
+                    time.sleep(0.25)
+    _miniapp_job_set(jid, "running", "⚙️ Запускаю резервний Sideloader (Rust)...")
     try:
         _st_t = threading.Thread(target=siboot_thread, args=(chat_id,), daemon=True)
         _st_t.start()
@@ -10742,7 +10754,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.57"
+SIDEBOT_VERSION = "2026.11.25.59"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -11652,7 +11664,7 @@ def _miniapp_api_dispatch(cmd, chat_id):
             _m = cmd.get("method") or ""
             if _action == "install" and not _m:
                 _m = _ms_get("backend") or job.get("miniapp_backend") or "rust"
-            if _m == "siboot":
+            if _m in ("siboot", "sideloader"):
                 _ipa = job.get("siboot_ipa_path") or job.get("ipa_path") or ""
                 if not _ipa or not os.path.exists(_ipa):
                     return {"ok": False, "text": "Спочатку завантаж IPA (Import IPA або в чат)."}
@@ -11732,13 +11744,13 @@ def _miniapp_api_dispatch(cmd, chat_id):
                 return {"ok": False, "text": _why}
             if cmd.get("sign_opts"):
                 _miniapp_signopts_merge(cmd.get("sign_opts"))
-            if (_ms_get("backend") or job.get("miniapp_backend") or "direct") == "siboot":
+            if (_ms_get("backend") or job.get("miniapp_backend") or "rust") in ("siboot", "sideloader"):
                 _jid = _miniapp_job_new("install_siboot", _b)
                 threading.Thread(target=_miniapp_siboot_program_worker,
                                  args=(_jid, chat_id, _b),
                                  daemon=True).start()
                 return {"ok": True, "job": _jid, "status": "started",
-                        "text": "🚀 Запускаю SideBot..."}
+                        "text": "⚡ Запускаю резервний Sideloader..."}
             _jid = _miniapp_job_new("install_program", _b)
             threading.Thread(target=_miniapp_install_program_worker,
                              args=(_jid, chat_id, _b), daemon=True).start()
