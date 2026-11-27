@@ -10632,7 +10632,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.30"
+SIDEBOT_VERSION = "2026.11.25.31"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -11939,15 +11939,15 @@ _MINIAPP_CAT_FLEK = {
     "games": 31, "social": 15, "emulators": 1, "utilities": 23,
     "video": 16, "photo": 30, "music": 7, "ai": 42,
 }
-_MINIAPP_CAT_KW = {
-    "games": ("game", "arcade", "rpg", "action", "puzzle", "minecraft", "roblox", "brawl", "clash", "pubg", "geometry", "subway"),
-    "social": ("social", "telegram", "instagram", "whatsapp", "discord", "tiktok", "twitter", "x ", "vk", "facebook", "snapchat", "messenger", "reddit", "youtube"),
-    "emulators": ("emulator", "retro", "dolphin", "ppsspp", "delta", "provenance", "utm", "mame", "nintendo", "psp", "gba", "nds", "ps2", "folia", "flycast"),
-    "utilities": ("util", "tool", "file", "filza", "developer", "terminal", "ssh", "vpn", "adblock", "livecontainer", "sidestore", "altstore", "esign", "feather", "cleaner"),
-    "video": ("video", "movie", "cinema", "tv", "player", "vlc", "infuse", "nplayer", "kodi", "stream", "anime", "netflix", "twitch"),
-    "photo": ("photo", "camera", "edit", "design", "capcut", "lightroom", "picsart", "vsco", "procreate", "canvas", "photoshop"),
-    "music": ("music", "audio", "spotify", "soundcloud", "deezer", "tidal", "apple music", "podcast", "radio", "equalizer"),
-    "ai": ("ai", "gpt", "chatgpt", "claude", "gemini", "copilot", "midjourney", "grok", "llm", "perplexity"),
+_MINIAPP_CAT_REPO = {
+    "games": {"games", "game", "arcade", "action", "adventure", "puzzle", "rpg", "simulation", "sports", "strategy", "racing"},
+    "social": {"social", "social-networking", "social networking", "messaging", "communication"},
+    "emulators": {"emulators", "emulator"},
+    "utilities": {"utilities", "utility", "tools", "developer", "developer-tools", "productivity", "system"},
+    "video": {"entertainment", "video", "movies", "tv", "streaming"},
+    "photo": {"photo-video", "photo & video", "photo", "graphics", "graphics & design", "design"},
+    "music": {"music", "audio"},
+    "ai": {"ai", "ai tools"},
 }
 
 
@@ -11955,32 +11955,37 @@ def _miniapp_cat_match(app, cat):
     if not cat:
         return True
     _c = str(app.get("category") or "").strip().lower()
-    _hay = " ".join([_c, str(app.get("name") or ""), str(app.get("subtitle") or "")]).lower()
     if cat == "other":
-        for _k in _MINIAPP_CAT_KW:
-            if _miniapp_cat_match(app, _k):
+        for _k, _vals in _MINIAPP_CAT_REPO.items():
+            if _c in _vals:
                 return False
         return True
-    _kws = _MINIAPP_CAT_KW.get(cat) or ()
-    return any(k in _hay for k in _kws)
+    _vals = _MINIAPP_CAT_REPO.get(cat) or set()
+    return _c in _vals
 
 
 def _miniapp_all_apps(query="", cat=""):
     _apps = []
     try:
-        _apps = list(_feather_lib_source_apps() or [])
-    except Exception:
-        _apps = []
-    try:
-        if _programs_merged_flek_enabled():
-            _fcat = _MINIAPP_CAT_FLEK.get(cat, "updates") if cat else "updates"
-            _fa, _more, _err = _programs_flek_fetch(_fcat, 0, query or None)
-            if _fa:
-                _apps = _apps + list(_fa)
+        _raw_apps = list(_feather_lib_source_apps() or [])
+        if cat:
+            _apps.extend([a for a in _raw_apps if isinstance(a, dict) and _miniapp_cat_match(a, cat)])
+        else:
+            _apps.extend(_raw_apps)
     except Exception:
         pass
-    if cat:
-        _apps = [a for a in _apps if isinstance(a, dict) and _miniapp_cat_match(a, cat)]
+    try:
+        if _programs_merged_flek_enabled():
+            if cat and cat in _MINIAPP_CAT_FLEK:
+                _fa, _more, _err = _programs_flek_fetch(_MINIAPP_CAT_FLEK[cat], 0, query or None)
+                if _fa:
+                    _apps.extend(list(_fa))
+            elif not cat:
+                _fa, _more, _err = _programs_flek_fetch("updates", 0, query or None)
+                if _fa:
+                    _apps.extend(list(_fa))
+    except Exception:
+        pass
     return _apps
 
 
