@@ -1310,6 +1310,7 @@ function applyI18n(){
   document.querySelectorAll('[data-i18n-ph]').forEach(function(n){
     n.setAttribute('placeholder', T(n.getAttribute('data-i18n-ph')));
   });
+  if(window._sbSyncPill) requestAnimationFrame(window._sbSyncPill);
 }
 function setLang(l){
   if(!I18N[l]) return;
@@ -3425,8 +3426,14 @@ if(!S.loaded){ refreshState(); }
     function syncPill(targetBtn){
       var btn = targetBtn || bar.querySelector('button.active') || bar.querySelector('button');
       if(!btn) return;
-      pill.style.width = btn.offsetWidth + 'px';
-      pill.style.transform = 'translateX(' + btn.offsetLeft + 'px)';
+      var br = bar.getBoundingClientRect(), r = btn.getBoundingClientRect();
+      if(br.width > 0 && r.width > 0){
+        pill.style.width = r.width.toFixed(1) + 'px';
+        pill.style.transform = 'translate3d(' + (r.left - br.left).toFixed(1) + 'px,0,0)';
+      } else {
+        pill.style.width = btn.offsetWidth + 'px';
+        pill.style.transform = 'translateX(' + btn.offsetLeft + 'px)';
+      }
     }
     window._sbSyncPill = function(){ syncPill(); };
     var dragging = false, startX = 0, moved = false, curIdx = 0;
@@ -3474,7 +3481,10 @@ if(!S.loaded){ refreshState(); }
       }
     }, {passive:true});
     window.addEventListener('resize', function(){ syncPill(); });
+    window.addEventListener('pageshow', function(){ requestAnimationFrame(function(){ syncPill(); }); });
     setTimeout(function(){ syncPill(); }, 40);
+    setTimeout(function(){ syncPill(); }, 250);
+    setTimeout(function(){ syncPill(); }, 700);
   })();
   var b1 = document.getElementById('sbUiDec'), b2 = document.getElementById('sbUiInc'), b3 = document.getElementById('sbUiVal');
   var b4 = document.getElementById('sbTabDec'), b5 = document.getElementById('sbTabInc'), b6 = document.getElementById('sbTabVal');
