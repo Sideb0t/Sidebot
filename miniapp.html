@@ -3764,12 +3764,38 @@ if(!S.loaded){ refreshState(); }
   }
   var ghBtn = document.getElementById('ghUpdateBtn');
   var _ghAvail = null;
+  function _waitReloadAfterUpdate(targetVer){
+    var tries = 0;
+    function tick(){
+      tries++;
+      fetch(location.origin + '/miniapp-api?t=' + Date.now(), {
+        method:'POST', cache:'no-store',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({action:'get_state', token: apiToken()})
+      }).then(function(resp){
+        if(!resp.ok) throw new Error('not ready');
+        return resp.json();
+      }).then(function(d){
+        var v = d && d.state && d.state.version;
+        if((!targetVer || v === targetVer || tries >= 4) && v){
+          location.replace(location.pathname + '?v=' + Date.now());
+          return;
+        }
+        if(tries < 30) setTimeout(tick, 450);
+        else location.replace(location.pathname + '?v=' + Date.now());
+      }).catch(function(){
+        if(tries < 30) setTimeout(tick, 450);
+        else location.replace(location.pathname + '?v=' + Date.now());
+      });
+    }
+    setTimeout(tick, 1200);
+  }
   function runApplyGhUpdate(btn, u){
     if(btn){ btn.disabled = true; btn.textContent = '⏳ Оновлюю...'; }
     apiCmd({action:'apply_update', url:(u && u.url)||'', version:(u && u.remote_version)||''}, 40000).then(function(r){
       if(r && r.ok){
-        toast('✅ Оновлено до ' + (r.version || 'нової версії') + '! Перезапуск...', false);
-        setTimeout(function(){ try{ location.reload(); }catch(e){} }, 3500);
+        toast('✅ Оновлено до ' + (r.version || 'нової версії') + '! Перезавантажую...', false);
+        _waitReloadAfterUpdate(r.version || (u && u.remote_version) || '');
       }else{
         if(btn){ btn.disabled = false; btn.textContent = '⬆️ Оновити зараз'; }
         toast('❌ ' + ((r && r.text) || 'Помилка оновлення'), true);
