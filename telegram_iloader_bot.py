@@ -7767,6 +7767,32 @@ class _OtaHandler(http.server.SimpleHTTPRequestHandler):
             except Exception:
                 pass
             return True
+        if _path == "/miniapp-cert-export":
+            _qs = urllib.parse.parse_qs(_u.query)
+            _cid = (_qs.get("cid") or [""])[0].strip()
+            _p12_file = ""
+            if _cid and _cid != "builtin":
+                _rec = _feather_cert_find(_feather_certs_load(), _cid)
+                if _rec:
+                    _p12_file = _feather_cert_abs(_rec, "p12") or ""
+            else:
+                _p12_file = P12_PATH if (P12_PATH and os.path.isfile(P12_PATH)) else ""
+            if not _p12_file or not os.path.isfile(_p12_file):
+                self.send_error(404, "Certificate not found")
+                return True
+            with open(_p12_file, "rb") as _cf:
+                _cb = _cf.read()
+            self.send_response(200)
+            self.send_header("Content-Type", "application/x-pkcs12")
+            self.send_header("Content-Disposition", 'attachment; filename="%s"' % (os.path.basename(_p12_file) or "cert.p12"))
+            self.send_header("Content-Length", str(len(_cb)))
+            self.send_header("Cache-Control", "no-store")
+            self.end_headers()
+            try:
+                self.wfile.write(_cb)
+            except Exception:
+                pass
+            return True
         if _path == "/miniapp-pairing-export":
             _ps = _list_pairings()
             if not _ps:
@@ -10606,7 +10632,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.28"
+SIDEBOT_VERSION = "2026.11.25.29"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
