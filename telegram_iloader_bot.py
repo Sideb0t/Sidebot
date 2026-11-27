@@ -7231,28 +7231,6 @@ def _appdata_restore_upload_thread(chat_id, bundle, doc):
     _appdata_confirm_screen(chat_id, _idx, -1, job.get("via", "reply"), None, upload=True)
 
 
-def install_thread(chat_id, allow_repair=True):
-    send_message(chat_id, tr("lockdown_starting"))
-    _path = LAST_SIGNED.get("path", "")
-    _udid = job.get("udid", "") or ""
-    _bundle = LAST_SIGNED.get("bundle", "")
-    if not _bundle and _path and os.path.exists(_path):
-        _bundle = read_ipa_info(_path)[0] or ""
-    _dbg("install start bundle=%s path=%s udid_tail=%s" % (_bundle, os.path.basename(_path or ""), _udid[-4:]))
-    if MINIS_MODE:
-        _aj = job.get("api_jid")
-        _cell_toggled = False
-        _t0 = time.time()
-        _tlog = []
-        _install_log_line("[INSTALL_THREAD] path=%s bundle=%s aj=%s cell=%s" % (os.path.basename(_path or ""), _bundle, _aj, bool(_ms_get("cell"))))
-        def _tmark(msg):
-            _s = "+%.1fs %s" % (time.time() - _t0, msg)
-            _tlog.append(_s)
-            _install_log_line("[TIMING] " + _s)
-            if _aj:
-                _miniapp_job_set(_aj, "running", _s)
-        _port_ok = False
-        send_message(chat_id, "\U0001f4f2 \u0412\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u044e\u044e \u0447\u0435\u0440\u0435\u0437 install-helper (Rust) \u043d\u0430 10.7.0.1... \u0422\u0440\u0438\u043c\u0430\u0439 \u0442\u0435\u043b\u0435\u0444\u043e\u043d \u0440\u043e\u0437\u0431\u043b\u043e\u043a\u043e\u0432\u0430\u043d\u0438\u043c, \u0435\u043a\u0440\u0430\u043d \u0443\u0432\u0456\u043c\u043a\u043d\u0435\u043d\u0438\u043c.")
 _CELL_NOTIFY_BODY = {
     "uk": "Встановлюю через мобільні дані",
     "ru": "Устанавливаю через мобильные данные",
@@ -7296,6 +7274,28 @@ def _minis_notify_ex(title, body):
         return False, str(_ne)[:160]
 
 
+def install_thread(chat_id, allow_repair=True):
+    send_message(chat_id, tr("lockdown_starting"))
+    _path = LAST_SIGNED.get("path", "")
+    _udid = job.get("udid", "") or ""
+    _bundle = LAST_SIGNED.get("bundle", "")
+    if not _bundle and _path and os.path.exists(_path):
+        _bundle = read_ipa_info(_path)[0] or ""
+    _dbg("install start bundle=%s path=%s udid_tail=%s" % (_bundle, os.path.basename(_path or ""), _udid[-4:]))
+    if MINIS_MODE:
+        _aj = job.get("api_jid")
+        _cell_toggled = False
+        _t0 = time.time()
+        _tlog = []
+        _install_log_line("[INSTALL_THREAD] path=%s bundle=%s aj=%s cell=%s" % (os.path.basename(_path or ""), _bundle, _aj, bool(_ms_get("cell"))))
+        def _tmark(msg):
+            _s = "+%.1fs %s" % (time.time() - _t0, msg)
+            _tlog.append(_s)
+            _install_log_line("[TIMING] " + _s)
+            if _aj:
+                _miniapp_job_set(_aj, "running", _s)
+        _port_ok = False
+        send_message(chat_id, "\U0001f4f2 \u0412\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u044e\u044e \u0447\u0435\u0440\u0435\u0437 install-helper (Rust) \u043d\u0430 10.7.0.1... \u0422\u0440\u0438\u043c\u0430\u0439 \u0442\u0435\u043b\u0435\u0444\u043e\u043d \u0440\u043e\u0437\u0431\u043b\u043e\u043a\u043e\u0432\u0430\u043d\u0438\u043c, \u0435\u043a\u0440\u0430\u043d \u0443\u0432\u0456\u043c\u043a\u043d\u0435\u043d\u0438\u043c.")
         if _ms_get("cell"):
             _names = _ms_get("cell_names") if isinstance(_ms_get("cell_names"), dict) else {}
             _sc_off = (_names.get("off") or "TurnOffData")
@@ -10697,7 +10697,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.45"
+SIDEBOT_VERSION = "2026.11.25.46"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
