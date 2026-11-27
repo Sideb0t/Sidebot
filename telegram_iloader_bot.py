@@ -10754,7 +10754,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.60"
+SIDEBOT_VERSION = "2026.11.25.61"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -19326,14 +19326,16 @@ def _refresh_due(now=None):
     return [r for _, r in due]
 
 
-def _miniapp_auto_due(now=None, days=None):
+def _miniapp_auto_due(now=None, days=None, mins=None):
     """Records Auto-Refresh should renew now: the profile expires
     within 48 h, or the record was signed more than `days` days
     ago (a 7-day profile is renewed before it dies, SideStore's
-    own rule of thumb). Only records the refresh flow can re-sign
-    without a new file. Oldest first."""
+    own rule of thumb). When mins <= 10 (live test mode), every
+    refreshable app is treated as due."""
     now = now or datetime.now(timezone.utc)
     days = int(days or _ms_get("auto_refresh_days") or 5)
+    if mins is None:
+        mins = int(_ms_get("auto_check_mins") or (int(_ms_get("auto_check_hours") or 1) * 60))
     _age_cut = now - timedelta(days=days)
     out = []
     for rec in load_installed():
@@ -19345,7 +19347,7 @@ def _miniapp_auto_due(now=None, days=None):
         _signed = _parse_expiry(rec.get("signed_at") or "")
         _soon = _exp is not None and _exp <= now + timedelta(hours=48)
         _old = _signed is not None and _signed <= _age_cut
-        if _soon or _old:
+        if mins <= 10 or _soon or _old:
             out.append((_exp or _signed or now, rec))
     out.sort(key=lambda t: t[0])
     return [r for _, r in out]
@@ -19355,7 +19357,10 @@ def _miniapp_auto_detail(ms=None):
     ms = ms or _ms_load()
     now = datetime.now(timezone.utc)
     days = int(ms.get("auto_refresh_days") or 5)
+    mins = int(ms.get("auto_check_mins") or (int(ms.get("auto_check_hours") or 1) * 60))
+    test_mode = (mins <= 10)
     age_cut = now - timedelta(days=days)
+    last_map = dict(ms.get("last_auto") or {})
     out = []
     for rec in load_installed():
         if not isinstance(rec, dict) or not rec.get("bundle"):
@@ -19374,7 +19379,11 @@ def _miniapp_auto_detail(ms=None):
                 d = sec // 86400
                 h = (sec % 86400) // 3600
                 rem_s = "%dd %dh" % (d, h)
-        due = bool(src_ok and ((exp is not None and exp <= now + timedelta(hours=48)) or (signed is not None and signed <= age_cut)))
+        if test_mode:
+            la = _parse_expiry(last_map.get(b) or "")
+            due = bool(src_ok and (la is None or (now - la) >= timedelta(minutes=mins)))
+        else:
+            due = bool(src_ok and ((exp is not None and exp <= now + timedelta(hours=48)) or (signed is not None and signed <= age_cut)))
         out.append({"b": b, "t": t, "rem": rem_s, "due": due, "src": bool(src_ok)})
     return out
 
@@ -19412,7 +19421,8 @@ def _auto_refresh_once(force=False):
             return "Зараз виконується інше завдання"
         _last = dict(_ms.get("last_auto") or {})
         _days = int(_ms.get("auto_refresh_days") or 5)
-        _due_list = _miniapp_auto_due(_now, _days)
+        _cooldown = timedelta(minutes=_mins) if _mins <= 10 else timedelta(hours=20)
+        _due_list = _miniapp_auto_due(_now, _days, mins=_mins)
         if not _due_list:
             _auto_log_add(_ms, "Перевірка OK: усі додатки свіжі (нічого оновлювати)")
             _ms_save(_ms)
@@ -19422,7 +19432,7 @@ def _auto_refresh_once(force=False):
             if not _b:
                 continue
             _la = _parse_expiry(_last.get(_b) or "")
-            if not force and _la is not None and (_now - _la) < timedelta(hours=20):
+            if not force and _la is not None and (_now - _la) < _cooldown:
                 continue
             _last[_b] = _now.isoformat()
             _ms["last_auto"] = _last
