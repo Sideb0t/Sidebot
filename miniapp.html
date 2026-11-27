@@ -2739,7 +2739,7 @@ function sidebotIconFail(img){
 function renderApps(){
   var pill = el('updPill');
   if(window._ghAvail && window._ghAvail.has_update){
-    pill.textContent = '🆕 Оновити SideBot (' + (window._ghAvail.remote_version || '') + ')';
+    pill.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px;justify-content:center"><svg class="sb-svg" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>Оновити SideBot (' + esc(window._ghAvail.remote_version || '') + ')</span></span>';
     pill.style.background = 'rgba(10,132,255,.22)';
     pill.style.color = '#60a5fa';
     pill.style.cursor = 'pointer';
@@ -3901,7 +3901,7 @@ if(!S.loaded){ refreshState(); }
       var appWrap = document.querySelector('.app') || document.body;
       appWrap.insertBefore(b, appWrap.firstChild);
     }
-    b.innerHTML = '<span>🆕 <b>Оновлення SideBot</b> (' + (u.remote_version || '') + ')</span><button class="btn" id="ghBannerBtn" style="margin:0;width:auto;padding:6px 12px;font-size:12px">Оновити</button>';
+    b.innerHTML = '<span style="display:inline-flex;align-items:center;gap:8px"><svg class="sb-svg" style="width:16px;height:16px" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span><b>Оновлення SideBot</b> (' + esc(u.remote_version || '') + ')</span></span><button class="btn" id="ghBannerBtn" style="margin:0;width:auto;padding:6px 12px;font-size:12px">Оновити</button>';
     var bb = document.getElementById('ghBannerBtn');
     if(bb) bb.onclick = function(){ runApplyGhUpdate(bb, u); };
   }
@@ -3910,10 +3910,10 @@ if(!S.loaded){ refreshState(); }
     updPillEl.style.cursor = 'pointer';
     updPillEl.addEventListener('click', function(){
       if(window._ghAvail && window._ghAvail.has_update){
-        runApplyGhUpdate(null, window._ghAvail);
+        runApplyGhUpdate(updPillEl, window._ghAvail);
         return;
       }
-      updPillEl.textContent = '⏳ Перевіряю оновлення...';
+      updPillEl.textContent = 'Перевіряю оновлення...';
       apiCmd({action:'check_update'}, 10000).then(function(r){
         if(r && r.ok && r.has_update){
           _ghAvail = r;
