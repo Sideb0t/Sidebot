@@ -455,7 +455,7 @@
         <button type="button" id="aiCopyBtn" style="margin-top:6px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.12);color:#fff;border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer">📋 Копіювати лог</button>
       </div>
     </div>
-    <div class="sech"><h2 data-i18n="active">Active</h2><button class="link" id="refreshAllBtn">🔄 <span data-i18n="refreshAll">Refresh All</span></button></div>
+    <div class="sech"><h2 data-i18n="active">Active</h2><button class="link" id="refreshAllBtn" style="display:inline-flex;align-items:center;gap:5px"><svg class="sb-svg" style="width:14px;height:14px" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg><span data-i18n="refreshAll">Refresh All</span></button></div>
     <div class="note" id="autoLine" style="margin:-6px 2px 10px"></div>
     <div id="appsList"></div>
     <div class="appids" id="appIdsLine"></div>
@@ -819,9 +819,9 @@ en: {
   active:"Active", refreshAll:"Refresh All", noUpdates:"No Updates Available",
   updOne:"1 Update Available", updMany:"%s Updates Available",
   viewIds:"View App IDs", appIdLine:"%s of %s App IDs used · %s left",
-  autoOn:"⏱ Auto-Refresh ON · renews every %s d · checks every %s h",
+  autoOn:"Auto-Refresh ON · renews every %s d · checks every %s h",
   autoRefreshed:" · %s auto-refreshed",
-  autoOff:"⏱ Auto-Refresh OFF — renew apps by hand with Refresh All",
+  autoOff:"Auto-Refresh OFF — renew apps by hand with Refresh All",
   noApps:"No installed apps yet.", noAppsHint:"Sign an app in the bot — it will show up here.",
   noSources:"No sources yet.", noSourcesHint:"Press + Add Source and paste a repo.json link.",
   srcOn:"Enabled", srcOff:"Disabled",
@@ -844,7 +844,7 @@ en: {
   removeCert:"🗑 Remove", removeCertBody:"Remove certificate \"%s\" from SideBot? Its .p12 and .mobileprovision files are deleted. This cannot be undone.",
   backupNow:"💾 Backup now", noEnabledSources:"No enabled sources — enable one on the Sources tab.",
   soBadBundle:"Bundle ID: letters, digits, dots and dashes only.",
-  cdExpired:"❌ Expired — refresh now", cdLeft:"⏳ %sd %s left · until %s",
+  cdExpired:"❌ Expired — refresh now", cdLeft:"%sd %s left · until %s",
   soBadVersion:"Version: digits and dots, e.g. 2.1.0.", soBadMinIos:"Minimum iOS: e.g. 15.0.", soSaveFailed:"Could not save the options.",
   confirmTitle:"Confirm", ok:"OK", removeSourceConfirm:"Remove source",
   langNote:"Applies at once to the whole SideBot interface.",
@@ -940,9 +940,9 @@ uk: {
   active:"Активні", refreshAll:"Оновити всі", noUpdates:"Оновлень немає",
   updOne:"Доступне 1 оновлення", updMany:"Доступно оновлень: %s",
   viewIds:"App IDs", appIdLine:"Використано %s з %s App IDs · лишилось %s",
-  autoOn:"⏱ Автооновлення УВІМК · перепідпис кожні %s дн · перевірка кожні %s год",
+  autoOn:"Автооновлення УВІМК · перепідпис кожні %s дн · перевірка кожні %s год",
   autoRefreshed:" · автооновлено: %s",
-  autoOff:"⏱ Автооновлення ВИМК — оновлюй вручну кнопкою «Оновити всі»",
+  autoOff:"Автооновлення ВИМК — оновлюй вручну кнопкою «Оновити всі»",
   noApps:"Встановлених додатків ще немає.", noAppsHint:"Підпиши додаток у боті — він зʼявиться тут.",
   noSources:"Джерел ще немає.", noSourcesHint:"Натисни + Додати джерело і встав посилання на repo.json.",
   srcOn:"Увімкнено", srcOff:"Вимкнено",
@@ -965,7 +965,7 @@ uk: {
   removeCert:"🗑 Прибрати", removeCertBody:"Прибрати сертифікат «%s» з SideBot? Його файли .p12 і .mobileprovision буде видалено. Скасувати це не можна.",
   backupNow:"💾 Зробити бекап", noEnabledSources:"Немає увімкнених джерел — увімкни одне на вкладці «Джерела».",
   soBadBundle:"Bundle ID: лише літери, цифри, крапки й дефіси.",
-  cdExpired:"❌ Прострочено — онови зараз", cdLeft:"⏳ %sd %s лишилось · до %s",
+  cdExpired:"❌ Прострочено — онови зараз", cdLeft:"%sd %s лишилось · до %s",
   soBadVersion:"Версія: цифри й крапки, напр. 2.1.0.", soBadMinIos:"Мінімальна iOS: напр. 15.0.", soSaveFailed:"Не вдалося зберегти параметри.",
   confirmTitle:"Підтвердження", ok:"Гаразд", removeSourceConfirm:"Прибрати джерело",
   langNote:"Застосовується одразу до всього інтерфейсу SideBot.",
@@ -1061,9 +1061,9 @@ ru: {
   active:"Активные", refreshAll:"Обновить все", noUpdates:"Обновлений нет",
   updOne:"Доступно 1 обновление", updMany:"Доступно обновлений: %s",
   viewIds:"App IDs", appIdLine:"Использовано %s из %s App IDs · осталось %s",
-  autoOn:"⏱ Автообновление ВКЛ · переподпись каждые %s дн · проверка каждые %s ч",
+  autoOn:"Автообновление ВКЛ · переподпись каждые %s дн · проверка каждые %s ч",
   autoRefreshed:" · автообновлено: %s",
-  autoOff:"⏱ Автообновление ВЫКЛ — обновляй вручную кнопкой «Обновить все»",
+  autoOff:"Автообновление ВЫКЛ — обновляй вручную кнопкой «Обновить все»",
   noApps:"Установленных приложений пока нет.", noAppsHint:"Подпиши приложение в боте — оно появится здесь.",
   noSources:"Источников пока нет.", noSourcesHint:"Нажми + Добавить источник и вставь ссылку на repo.json.",
   srcOn:"Включён", srcOff:"Отключён",
@@ -1086,7 +1086,7 @@ ru: {
   removeCert:"🗑 Убрать", removeCertBody:"Убрать сертификат «%s» из SideBot? Его файлы .p12 и .mobileprovision будут удалены. Отменить это нельзя.",
   backupNow:"💾 Сделать бэкап", noEnabledSources:"Нет включённых источников — включи один на вкладке «Источники».",
   soBadBundle:"Bundle ID: только буквы, цифры, точки и дефисы.",
-  cdExpired:"❌ Просрочено — обнови сейчас", cdLeft:"⏳ %sd %s осталось · до %s",
+  cdExpired:"❌ Просрочено — обнови сейчас", cdLeft:"%sd %s осталось · до %s",
   soBadVersion:"Версия: цифры и точки, напр. 2.1.0.", soBadMinIos:"Минимальная iOS: напр. 15.0.", soSaveFailed:"Не удалось сохранить параметры.",
   confirmTitle:"Подтверждение", ok:"Хорошо", removeSourceConfirm:"Убрать источник",
   langNote:"Применяется сразу ко всему интерфейсу SideBot.",
@@ -1182,9 +1182,9 @@ de: {
   active:"Aktiv", refreshAll:"Alle erneuern", noUpdates:"Keine Updates verfügbar",
   updOne:"1 Update verfügbar", updMany:"%s Updates verfügbar",
   viewIds:"App-IDs", appIdLine:"%s von %s App-IDs benutzt · %s übrig",
-  autoOn:"⏱ Auto-Erneuerung EIN · erneuert alle %s T · prüft alle %s Std",
+  autoOn:"Auto-Erneuerung EIN · erneuert alle %s T · prüft alle %s Std",
   autoRefreshed:" · %s automatisch erneuert",
-  autoOff:"⏱ Auto-Erneuerung AUS — erneuere von Hand mit „Alle erneuern“",
+  autoOff:"Auto-Erneuerung AUS — erneuere von Hand mit „Alle erneuern“",
   noApps:"Noch keine Apps installiert.", noAppsHint:"Signiere eine App im Bot — sie erscheint dann hier.",
   noSources:"Noch keine Quellen.", noSourcesHint:"Tippe + Quelle hinzufügen und füge einen repo.json-Link ein.",
   srcOn:"Aktiv", srcOff:"Inaktiv",
@@ -1207,7 +1207,7 @@ de: {
   removeCert:"🗑 Entfernen", removeCertBody:"Zertifikat „%s“ aus SideBot entfernen? Seine .p12- und .mobileprovision-Dateien werden gelöscht. Das lässt sich nicht rückgängig machen.",
   backupNow:"💾 Jetzt sichern", noEnabledSources:"Keine aktive Quelle — aktiviere eine im Tab Quellen.",
   soBadBundle:"Bundle-ID: nur Buchstaben, Ziffern, Punkte und Bindestriche.",
-  cdExpired:"❌ Abgelaufen — jetzt erneuern", cdLeft:"⏳ %sd %s übrig · bis %s",
+  cdExpired:"❌ Abgelaufen — jetzt erneuern", cdLeft:"%sd %s übrig · bis %s",
   soBadVersion:"Version: Ziffern und Punkte, z. B. 2.1.0.", soBadMinIos:"Minimale iOS: z. B. 15.0.", soSaveFailed:"Optionen konnten nicht gespeichert werden.",
   confirmTitle:"Bestätigen", ok:"OK", removeSourceConfirm:"Quelle entfernen",
   langNote:"Gilt sofort für die gesamte SideBot-Oberfläche.",
@@ -2845,9 +2845,9 @@ function renderApps(){
     if(_am < 60){
       _autoTxt = _autoTxt.replace(/(\d+)\s*(год|ч|h|Std\.?)/i, _am + (LANG==='uk'?' хв':LANG==='ru'?' мин':LANG==='de'?' Min':' min'));
     }
-    al.textContent = S.auto.on
+    al.innerHTML = '<svg class="sb-svg" style="width:13px;height:13px;vertical-align:-2px;margin-right:5px" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M5 3L2 6"/><path d="M22 6l-3-3"/><path d="M10 2h4"/></svg>' + esc(S.auto.on
       ? (_autoTxt + (S.auto.n ? T('autoRefreshed', S.auto.n) : ''))
-      : T('autoOff');
+      : T('autoOff'));
   }
   tickCountdowns();
 }
@@ -2883,7 +2883,7 @@ function tickCountdowns(){
     var until = (LANG === 'en')
       ? (_ml + ' ' + dt.getDate() + ', ' + _pad2(dt.getHours()) + ':' + _pad2(dt.getMinutes()))
       : (dt.getDate() + ' ' + _ml + ', ' + _pad2(dt.getHours()) + ':' + _pad2(dt.getMinutes()));
-    node.textContent = T('cdLeft', d, _pad2(h)+':'+_pad2(m)+':'+_pad2(ss), until);
+    node.innerHTML = '<svg class="sb-svg" style="width:13px;height:13px;vertical-align:-2px;margin-right:5px" viewBox="0 0 24 24"><path d="M5 2h14"/><path d="M5 22h14"/><path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"/><path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"/></svg>' + esc(T('cdLeft', d, _pad2(h)+':'+_pad2(m)+':'+_pad2(ss), until));
     node.className = 'appsub cdline' + (ms < 12 * 3600 * 1000 ? ' bad' : (ms < 2 * 86400 * 1000 ? ' warn' : ''));
   });
 }
