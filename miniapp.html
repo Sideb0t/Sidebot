@@ -48,6 +48,12 @@
     box-shadow:inset 0 1px 0 rgba(255,255,255,.07), 0 8px 24px rgba(0,0,0,.35);
     backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
   }
+  html[data-theme="sidebot"] .card .row{
+    background:transparent; border:none; box-shadow:none;
+    backdrop-filter:none; -webkit-backdrop-filter:none;
+    border-radius:0; border-bottom:1px solid rgba(0,229,255,.12);
+  }
+  html[data-theme="sidebot"] .card .row:last-child{ border-bottom:none; }
   html[data-theme="sidebot"] .tabbar{
     border-color:rgba(0,229,255,.26);
     box-shadow:inset 0 1px 1px rgba(0,229,255,.35), 0 10px 30px rgba(0,0,0,.50);

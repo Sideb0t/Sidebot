@@ -92,6 +92,19 @@ WQFILES_DEFAULT_SOURCE = {
     "name": "WQ Files",
     "url": "https://raw.githubusercontent.com/kolbicz/WQFiles/main/source.json",
 }
+POPULAR_DEFAULT_SOURCES = [
+    {"name": "CyPwn IPA Library", "url": "https://ipa.cypwn.xyz/cypwn.json"},
+    {"name": "SideStore Community", "url": "https://community-apps.sidestore.io/sidecommunity.json"},
+    {"name": "Official AltStore", "url": "https://apps.altstore.io"},
+    {"name": "WuXu's Library++", "url": "https://wuxu1.github.io/wuxu-complete-plus.json"},
+    {"name": "Quantum Source++", "url": "https://quarksources.github.io/quantumsource++.json"},
+    {"name": "ryP0 Repository", "url": "https://raw.githubusercontent.com/Sami-Wali/ryP0-repository/main/repo.json"},
+    {"name": "WQ Files", "url": "https://raw.githubusercontent.com/kolbicz/WQFiles/main/source.json"},
+    {"name": "UTM Repository", "url": "https://alt.getutm.app"},
+    {"name": "Provenance EMU", "url": "https://provenance-emu.com/apps.json"},
+    {"name": "OatmealDome (DolphiniOS)", "url": "https://altstore.oatmealdome.me"},
+    {"name": "RandomBlock", "url": "https://randomblock1.com/altstore/apps.json"},
+]
 MINIAPP_DYLIBS_DIR = os.path.join(BASE_DIR, "dylibs")
 
 
@@ -10586,7 +10599,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.18"
+SIDEBOT_VERSION = "2026.11.25.19"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -22622,24 +22635,23 @@ def _programs_sources_load():
     if not isinstance(data.get("disabled"), list):
         data["disabled"] = []
     if not data["sources"]:
-        data["sources"] = [{"id": 1,
-                            "name": PROGRAMS_DEFAULT_SOURCE["name"],
-                            "url": PROGRAMS_DEFAULT_SOURCE["url"],
-                            "kind": "repo",
-                            "added": int(time.time()),
-                            "fetched_at": ""},
-                           {"id": 2,
-                            "name": FLEKSTORE_DEFAULT_SOURCE["name"],
-                            "url": FLEKSTORE_DEFAULT_SOURCE["url"],
-                            "kind": "flekstore",
-                            "added": int(time.time()),
-                            "fetched_at": ""},
-                           {"id": 3,
-                            "name": WQFILES_DEFAULT_SOURCE["name"],
-                            "url": WQFILES_DEFAULT_SOURCE["url"],
-                            "kind": "repo",
-                            "added": int(time.time()),
-                            "fetched_at": ""}]
+        data["sources"] = [{
+            "id": 1,
+            "name": FLEKSTORE_DEFAULT_SOURCE["name"],
+            "url": FLEKSTORE_DEFAULT_SOURCE["url"],
+            "kind": "flekstore",
+            "added": int(time.time()),
+            "fetched_at": "",
+        }]
+        for _idx, _ps in enumerate(POPULAR_DEFAULT_SOURCES, start=2):
+            data["sources"].append({
+                "id": _idx,
+                "name": _ps["name"],
+                "url": _ps["url"],
+                "kind": "repo",
+                "added": int(time.time()),
+                "fetched_at": "",
+            })
         data["active_id"] = 1
         _programs_sources_save(data)
     else:
@@ -22647,23 +22659,34 @@ def _programs_sources_load():
         if not any((s.get("kind") or "repo") == "flekstore"
                    for s in data["sources"] if isinstance(s, dict)):
             _nid = _programs_next_id(data)
-            data["sources"].append({"id": _nid,
-                                    "name": FLEKSTORE_DEFAULT_SOURCE["name"],
-                                    "url": FLEKSTORE_DEFAULT_SOURCE["url"],
-                                    "kind": "flekstore",
-                                    "added": int(time.time()),
-                                    "fetched_at": ""})
+            data["sources"].insert(0, {"id": _nid,
+                                       "name": FLEKSTORE_DEFAULT_SOURCE["name"],
+                                       "url": FLEKSTORE_DEFAULT_SOURCE["url"],
+                                       "kind": "flekstore",
+                                       "added": int(time.time()),
+                                       "fetched_at": ""})
             _changed_src = True
-        if not any((s.get("url") or "").strip() == WQFILES_DEFAULT_SOURCE["url"]
-                   for s in data["sources"] if isinstance(s, dict)):
-            _nid = _programs_next_id(data)
-            data["sources"].append({"id": _nid,
-                                    "name": WQFILES_DEFAULT_SOURCE["name"],
-                                    "url": WQFILES_DEFAULT_SOURCE["url"],
-                                    "kind": "repo",
-                                    "added": int(time.time()),
-                                    "fetched_at": ""})
-            _changed_src = True
+        else:
+            _fi = next((i for i, s in enumerate(data["sources"])
+                        if isinstance(s, dict) and (s.get("kind") or "repo") == "flekstore"), 0)
+            if _fi > 0:
+                _fs = data["sources"].pop(_fi)
+                data["sources"].insert(0, _fs)
+                _changed_src = True
+        _existing_urls = {((s.get("url") or "").strip().rstrip("/").lower())
+                          for s in data["sources"] if isinstance(s, dict)}
+        for _ps in POPULAR_DEFAULT_SOURCES:
+            _u_norm = _ps["url"].strip().rstrip("/").lower()
+            if _u_norm not in _existing_urls:
+                _nid = _programs_next_id(data)
+                data["sources"].append({"id": _nid,
+                                        "name": _ps["name"],
+                                        "url": _ps["url"],
+                                        "kind": "repo",
+                                        "added": int(time.time()),
+                                        "fetched_at": ""})
+                _existing_urls.add(_u_norm)
+                _changed_src = True
         if _changed_src:
             _programs_sources_save(data)
     ids = [s.get("id") for s in data["sources"] if isinstance(s, dict)]
