@@ -1352,7 +1352,13 @@ function handleApiResult(cmd, r){
      WebView, so the page opens the bot's own https /jit page,
      which hands it to StikDebug in Safari — SideStore's flow. */
   if(r.open_jit){ openJit(r.open_jit); toast(r.text || T('working')); return; }
-  if(r.open_url){ toast(r.text || T('working')); setTimeout(function(){ window.location.href = r.open_url; }, 120); return; }
+  if(r.open_url){
+    toast(r.text || T('working'));
+    if(typeof showTab === 'function') showTab('apps');
+    if(typeof setAppsCard === 'function') setAppsCard(r.text || '📲 Відкрити', 100, null, true, r.open_url);
+    try{ window.location.href = r.open_url; }catch(e){}
+    return;
+  }
   switch(cmd.action){
     case 'search_programs':
       renderSearchResults(cmd.query, r.items || []);
