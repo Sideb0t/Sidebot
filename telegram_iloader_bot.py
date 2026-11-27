@@ -10606,7 +10606,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.23"
+SIDEBOT_VERSION = "2026.11.25.24"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -11401,9 +11401,10 @@ def _miniapp_api_dispatch(cmd, chat_id):
         # --- fast: search programs ---
         if _action == "search_programs":
             _q = cmd.get("query") or ""
+            _sid = str(cmd.get("source_id") or "").strip()
             if not (isinstance(_q, str) and 2 <= len(_q.strip()) <= 200):
                 return {"ok": False, "text": "bad query"}
-            _hits, _has = _miniapp_search_results(_q)
+            _hits, _has = _miniapp_search_results(_q, _sid)
             if not _hits:
                 if not _has and not _programs_enabled_sources(
                         _programs_sources_load()):
@@ -11423,7 +11424,8 @@ def _miniapp_api_dispatch(cmd, chat_id):
                 _lim = int(cmd.get("limit") or 30)
             except Exception:
                 _lim = 30
-            _items, _total, _err = _miniapp_list_programs(_off, _lim)
+            _sid = str(cmd.get("source_id") or "").strip()
+            _items, _total, _err = _miniapp_list_programs(_off, _lim, _sid)
             if _err:
                 return {"ok": False, "text": _err}
             return {"ok": True, "items": _items, "total": _total,
@@ -11907,7 +11909,44 @@ def _appicon_remote_url(bundle):
         return ""
 
 
-def _miniapp_search_results(query):
+def _miniapp_source_apps(source_id, query=""):
+    """Load apps from a single enabled source_id (or all if empty)."""
+    _sid = (source_id or "").strip()
+    if not _sid:
+        _apps = []
+        try:
+            _apps = list(_feather_lib_source_apps() or [])
+        except Exception:
+            _apps = []
+        try:
+            if _programs_merged_flek_enabled():
+                _fa, _more, _err = _programs_flek_fetch("updates", 0, query or None)
+                if _fa:
+                    _apps = _apps + list(_fa)
+        except Exception:
+            pass
+        return _apps
+    if _sid == "flekstore":
+        try:
+            _fa, _more, _err = _programs_flek_fetch("updates", 0, query or None)
+            return list(_fa or [])
+        except Exception:
+            return []
+    for _src in _programs_sources_load():
+        if str(_src.get("id") or "") == _sid:
+            _apps, _when = _programs_cache_load(_sid)
+            if not _apps and _src.get("url"):
+                try:
+                    _apps, _name, _err = _programs_fetch_repo(_src.get("url"))
+                    if _apps:
+                        _programs_cache_save(_sid, _apps)
+                except Exception:
+                    _apps = []
+            return list(_apps or [])
+    return []
+
+
+def _miniapp_search_results(query, source_id=""):
     """Search hits as plain dicts (name/dev/bundle/version), max 10,
     plus a flag whether any source catalog was loaded at all.
     Shared by the chat search and the in-app API — one code path,
@@ -11915,18 +11954,7 @@ def _miniapp_search_results(query):
     _q = (query or "").strip()
     if len(_q) < 2:
         return [], False
-    _apps = []
-    try:
-        _apps = _feather_lib_source_apps() or []
-    except Exception:
-        _apps = []
-    try:
-        if _programs_merged_flek_enabled():
-            _fa, _more, _err = _programs_flek_fetch("updates", 0, _q)
-            if _fa:
-                _apps = list(_apps) + list(_fa)
-    except Exception:
-        pass
+    _apps = _miniapp_source_apps(source_id, _q)
     _has = bool(_apps)
     _ql = _q.casefold()
     _hits, _seen = [], set()
@@ -11952,24 +11980,14 @@ def _miniapp_search_results(query):
             break
     return _hits, _has
 
-def _miniapp_list_programs(offset, limit):
+def _miniapp_list_programs(offset, limit, source_id=""):
     """Default Browse list: the merged pool from the enabled
-    sources (repo catalogs via _feather_lib_source_apps, plus
-    FlekStore updates page 0 when enabled), deduped by
-    bundleIdentifier — first source in the user's source order
-    wins, exactly like the chat merged view
-    (_programs_merged_fetch_thread "entry"). Items use the
-    search-hit shape (name/dev/bundle/version). Returns
-    (items, total, error_or_None): error is set when the pool
-    is empty although sources are enabled (fetch failed) — the
-    page must show that instead of silent emptiness."""
+    sources (or one source_id when selected), deduped by
+    bundleIdentifier."""
     _offset = max(0, int(offset or 0))
     _limit = min(50, max(1, int(limit or 30)))
     _pool, _seen = [], set()
-    try:
-        _apps = _feather_lib_source_apps() or []
-    except Exception:
-        _apps = []
+    _apps = _miniapp_source_apps(source_id)
     for _a in _apps:
         if not isinstance(_a, dict):
             continue
@@ -11978,19 +11996,6 @@ def _miniapp_list_programs(offset, limit):
             continue
         _seen.add(_bid)
         _pool.append(_a)
-    try:
-        if _programs_merged_flek_enabled():
-            _fa, _more, _err = _programs_flek_fetch("updates", 0)
-            for _a in (_fa or []):
-                if not isinstance(_a, dict):
-                    continue
-                _bid = _a.get("bundleIdentifier") or ""
-                if not _bid or _bid in _seen:
-                    continue
-                _seen.add(_bid)
-                _pool.append(_a)
-    except Exception:
-        pass
     if not _pool:
         if not _programs_enabled_sources(_programs_sources_load()):
             return [], 0, tr("miniapp_search_no_catalog")
