@@ -395,14 +395,14 @@
     <div class="card">
       <div style="margin-top:2px;position:relative">
         <button class="btn ghost" id="srcGroupBtn" type="button" style="width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;padding:10px 12px;margin:0">
-          <span><span style="opacity:.7;font-size:12px;margin-right:6px">Категорія:</span><b id="srcGroupLabel">🌐 Усі категорії</b></span>
+          <span><span style="opacity:.7;font-size:12px;margin-right:6px" data-i18n="catLbl">Категорія:</span><b id="srcGroupLabel" data-i18n="catAll">🌐 Усі категорії</b></span>
           <span style="opacity:.7">▾</span>
         </button>
         <div id="srcGroupMenu" class="hidden" style="margin-top:6px;background:rgba(20,20,26,.98);border:1px solid rgba(255,255,255,.12);border-radius:12px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.45);max-height:260px;overflow-y:auto"></div>
       </div>
       <div style="margin-top:8px;position:relative">
         <button class="btn ghost" id="installDestBtn" type="button" style="width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;padding:10px 12px">
-          <span><span style="opacity:.7;font-size:12px;margin-right:6px">Встановити куди:</span><b id="installDestLabel">📱 SideBot</b></span>
+          <span><span style="opacity:.7;font-size:12px;margin-right:6px" data-i18n="installToLbl">Встановити куди:</span><b id="installDestLabel">📱 SideBot</b></span>
           <span style="opacity:.7">▾</span>
         </button>
         <div id="installDestMenu" class="hidden" style="margin-top:6px;background:rgba(20,20,26,.98);border:1px solid rgba(255,255,255,.12);border-radius:12px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.45)"></div>
@@ -413,7 +413,7 @@
       <button class="btn" id="importBtn" style="margin-top:10px" data-i18n="importIpa">+ Import IPA</button>
       <label style="display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;opacity:.9;cursor:pointer;user-select:none">
         <input type="checkbox" id="importOtaChk" style="width:16px;height:16px;accent-color:#0a84ff;margin:0">
-        <span>📲 OTA встановлення (manifest)</span>
+        <span data-i18n="otaManifestLbl">📲 OTA встановлення (manifest)</span>
       </label>
       <input type="file" id="ipaFile" accept=".ipa" class="hidden">
       <div id="uploadBox" class="hidden" style="margin-top:10px">
@@ -466,7 +466,7 @@
 
     <details class="card" style="padding:10px 14px;margin-bottom:10px" open>
       <summary style="cursor:pointer;font-size:14px;font-weight:700;color:#fff;list-style:none;display:flex;align-items:center;justify-content:space-between">
-        <span style="display:inline-flex;align-items:center;gap:8px"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5.5-3.4 9.7-8 11-4.6-1.3-8-5.5-8-11V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg> Підпис та сертифікати</span>
+        <span style="display:inline-flex;align-items:center;gap:8px"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5.5-3.4 9.7-8 11-4.6-1.3-8-5.5-8-11V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg> <span data-i18n="secSignCerts">Підпис та сертифікати</span></span>
         <span style="font-size:12px;color:var(--gray)">▾</span>
       </summary>
       <div style="margin-top:10px">
@@ -482,7 +482,7 @@
 
     <details class="card" style="padding:10px 14px;margin-bottom:10px">
       <summary style="cursor:pointer;font-size:14px;font-weight:700;color:#fff;list-style:none;display:flex;align-items:center;justify-content:space-between">
-        <span style="display:inline-flex;align-items:center;gap:8px"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg> Мережа, Pairing та автооновлення</span>
+        <span style="display:inline-flex;align-items:center;gap:8px"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><circle cx="12" cy="20" r="1"/></svg> <span data-i18n="secNetPairing">Мережа, Pairing та автооновлення</span></span>
         <span style="font-size:12px;color:var(--gray)">▾</span>
       </summary>
       <div style="margin-top:10px">
@@ -496,7 +496,7 @@
 
     <details class="card" style="padding:10px 14px;margin-bottom:10px">
       <summary style="cursor:pointer;font-size:14px;font-weight:700;color:#fff;list-style:none;display:flex;align-items:center;justify-content:space-between">
-        <span style="display:inline-flex;align-items:center;gap:8px"><svg class="sb-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg> Оформлення, мова та розмір</span>
+        <span style="display:inline-flex;align-items:center;gap:8px"><svg class="sb-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 3v18M3 12h18"/></svg> <span data-i18n="secThemeLangSize">Оформлення, мова та розмір</span></span>
         <span style="font-size:12px;color:var(--gray)">▾</span>
       </summary>
       <div style="margin-top:10px">
@@ -504,7 +504,7 @@
         <div class="note" id="langNote" data-i18n="langNote" style="margin-bottom:10px">Applies at once to the whole SideBot interface.</div>
         <div style="display:flex;flex-direction:column;gap:10px">
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-            <span style="font-size:14px;font-weight:600">Загальний розмір</span>
+            <span style="font-size:14px;font-weight:600" data-i18n="uiScaleLbl">Загальний розмір</span>
             <div style="display:flex;align-items:center;gap:6px">
               <button class="btn ghost" id="sbUiDec" style="width:auto;padding:6px 12px;margin:0;font-size:15px">−</button>
               <button class="btn ghost" id="sbUiVal" style="width:auto;padding:6px 10px;margin:0;font-size:13px;min-width:54px">100%</button>
@@ -512,7 +512,7 @@
             </div>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-            <span style="font-size:14px;font-weight:600">Нижня панель</span>
+            <span style="font-size:14px;font-weight:600" data-i18n="tabScaleLbl">Нижня панель</span>
             <div style="display:flex;align-items:center;gap:6px">
               <button class="btn ghost" id="sbTabDec" style="width:auto;padding:6px 12px;margin:0;font-size:15px">−</button>
               <button class="btn ghost" id="sbTabVal" style="width:auto;padding:6px 10px;margin:0;font-size:13px;min-width:54px">100%</button>
@@ -520,7 +520,7 @@
             </div>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:8px">
-            <span style="font-size:14px;font-weight:600">Розмір шрифту</span>
+            <span style="font-size:14px;font-weight:600" data-i18n="fontScaleLbl">Розмір шрифту</span>
             <div style="display:flex;align-items:center;gap:6px">
               <button class="btn ghost" id="sbFontDec" style="width:auto;padding:6px 12px;margin:0;font-size:15px">−</button>
               <button class="btn ghost" id="sbFontVal" style="width:auto;padding:6px 10px;margin:0;font-size:13px;min-width:54px">100%</button>
@@ -528,7 +528,7 @@
             </div>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
-            <span style="font-size:14px;font-weight:600;white-space:nowrap">Прозорість скла</span>
+            <span style="font-size:14px;font-weight:600;white-space:nowrap" data-i18n="glassLbl">Прозорість скла</span>
             <div style="display:flex;align-items:center;gap:8px;flex:1;max-width:190px">
               <input type="range" id="sbGlassRange" min="0" max="90" value="5" style="width:100%;accent-color:var(--acc-bright)">
               <span id="sbGlassVal" style="font-size:12px;color:var(--gray);min-width:34px;text-align:right">5%</span>
@@ -540,7 +540,7 @@
 
     <details class="card" style="padding:10px 14px;margin-bottom:10px">
       <summary style="cursor:pointer;font-size:14px;font-weight:600;color:#fff;list-style:none;display:flex;align-items:center;justify-content:space-between">
-        <span style="display:inline-flex;align-items:center;gap:8px"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> Видимість вкладок і розділів</span>
+        <span style="display:inline-flex;align-items:center;gap:8px"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> <span data-i18n="secTabVis">Видимість вкладок і розділів</span></span>
         <span style="font-size:12px;color:var(--gray)">▾</span>
       </summary>
       <div id="tabsCard" style="margin-top:8px"></div>
@@ -548,7 +548,7 @@
 
     <details class="card" style="padding:10px 14px;margin-bottom:10px">
       <summary style="cursor:pointer;font-size:14px;font-weight:700;color:#fff;list-style:none;display:flex;align-items:center;justify-content:space-between">
-        <span style="display:inline-flex;align-items:center;gap:8px"><svg class="sb-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg> Іконки та фон (iPhone)</span>
+        <span style="display:inline-flex;align-items:center;gap:8px"><svg class="sb-svg" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg> <span data-i18n="secIconsBg">Іконки та фон (iPhone)</span></span>
         <span style="font-size:12px;color:var(--gray)">▾</span>
       </summary>
       <div style="margin-top:10px">
@@ -573,7 +573,7 @@
 
     <details class="card" style="padding:10px 14px;margin-bottom:10px">
       <summary style="cursor:pointer;font-size:14px;font-weight:700;color:#fff;list-style:none;display:flex;align-items:center;justify-content:space-between">
-        <span style="display:inline-flex;align-items:center;gap:8px"><svg class="sb-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg> Загальні, перевірка та додатково</span>
+        <span style="display:inline-flex;align-items:center;gap:8px"><svg class="sb-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3h.1a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8v.1a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg> <span data-i18n="secGenVerAdv">Загальні, перевірка та додатково</span></span>
         <span style="font-size:12px;color:var(--gray)">▾</span>
       </summary>
       <div style="margin-top:10px">
@@ -588,14 +588,14 @@
 
     <details class="card" style="padding:10px 14px;margin-bottom:10px">
       <summary style="cursor:pointer;font-size:14px;font-weight:700;color:#fff;list-style:none;display:flex;align-items:center;justify-content:space-between">
-        <span style="display:inline-flex;align-items:center;gap:8px"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M4 17l6-6-6-6"/><path d="M12 19h8"/></svg> Система та діагностика</span>
+        <span style="display:inline-flex;align-items:center;gap:8px"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M4 17l6-6-6-6"/><path d="M12 19h8"/></svg> <span data-i18n="secSysDiag">Система та діагностика</span></span>
         <span style="font-size:12px;color:var(--gray)">▾</span>
       </summary>
       <div style="margin-top:10px;display:flex;flex-direction:column;gap:8px">
-        <button class="btn" id="ghUpdateBtn" style="margin:0">Перевірити оновлення (GitHub)</button>
-        <button class="btn ghost" id="updFileBtn" style="margin:0">Оновити з файлу</button>
-        <button class="btn ghost" id="copyBotLogBtn" style="margin:0">Копіювати лог (bot.log)</button>
-        <button class="btn ghost" id="obReopenBtn" style="margin:0">Початкове налаштування (Setup)</button>
+        <button class="btn" id="ghUpdateBtn" style="margin:0" data-i18n="ghCheckBtn">Перевірити оновлення (GitHub)</button>
+        <button class="btn ghost" id="updFileBtn" style="margin:0" data-i18n="updFileBtnLbl">Оновити з файлу</button>
+        <button class="btn ghost" id="copyBotLogBtn" style="margin:0" data-i18n="copyBotLogLbl">Копіювати лог (bot.log)</button>
+        <button class="btn ghost" id="obReopenBtn" style="margin:0" data-i18n="obSetupLbl">Початкове налаштування (Setup)</button>
         <button class="btn ghost" id="resetBtn" style="margin:0" data-i18n="resetDefaults">Reset to Defaults</button>
       </div>
     </details>
@@ -913,7 +913,16 @@ en: {
   badUrl:"Enter an https link that ends in .json.",
   loading:"Working…", jobToggleOff:"Turning cellular data off: ", jobToggleOn:"Turning cellular data on: ",
   jobToggleHint:" — tap Open if it does not start by itself.",
-  stillRunning:"Still running — check chat.", openBtn:"Open "
+  stillRunning:"Still running — check chat.", openBtn:"Open ",
+  secSignCerts:"Signing & Certificates", secNetPairing:"Network, Pairing & Auto-Refresh",
+  secThemeLangSize:"Theme, Language & Scale", secTabVis:"Tabs & Sections Visibility",
+  secIconsBg:"Icons & Background (iPhone)", secGenVerAdv:"General, Verification & Advanced",
+  secSysDiag:"System & Diagnostics", uiScaleLbl:"Overall Scale", tabScaleLbl:"Tab Bar Scale",
+  fontScaleLbl:"Font Size", glassLbl:"Glass Opacity", themeLbl:"Theme",
+  ghCheckBtn:"Check for Updates (GitHub)", updFileBtnLbl:"Update from File",
+  copyBotLogLbl:"Copy Log (bot.log)", obSetupLbl:"Initial Setup",
+  catLbl:"Category:", catAll:"🌐 All categories", installToLbl:"Install to:",
+  otaManifestLbl:"📲 OTA install (manifest)"
 },
 uk: {
   news:"Новини", sources:"Джерела", browse:"Огляд",appstoreOpen:"Відкрити App Store UI", myApps:"Мої додатки", settings:"Налаштування",
@@ -1024,7 +1033,16 @@ uk: {
   badUrl:"Введи https-посилання, що закінчується на .json.",
   loading:"Працюю…", jobToggleOff:"Вимикаю мобільні дані: ", jobToggleOn:"Вмикаю мобільні дані: ",
   jobToggleHint:" — натисни «Відкрити», якщо не почнеться саме.",
-  stillRunning:"Ще працює — перевір чат.", openBtn:"Відкрити "
+  stillRunning:"Ще працює — перевір чат.", openBtn:"Відкрити ",
+  secSignCerts:"Підпис та сертифікати", secNetPairing:"Мережа, Pairing та автооновлення",
+  secThemeLangSize:"Оформлення, мова та розмір", secTabVis:"Видимість вкладок і розділів",
+  secIconsBg:"Іконки та фон (iPhone)", secGenVerAdv:"Загальні, перевірка та додатково",
+  secSysDiag:"Система та діагностика", uiScaleLbl:"Загальний розмір", tabScaleLbl:"Нижня панель",
+  fontScaleLbl:"Розмір шрифту", glassLbl:"Прозорість скла", themeLbl:"Тема оформлення",
+  ghCheckBtn:"Перевірити оновлення (GitHub)", updFileBtnLbl:"Оновити з файлу",
+  copyBotLogLbl:"Копіювати лог (bot.log)", obSetupLbl:"Початкове налаштування (Setup)",
+  catLbl:"Категорія:", catAll:"🌐 Усі категорії", installToLbl:"Встановити куди:",
+  otaManifestLbl:"📲 OTA встановлення (manifest)"
 },
 ru: {
   news:"Новости", sources:"Источники", browse:"Обзор",appstoreOpen:"Открыть App Store UI", myApps:"Мои приложения", settings:"Настройки",
@@ -1135,7 +1153,16 @@ ru: {
   badUrl:"Введи https-ссылку, заканчивающуюся на .json.",
   loading:"Работаю…", jobToggleOff:"Выключаю мобильные данные: ", jobToggleOn:"Включаю мобильные данные: ",
   jobToggleHint:" — нажми «Открыть», если не начнётся само.",
-  stillRunning:"Ещё работает — проверь чат.", openBtn:"Открыть "
+  stillRunning:"Ещё работает — проверь чат.", openBtn:"Открыть ",
+  secSignCerts:"Подпись и сертификаты", secNetPairing:"Сеть, Pairing и автообновление",
+  secThemeLangSize:"Оформление, язык и размер", secTabVis:"Видимость вкладок и разделов",
+  secIconsBg:"Иконки и фон (iPhone)", secGenVerAdv:"Общие, проверка и дополнительно",
+  secSysDiag:"Система и диагностика", uiScaleLbl:"Общий размер", tabScaleLbl:"Нижняя панель",
+  fontScaleLbl:"Размер шрифта", glassLbl:"Прозрачность стекла", themeLbl:"Тема оформления",
+  ghCheckBtn:"Проверить обновления (GitHub)", updFileBtnLbl:"Обновить из файла",
+  copyBotLogLbl:"Копировать лог (bot.log)", obSetupLbl:"Начальная настройка (Setup)",
+  catLbl:"Категория:", catAll:"🌐 Все категории", installToLbl:"Установить куда:",
+  otaManifestLbl:"📲 OTA установка (manifest)"
 },
 de: {
   news:"News", sources:"Quellen", browse:"Stöbern",appstoreOpen:"App Store UI öffnen", myApps:"Meine Apps", settings:"Einstellungen",
@@ -1246,7 +1273,16 @@ de: {
   badUrl:"Gib einen https-Link ein, der auf .json endet.",
   loading:"Arbeite…", jobToggleOff:"Mobilfunk wird ausgeschaltet: ", jobToggleOn:"Mobilfunk wird eingeschaltet: ",
   jobToggleHint:" — tippe auf Öffnen, wenn es nicht von selbst startet.",
-  stillRunning:"Läuft noch — prüfe den Chat.", openBtn:"Öffnen "
+  stillRunning:"Läuft noch — prüfe den Chat.", openBtn:"Öffnen ",
+  secSignCerts:"Signierung & Zertifikate", secNetPairing:"Netzwerk, Pairing & Auto-Refresh",
+  secThemeLangSize:"Design, Sprache & Größe", secTabVis:"Tabs & Bereiche",
+  secIconsBg:"Icons & Hintergrund (iPhone)", secGenVerAdv:"Allgemein, Prüfung & Erweitert",
+  secSysDiag:"System & Diagnose", uiScaleLbl:"Gesamtgröße", tabScaleLbl:"Tab-Leiste",
+  fontScaleLbl:"Schriftgröße", glassLbl:"Glas-Transparenz", themeLbl:"Design-Theme",
+  ghCheckBtn:"Nach Updates suchen (GitHub)", updFileBtnLbl:"Aus Datei aktualisieren",
+  copyBotLogLbl:"Log kopieren (bot.log)", obSetupLbl:"Ersteinrichtung (Setup)",
+  catLbl:"Kategorie:", catAll:"🌐 Alle Kategorien", installToLbl:"Installieren in:",
+  otaManifestLbl:"📲 OTA-Installation (Manifest)"
 }
 };
 var LANG = (S.lang && I18N[S.lang]) ? S.lang : 'en';
@@ -3011,7 +3047,7 @@ function renderSettings(){
      is plain outbound HTTPS, so LTE/5G works exactly like Wi-Fi —
      there is no Wi-Fi-only rule to hide behind. OFF only blocks a
      job the bot can positively identify as running on mobile data. */
-  el('cellCard').innerHTML = '<div class="row" style="flex-direction:column;align-items:stretch;gap:8px;cursor:default"><span>Тема оформлення</span>'
+  el('cellCard').innerHTML = '<div class="row" style="flex-direction:column;align-items:stretch;gap:8px;cursor:default"><span>'+esc(T('themeLbl'))+'</span>'
     + '<div style="display:flex;gap:6px">'
     + '<button class="btn '+(getTheme()==='sidebot'?'':'ghost')+' sb-thm" data-t="sidebot" style="flex:1;padding:9px 6px;font-size:12px;display:inline-flex;align-items:center;justify-content:center;gap:6px"><img src="/sidebot-icon.png?v=1" class="sb-thm-ic" alt="">SideBot</button>'
     + '<button class="btn '+(getTheme()==='altstore'?'':'ghost')+' sb-thm" data-t="altstore" style="flex:1;padding:9px 6px;font-size:12px;display:inline-flex;align-items:center;justify-content:center;gap:6px"><img src="/altstore-icon.png?v=1" class="sb-thm-ic" alt="">AltStore</button>'
