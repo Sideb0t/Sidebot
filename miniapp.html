@@ -2238,15 +2238,38 @@ function showDetail(cmd, text, items){
       }
       var btns = document.createElement('div');
       btns.style.cssText = 'display:flex;gap:8px;flex-wrap:wrap';
+      function dlCert(kind, fallbackName){
+        var url = '/miniapp-cert-export?cid=' + encodeURIComponent(it.cid) + '&kind=' + encodeURIComponent(kind) + '&t=' + encodeURIComponent(T_TOKEN || '');
+        fetch(url).then(function(resp){
+          if(!resp.ok) throw new Error(resp.status === 404 ? 'Файл ще не створено — зʼявиться після першого підпису' : ('HTTP ' + resp.status));
+          var cd = resp.headers.get('Content-Disposition') || '';
+          var m = cd.match(/filename="([^"]+)"/i);
+          var fn = (m && m[1]) ? m[1] : fallbackName;
+          return resp.blob().then(function(bl){ return {bl:bl, fn:fn}; });
+        }).then(function(res){
+          var u = URL.createObjectURL(res.bl);
+          var a = document.createElement('a');
+          a.href = u;
+          a.download = res.fn;
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(function(){ URL.revokeObjectURL(u); a.remove(); }, 1500);
+        }).catch(function(err){
+          toast((err && err.message) || 'Не вдалося експортувати', true);
+        });
+      }
       var ce = document.createElement('button');
       ce.className = 'btn ghost';
       ce.style.cssText = 'flex:1;padding:9px 10px;font-size:13px;margin:0';
       ce.textContent = 'Експорт .p12';
-      ce.addEventListener('click', function(){
-        var url = '/miniapp-cert-export?cid=' + encodeURIComponent(it.cid) + '&t=' + encodeURIComponent(T_TOKEN || '');
-        window.open(url, '_blank');
-      });
+      ce.addEventListener('click', function(){ dlCert('p12', 'cert.p12'); });
       btns.appendChild(ce);
+      var cp = document.createElement('button');
+      cp.className = 'btn ghost';
+      cp.style.cssText = 'flex:1;padding:9px 10px;font-size:13px;margin:0';
+      cp.textContent = 'Експорт .mobileprovision';
+      cp.addEventListener('click', function(){ dlCert('provision', 'cert.mobileprovision'); });
+      btns.appendChild(cp);
       if(!it.active){
         var ca = document.createElement('button');
         ca.className = 'btn';
