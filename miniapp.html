@@ -377,7 +377,7 @@
     <div class="card">
       <div style="margin-top:2px;position:relative">
         <button class="btn ghost" id="srcGroupBtn" type="button" style="width:100%;display:flex;align-items:center;justify-content:space-between;text-align:left;padding:10px 12px;margin:0">
-          <span><span style="opacity:.7;font-size:12px;margin-right:6px">Група додатків:</span><b id="srcGroupLabel">🌐 Усі джерела</b></span>
+          <span><span style="opacity:.7;font-size:12px;margin-right:6px">Категорія:</span><b id="srcGroupLabel">🌐 Усі категорії</b></span>
           <span style="opacity:.7">▾</span>
         </button>
         <div id="srcGroupMenu" class="hidden" style="margin-top:6px;background:rgba(20,20,26,.98);border:1px solid rgba(255,255,255,.12);border-radius:12px;overflow:hidden;box-shadow:0 10px 28px rgba(0,0,0,.45);max-height:260px;overflow-y:auto"></div>
@@ -2393,9 +2393,21 @@ function renderSources(){
    Search (≥2 chars) replaces the list; clearing the search
    restores it. + Import IPA uploads an .ipa from Files to the
    bot, which signs it through the normal prov_ipa flow. */
+var BROWSE_CATS = [
+  ['', '🌐 Усі категорії'],
+  ['games', '🎮 Ігри та аркади'],
+  ['social', '📱 Соцмережі'],
+  ['emulators', '🕹️ Емулятори'],
+  ['utilities', '🛠️ Утиліти та інструменти'],
+  ['video', '🎬 Відео та фільми'],
+  ['photo', '📸 Фото та дизайн'],
+  ['music', '🎵 Музика та аудіо'],
+  ['ai', '🤖 AI інструменти'],
+  ['other', '⚡ Інше']
+];
 var browseLoaded = false, browseMode = 'list', browseOffset = 0, browseMore = false;
 var browseItems = [];
-try{ S.browseSource = localStorage.getItem('sb_browse_source') || ''; }catch(e){ S.browseSource = ''; }
+try{ S.browseCat = localStorage.getItem('sb_browse_cat') || ''; }catch(e){ S.browseCat = ''; }
 if(el('srcGroupBtn')){
   el('srcGroupBtn').addEventListener('click', function(){
     var m = el('srcGroupMenu');
@@ -2403,28 +2415,25 @@ if(el('srcGroupBtn')){
   });
 }
 function renderBrowse(){
-  var btn = el('srcGroupBtn'), lbl = el('srcGroupLabel'), menu = el('srcGroupMenu');
-  var en = S.srcs.filter(function(s){ return !!s.e; });
+  var lbl = el('srcGroupLabel'), menu = el('srcGroupMenu');
   if(lbl && menu){
-    var opts = [{id:'', name:'🌐 Усі джерела'}].concat(en.map(function(s){ return {id:String(s.id||''), name:String(s.n||s.id||'')}; }));
-    var cur = S.browseSource || '';
-    var curItem = opts.filter(function(o){ return o.id === cur; })[0] || opts[0];
-    if(cur && curItem === opts[0]){ cur = ''; S.browseSource = ''; }
-    lbl.textContent = curItem.name;
-    menu.innerHTML = opts.map(function(o){
-      var act = (o.id === cur);
-      return '<button type="button" data-srcg="'+esc(o.id)+'" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:'+(act?'rgba(10,132,255,.18)':'transparent')+';border:0;border-bottom:1px solid rgba(255,255,255,.06);color:#fff;font-size:14px;text-align:left;cursor:pointer"><span>'+esc(o.name)+'</span>'+(act?'<span style="color:#0a84ff;font-weight:700">✓</span>':'')+'</button>';
+    var cur = S.browseCat || '';
+    var curItem = BROWSE_CATS.filter(function(o){ return o[0] === cur; })[0] || BROWSE_CATS[0];
+    lbl.textContent = curItem[1];
+    menu.innerHTML = BROWSE_CATS.map(function(o){
+      var act = (o[0] === cur);
+      return '<button type="button" data-srcg="'+esc(o[0])+'" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:10px 12px;background:'+(act?'rgba(10,132,255,.18)':'transparent')+';border:0;border-bottom:1px solid rgba(255,255,255,.06);color:#fff;font-size:14px;text-align:left;cursor:pointer"><span>'+esc(o[1])+'</span>'+(act?'<span style="color:#0a84ff;font-weight:700">✓</span>':'')+'</button>';
     }).join('');
     Array.prototype.forEach.call(menu.querySelectorAll('[data-srcg]'), function(b){
       b.addEventListener('click', function(){
-        S.browseSource = b.getAttribute('data-srcg') || '';
-        try{ localStorage.setItem('sb_browse_source', S.browseSource); }catch(err){}
+        S.browseCat = b.getAttribute('data-srcg') || '';
+        try{ localStorage.setItem('sb_browse_cat', S.browseCat); }catch(err){}
         menu.classList.add('hidden');
         renderBrowse();
         var q = (el('q') && el('q').value || '').trim();
         if(q.length >= 2){
           browseMode = 'search';
-          send({action:'search_programs', query:q, source_id:S.browseSource});
+          send({action:'search_programs', query:q, category:S.browseCat});
         } else {
           browseLoaded = false;
           loadBrowseList(0);
@@ -2456,7 +2465,7 @@ function loadBrowseList(offset){
   if(off === 0){ browseItems = []; browseOffset = 0; }
   browseMode = 'list';
   el('searchResults').innerHTML = '<div class="empty">'+esc(T('loadingApps'))+'</div>';
-  apiCmd({action:'list_programs', offset: off, limit: 30, source_id: S.browseSource || ''}, 60000).then(function(r){
+  apiCmd({action:'list_programs', offset: off, limit: 30, category: S.browseCat || ''}, 60000).then(function(r){
     if(!r || r.ok === false){
       el('searchResults').innerHTML = '<div class="resrow"><b>'+esc(T('loadFailed'))+'</b><div class="meta">'+esc((r && r.text) || T('loadFailedHint'))+'</div></div>';
       return;
@@ -2474,7 +2483,7 @@ el('searchBtn').addEventListener('click', function(){
   var q = el('q').value.trim();
   if(q.length < 2){ return; }
   browseMode = 'search';
-  send({action:'search_programs', query:q, source_id: S.browseSource || ''});
+  send({action:'search_programs', query:q, category: S.browseCat || ''});
 });
 el('q').addEventListener('input', function(){
   if(el('q').value.trim().length === 0 && browseMode === 'search'){

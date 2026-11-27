@@ -10606,7 +10606,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.25"
+SIDEBOT_VERSION = "2026.11.25.26"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -11401,10 +11401,10 @@ def _miniapp_api_dispatch(cmd, chat_id):
         # --- fast: search programs ---
         if _action == "search_programs":
             _q = cmd.get("query") or ""
-            _sid = str(cmd.get("source_id") or "").strip()
+            _cat = str(cmd.get("category") or "").strip().lower()
             if not (isinstance(_q, str) and 2 <= len(_q.strip()) <= 200):
                 return {"ok": False, "text": "bad query"}
-            _hits, _has = _miniapp_search_results(_q, _sid)
+            _hits, _has = _miniapp_search_results(_q, _cat)
             if not _hits:
                 if not _has and not _programs_enabled_sources(
                         _programs_sources_load()):
@@ -11424,8 +11424,8 @@ def _miniapp_api_dispatch(cmd, chat_id):
                 _lim = int(cmd.get("limit") or 30)
             except Exception:
                 _lim = 30
-            _sid = str(cmd.get("source_id") or "").strip()
-            _items, _total, _err = _miniapp_list_programs(_off, _lim, _sid)
+            _cat = str(cmd.get("category") or "").strip().lower()
+            _items, _total, _err = _miniapp_list_programs(_off, _lim, _cat)
             if _err:
                 return {"ok": False, "text": _err}
             return {"ok": True, "items": _items, "total": _total,
@@ -11909,44 +11909,56 @@ def _appicon_remote_url(bundle):
         return ""
 
 
-def _miniapp_source_apps(source_id, query=""):
-    """Load apps from a single enabled source_id (or all if empty)."""
-    _sid = (source_id or "").strip()
-    if not _sid:
+_MINIAPP_CAT_FLEK = {
+    "games": 31, "social": 15, "emulators": 1, "utilities": 23,
+    "video": 16, "photo": 30, "music": 7, "ai": 42,
+}
+_MINIAPP_CAT_KW = {
+    "games": ("game", "arcade", "rpg", "action", "puzzle", "minecraft", "roblox", "brawl", "clash", "pubg", "geometry", "subway"),
+    "social": ("social", "telegram", "instagram", "whatsapp", "discord", "tiktok", "twitter", "x ", "vk", "facebook", "snapchat", "messenger", "reddit", "youtube"),
+    "emulators": ("emulator", "retro", "dolphin", "ppsspp", "delta", "provenance", "utm", "mame", "nintendo", "psp", "gba", "nds", "ps2", "folia", "flycast"),
+    "utilities": ("util", "tool", "file", "filza", "developer", "terminal", "ssh", "vpn", "adblock", "livecontainer", "sidestore", "altstore", "esign", "feather", "cleaner"),
+    "video": ("video", "movie", "cinema", "tv", "player", "vlc", "infuse", "nplayer", "kodi", "stream", "anime", "netflix", "twitch"),
+    "photo": ("photo", "camera", "edit", "design", "capcut", "lightroom", "picsart", "vsco", "procreate", "canvas", "photoshop"),
+    "music": ("music", "audio", "spotify", "soundcloud", "deezer", "tidal", "apple music", "podcast", "radio", "equalizer"),
+    "ai": ("ai", "gpt", "chatgpt", "claude", "gemini", "copilot", "midjourney", "grok", "llm", "perplexity"),
+}
+
+
+def _miniapp_cat_match(app, cat):
+    if not cat:
+        return True
+    _c = str(app.get("category") or "").strip().lower()
+    _hay = " ".join([_c, str(app.get("name") or ""), str(app.get("subtitle") or "")]).lower()
+    if cat == "other":
+        for _k in _MINIAPP_CAT_KW:
+            if _miniapp_cat_match(app, _k):
+                return False
+        return True
+    _kws = _MINIAPP_CAT_KW.get(cat) or ()
+    return any(k in _hay for k in _kws)
+
+
+def _miniapp_all_apps(query="", cat=""):
+    _apps = []
+    try:
+        _apps = list(_feather_lib_source_apps() or [])
+    except Exception:
         _apps = []
-        try:
-            _apps = list(_feather_lib_source_apps() or [])
-        except Exception:
-            _apps = []
-        try:
-            if _programs_merged_flek_enabled():
-                _fa, _more, _err = _programs_flek_fetch("updates", 0, query or None)
-                if _fa:
-                    _apps = _apps + list(_fa)
-        except Exception:
-            pass
-        return _apps
-    if _sid == "flekstore":
-        try:
-            _fa, _more, _err = _programs_flek_fetch("updates", 0, query or None)
-            return list(_fa or [])
-        except Exception:
-            return []
-    for _src in _programs_sources_load():
-        if str(_src.get("id") or "") == _sid:
-            _apps, _when = _programs_cache_load(_sid)
-            if not _apps and _src.get("url"):
-                try:
-                    _apps, _name, _err = _programs_fetch_repo(_src.get("url"))
-                    if _apps:
-                        _programs_cache_save(_sid, _apps)
-                except Exception:
-                    _apps = []
-            return list(_apps or [])
-    return []
+    try:
+        if _programs_merged_flek_enabled():
+            _fcat = _MINIAPP_CAT_FLEK.get(cat, "updates") if cat else "updates"
+            _fa, _more, _err = _programs_flek_fetch(_fcat, 0, query or None)
+            if _fa:
+                _apps = _apps + list(_fa)
+    except Exception:
+        pass
+    if cat:
+        _apps = [a for a in _apps if isinstance(a, dict) and _miniapp_cat_match(a, cat)]
+    return _apps
 
 
-def _miniapp_search_results(query, source_id=""):
+def _miniapp_search_results(query, category=""):
     """Search hits as plain dicts (name/dev/bundle/version), max 10,
     plus a flag whether any source catalog was loaded at all.
     Shared by the chat search and the in-app API — one code path,
@@ -11954,7 +11966,7 @@ def _miniapp_search_results(query, source_id=""):
     _q = (query or "").strip()
     if len(_q) < 2:
         return [], False
-    _apps = _miniapp_source_apps(source_id, _q)
+    _apps = _miniapp_all_apps(_q, category)
     _has = bool(_apps)
     _ql = _q.casefold()
     _hits, _seen = [], set()
@@ -11980,14 +11992,14 @@ def _miniapp_search_results(query, source_id=""):
             break
     return _hits, _has
 
-def _miniapp_list_programs(offset, limit, source_id=""):
+def _miniapp_list_programs(offset, limit, category=""):
     """Default Browse list: the merged pool from the enabled
-    sources (or one source_id when selected), deduped by
+    sources (filtered by category when selected), deduped by
     bundleIdentifier."""
     _offset = max(0, int(offset or 0))
     _limit = min(50, max(1, int(limit or 30)))
     _pool, _seen = [], set()
-    _apps = _miniapp_source_apps(source_id)
+    _apps = _miniapp_all_apps("", category)
     for _a in _apps:
         if not isinstance(_a, dict):
             continue
@@ -28558,20 +28570,35 @@ def _feather_lib_source_apps():
     FlekStore is skipped: its placeholder bundle IDs can never
     match a real app."""
     data = _programs_sources_load()
-    apps = []
-    for src in _programs_enabled_sources(data):
-        if (src.get("kind") or "repo") != "repo":
-            continue
+    _repo_srcs = [s for s in _programs_enabled_sources(data) if (s.get("kind") or "repo") == "repo"]
+    _by_id = {}
+    _need_fetch = []
+    for src in _repo_srcs:
         _sid = src.get("id")
         _apps, _when = _programs_cache_load(_sid)
-        if _apps is None:
-            _data, _raw, _err = _programs_fetch_repo(src.get("url") or "")
-            if _err or not _data:
-                continue
-            _programs_cache_save(_sid, _raw)
-            _apps = _data.get("apps") or []
-            _programs_normalize_flat_apps(_apps)
-        apps.extend(_apps or [])
+        if _apps is not None:
+            _by_id[_sid] = _apps
+        else:
+            _need_fetch.append(src)
+    if _need_fetch:
+        try:
+            import concurrent.futures as _cf
+            def _fetch_one(s):
+                _d, _raw, _err = _programs_fetch_repo(s.get("url") or "", timeout=12)
+                if _err or not _d:
+                    return s.get("id"), []
+                _programs_cache_save(s.get("id"), _raw)
+                _a = _d.get("apps") or []
+                _programs_normalize_flat_apps(_a)
+                return s.get("id"), _a
+            with _cf.ThreadPoolExecutor(max_workers=6) as _ex:
+                for _sid_res, _apps_res in _ex.map(_fetch_one, _need_fetch, timeout=18):
+                    _by_id[_sid_res] = _apps_res
+        except Exception:
+            pass
+    apps = []
+    for src in _repo_srcs:
+        apps.extend(_by_id.get(src.get("id")) or [])
     return apps
 
 
