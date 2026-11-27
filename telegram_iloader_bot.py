@@ -7299,7 +7299,7 @@ def install_thread(chat_id, allow_repair=True):
         if _ms_get("cell"):
             _names = _ms_get("cell_names") if isinstance(_ms_get("cell_names"), dict) else {}
             _sc_off = (_names.get("off") or "TurnOffData")
-            _notify_msg = _CELL_NOTIFY_BODY.get(get_lang(), _CELL_NOTIFY_BODY["uk"])
+            _notify_msg = _CELL_NOTIFY_BODY.get(CUR_LANG, _CELL_NOTIFY_BODY["uk"])
             if _minis_notify("SideBot", _notify_msg):
                 _tmark("apple-notification -> %s" % _notify_msg)
                 _cell_toggled = True
@@ -10697,7 +10697,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.46"
+SIDEBOT_VERSION = "2026.11.25.48"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -10821,7 +10821,8 @@ def _miniapp_api_dispatch(cmd, chat_id):
                     pass
             return {"ok": True, "reachable": _ok, "host": "%s:%d" % (_host, _hit or _port)}
         if _action == "test_cell_notify":
-            _notify_msg = _CELL_NOTIFY_BODY.get(get_lang(), _CELL_NOTIFY_BODY["uk"])
+            _lng = cmd.get("lang") or CUR_LANG
+            _notify_msg = _CELL_NOTIFY_BODY.get(_lng, _CELL_NOTIFY_BODY["uk"])
             _ok_n, _det_n = _minis_notify_ex("SideBot", _notify_msg)
             return {"ok": _ok_n, "text": (_notify_msg if _ok_n else ("Помилка: " + _det_n))}
         if _action == "set_backend":
