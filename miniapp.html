@@ -3061,10 +3061,34 @@ if(!S.loaded){ refreshState(); }
     var tb = clamp(getNum('sidebot_tab_scale', 100), 70, 140);
     var gl = clamp(getNum('sidebot_glass_op', 5), 0, 90);
     var wrap = document.querySelector('.wrap');
-    if(wrap) wrap.style.zoom = (ui / 100);
+    if(wrap){
+      wrap.style.zoom = '';
+      wrap.style.fontSize = (ui === 100) ? '' : (ui + '%');
+    }
+    document.documentElement.style.setProperty('--ui-scale', String(ui / 100));
     var barOuter = document.querySelector('.tabbar');
     var tbi = document.querySelector('.tabbar .inner');
-    if(tbi) tbi.style.zoom = (tb / 100);
+    if(tbi){
+      tbi.style.zoom = '';
+      tbi.style.transform = '';
+    }
+    if(barOuter){
+      var ts = tb / 100;
+      barOuter.style.setProperty('--tab-scale', String(ts));
+      var ics = barOuter.querySelectorAll('.ic');
+      for(var ii=0; ii<ics.length; ii++){
+        var sz = Math.round(22 * ts);
+        ics[ii].style.width = sz + 'px';
+        ics[ii].style.height = sz + 'px';
+        ics[ii].style.flex = '0 0 ' + sz + 'px';
+        var sv = ics[ii].querySelector('svg');
+        if(sv){ var ssz = Math.round(21 * ts); sv.style.width = ssz + 'px'; sv.style.height = ssz + 'px'; sv.style.flex = '0 0 ' + ssz + 'px'; }
+      }
+      var lbls = barOuter.querySelectorAll('button span:last-child');
+      for(var li=0; li<lbls.length; li++){
+        lbls[li].style.fontSize = (9.5 * ts).toFixed(1) + 'px';
+      }
+    }
     if(barOuter){
       var a = gl / 100;
       barOuter.style.setProperty('--glass-a', (a * 0.45).toFixed(3));
