@@ -10573,18 +10573,7 @@ def _miniapp_siboot_program_worker(jid, chat_id, bundle):
     job["udid"] = _prof.get("udid", "")
     job["profile_id"] = _prof.get("id")
     job["api_jid"] = jid
-    if MINIS_MODE and _ms_get("cell"):
-        _notify_msg = _CELL_NOTIFY_BODY.get(CUR_LANG, _CELL_NOTIFY_BODY["uk"])
-        if _minis_notify("SideBot", _notify_msg):
-            _miniapp_job_set(jid, "running", "📶 Чекаю відкриття 10.7.0.1:49152...")
-            time.sleep(2.0)
-            _dl = time.time() + 12.0
-            while time.time() < _dl:
-                try:
-                    with socket.create_connection((MINIS_PHONE_HOST, 49152), timeout=0.4):
-                        break
-                except Exception:
-                    time.sleep(0.25)
+    job["_siboot_ok"] = False
     _miniapp_job_set(jid, "running", "⚙️ Запускаю резервний Sideloader (Rust)...")
     try:
         _st_t = threading.Thread(target=siboot_thread, args=(chat_id,), daemon=True)
@@ -10600,7 +10589,10 @@ def _miniapp_siboot_program_worker(jid, chat_id, bundle):
             job["api_jid"] = None
     _cur_st = (_MINIAPP_JOBS.get(jid) or {}).get("status")
     if _cur_st not in ("done", "failed"):
-        _miniapp_job_set(jid, "done", "✅ SideBot завершив роботу")
+        if job.get("_siboot_ok"):
+            _miniapp_job_set(jid, "done", "✅ Встановлено через Sideloader (Rust)")
+        else:
+            _miniapp_job_set(jid, "failed", "❌ Sideloader не завершив встановлення")
 
 
 def _refresh_siboot_thread(chat_id, bundle, title, url, orig, prof, pw):
@@ -10873,7 +10865,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.83"
+SIDEBOT_VERSION = "2026.11.25.84"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -18068,10 +18060,12 @@ def siboot_thread(chat_id):
         cmd += ["--home", SIBOOT_HOME,
                 "--apple-id", apple_id, "--ipa", os.path.abspath(ipa_path),
                 "--anisette", effective_anisette_url()]
+        if job.get("udid") and "sideloader" in os.path.basename(exe).lower():
+            cmd += ["--udid", str(job["udid"])]
         if pair_path and _pair_kind != "sidestore":
             cmd += ["--pairing-file", pair_path]
-        _install_log_line("[SIBOOT] start exe=%s ipa=%s pair=%s" % (os.path.basename(exe), os.path.basename(ipa_path), pair_path or "-"))
-        _use_cell_sb = bool(_ms_get("cell")) and MINIS_MODE
+        _install_log_line("[SIBOOT] start exe=%s ipa=%s pair=%s udid=%s" % (os.path.basename(exe), os.path.basename(ipa_path), pair_path or "-", job.get("udid") or "-"))
+        _use_cell_sb = bool(_ms_get("cell")) and MINIS_MODE and not (job.get("udid") and "sideloader" in os.path.basename(exe).lower())
         if _use_cell_sb:
             _install_log_line("[SIBOOT] 5G cell=True -> running TurnOffData")
             try:
@@ -18323,12 +18317,19 @@ def siboot_thread(chat_id):
                 # "signed {name} as {bundle}" / "{name} installed
                 # ({bundle})" lines — not from the step-5 title, which
                 # is hardcoded "Signing SideInstaller" for any IPA.
+                if clean == "NEED_TUNNEL":
+                    if MINIS_MODE and _ms_get("cell"):
+                        _notify_msg = _CELL_NOTIFY_BODY.get(CUR_LANG, _CELL_NOTIFY_BODY["uk"])
+                        _minis_notify("SideBot", _notify_msg)
+                        _install_log_line("[SIBOOT] NEED_TUNNEL -> apple-notification")
+                    continue
                 _m = _signed_re.match(clean)
                 if _m:
                     signed_name, signed_bundle = _m.group(1), _m.group(2)
                 _m2 = _installed_re.match(clean)
                 if _m2:
                     signed_name, signed_bundle = _m2.group(1), _m2.group(2)
+                    job["_siboot_ok"] = True
                 if "downloaded sideinstaller" in low:
                     # siboot ignored our --ipa and downloaded its
                     # default: abort, install nothing.
@@ -18430,10 +18431,8 @@ def siboot_thread(chat_id):
         _aj_end = job.get("api_jid")
         if _aj_end:
             _jobj_end = _miniapp_job_get(_aj_end)
-            if _jobj_end is not None and _jobj_end.get("_cell_off_sent") and not _jobj_end.get("_cell_on_sent"):
-                _jobj_end["_cell_on_sent"] = True
-                _jobj_end["toggle"] = "on"
-                _jobj_end["toggle_name"] = ((_ms_get("cell_names") or {}).get("on") if isinstance(_ms_get("cell_names"), dict) else "") or "TurnOnData"
+            if rc not in (0, None) and _jobj_end is not None and _jobj_end.get("status") not in ("done", "failed"):
+                _miniapp_job_set(_aj_end, "failed", "❌ Sideloader завершився з помилкою (rc=%s)" % rc)
         if job.get("siboot_run") is _run:
             job["siboot_run"] = None
             job["siboot_proc"] = None
