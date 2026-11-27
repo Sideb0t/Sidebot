@@ -8135,7 +8135,7 @@ class _OtaHandler(http.server.SimpleHTTPRequestHandler):
                                     raise RuntimeError("install-helper/pairing missing")
                             else:
                                 _miniapp_job_set(_jid_l, "running", "🔐 Re-signing " + _t_l + "...", pct=50)
-                                _miniapp_api_reinstall_worker(_jid_l, None, _b_raw, "source")
+                                _miniapp_api_refresh_worker(_jid_l, None, _b_raw)
                             _recs_all = load_installed()
                             for _x in _recs_all:
                                 if _x.get("bundle") == _b_raw:
@@ -11110,7 +11110,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.88"
+SIDEBOT_VERSION = "2026.11.25.89"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -11933,20 +11933,55 @@ def _miniapp_api_dispatch(cmd, chat_id):
                 return {"ok": False, "text": tr("miniapp_busy")}
             _jid = _miniapp_job_new("reinstall", _b)
             def _react_w():
-                _miniapp_api_reinstall_worker(_jid, chat_id, _b, "source")
-                _all = load_installed()
-                _changed = False
-                for _x in _all:
-                    if _x.get("bundle") == _b and _x.get("disabled"):
-                        _x["disabled"] = False
-                        _changed = True
-                if _changed:
-                    save_installed(_all)
-                if (_MINIAPP_JOBS.get(_jid) or {}).get("status") == "done" and _appdata_for(_b):
-                    try:
-                        _appdata_restore_thread(chat_id, _b, 0)
-                    except Exception:
-                        pass
+                try:
+                    _sc_ipa = _rec.get("signed_cache") or ""
+                    _fresh = False
+                    if _sc_ipa and os.path.isfile(_sc_ipa):
+                        try:
+                            _fresh = ((time.time() - os.path.getmtime(_sc_ipa)) < 6 * 86400)
+                        except Exception:
+                            _fresh = False
+                    if _fresh:
+                        _miniapp_job_set(_jid, "running", "⚡ " + (_rec.get("title") or _b))
+                        if MINIS_MODE and _ms_get("cell"):
+                            _nm = _CELL_NOTIFY_BODY.get(CUR_LANG, _CELL_NOTIFY_BODY["uk"])
+                            if _minis_notify("SideBot", _nm):
+                                time.sleep(2.0)
+                                _we = time.time() + 8.0
+                                while time.time() < _we:
+                                    import socket as _sock
+                                    _s = _sock.socket(); _s.settimeout(0.4)
+                                    _okp = (_s.connect_ex(("10.7.0.1", 49152)) == 0)
+                                    _s.close()
+                                    if _okp: break
+                                    time.sleep(0.3)
+                        _exe_ih = _minis_install_exe()
+                        _rf_ih = _minis_pairing_file(_rec.get("udid") or "")
+                        if _exe_ih and _rf_ih:
+                            _r_ih = subprocess.run([_exe_ih, "--host", MINIS_PHONE_HOST, "--pairing-file", _rf_ih, "--ipa", _sc_ipa, "--timeout-secs", "180"], capture_output=True, text=True, timeout=200)
+                            if _r_ih.returncode == 0:
+                                _miniapp_job_set(_jid, "done", "▶️ " + (_rec.get("title") or _b))
+                            else:
+                                _miniapp_api_refresh_worker(_jid, chat_id, _b)
+                        else:
+                            _miniapp_api_refresh_worker(_jid, chat_id, _b)
+                    else:
+                        _miniapp_api_refresh_worker(_jid, chat_id, _b)
+                    _all = load_installed()
+                    _changed = False
+                    for _x in _all:
+                        if _x.get("bundle") == _b and _x.get("disabled"):
+                            _x["disabled"] = False
+                            _changed = True
+                    if _changed:
+                        save_installed(_all)
+                    if (_MINIAPP_JOBS.get(_jid) or {}).get("status") == "done" and _appdata_for(_b):
+                        try:
+                            _appdata_restore_thread(chat_id, _b, 0)
+                        except Exception:
+                            pass
+                except Exception as _re:
+                    _miniapp_job_set(_jid, "failed", "❌ " + str(_re)[:160])
             threading.Thread(target=_react_w, daemon=True).start()
             return {"ok": True, "job": _jid, "status": "started", "text": "▶️ " + (_rec.get("title") or _b)}
         if _action == "delete_app":
