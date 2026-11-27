@@ -7388,6 +7388,13 @@ def install_thread(chat_id, allow_repair=True):
         if _cell_toggled and not _port_ok:
             _tmark("abort: port 10.7.0.1:49152 unreachable")
             _det = "Порт 10.7.0.1:49152 недоступний (перевір LocalDevVPN)"
+        elif (_ms_get("backend") or job.get("miniapp_backend") or "rust") == "direct":
+            _tmark("start direct (pymobiledevice3)")
+            _ok, _det, _ps, _uv = install_via_lockdown(_path, _udid, _bundle)
+            if _uv:
+                _ok = False
+                _det = "Не підтверджено на пристрої"
+            _tmark("direct done ok=%s" % _ok)
         else:
             _tmark("start install-helper")
             _ok, _det = install_minis_rust(_path, _udid, _bundle)
@@ -10735,7 +10742,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.56"
+SIDEBOT_VERSION = "2026.11.25.57"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -11660,7 +11667,7 @@ def _miniapp_api_dispatch(cmd, chat_id):
                 threading.Thread(target=siboot_thread, args=(chat_id,), daemon=True).start()
                 return {"ok": True, "job": _jid, "status": "chat",
                         "text": "🚀 Запускаю SideBot — дивись у чаті!"}
-            if _m != "rust":
+            if _m not in ("rust", "direct"):
                 return {"ok": False,
                         "text": tr("miniapp_backend_minis")}
             _jid = _miniapp_job_new("install", "")
