@@ -106,7 +106,8 @@
     font-family:-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     color:#FFFFFF; background:#121212;
   }
-  .wrap{ max-width:520px; margin:0 auto; height:100dvh; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; overscroll-behavior-y:contain; padding:max(18px, calc(12px + env(safe-area-inset-top))) 16px calc(92px + env(safe-area-inset-bottom)); }
+  .wrap{ max-width:520px; margin:0 auto; height:100dvh; overflow-y:auto; overflow-x:hidden; -webkit-overflow-scrolling:touch; overscroll-behavior-y:contain; }
+  #uiScaleInner{ padding:max(18px, calc(12px + env(safe-area-inset-top))) 16px calc(92px + env(safe-area-inset-bottom)); }
   .topbar{ display:flex; align-items:center; justify-content:space-between; padding-top:4px; }
   .brand{ font-size:11px; font-weight:700; letter-spacing:.22em; color:var(--muted); text-transform:uppercase; }
   .profchip{
@@ -351,7 +352,7 @@
 </style>
 </head>
 <body>
-<div class="wrap">
+<div class="wrap"><div id="uiScaleInner">
   <!-- ============ NEWS ============ -->
   <section id="tab-news" class="hidden">
     <div class="topbar"><span class="brand">SideBot</span><button class="profchip" data-profchip aria-label="Profile"><span class="plab"></span><span class="chev">▾</span></button></div>
@@ -537,7 +538,7 @@
     <input type="file" id="updFileInput" class="hidden">
     <div class="note" data-i18n="changesNote">Changes apply right here — no need to leave the app.</div>
   </section>
-</div>
+</div></div>
 
 <div id="obOverlay" class="hidden">
   <div class="ob-top">
@@ -3100,26 +3101,22 @@ if(!S.loaded){ refreshState(); }
     var tb = clamp(getNum('sidebot_tab_scale', 100), 70, 140);
     var gl = clamp(getNum('sidebot_glass_op', 5), 0, 90);
     var wrap = document.querySelector('.wrap');
+    var inner = document.getElementById('uiScaleInner');
     if(wrap){
-      wrap.style.zoom = '';
-      wrap.style.fontSize = '';
+      wrap.style.zoom = ''; wrap.style.transform = ''; wrap.style.width = ''; wrap.style.height = ''; wrap.style.maxWidth = ''; wrap.style.margin = ''; wrap.style.marginBottom = '';
+    }
+    if(inner){
       if(ui === 100){
-        wrap.style.transform = '';
-        wrap.style.transformOrigin = '';
-        wrap.style.width = '';
-        wrap.style.height = '';
-        wrap.style.maxWidth = '';
-        wrap.style.margin = '';
-        wrap.style.marginBottom = '';
+        inner.style.transform = '';
+        inner.style.transformOrigin = '';
+        inner.style.width = '';
+        inner.style.marginBottom = '';
       } else {
         var s = ui / 100;
-        wrap.style.transform = 'scale(' + s + ')';
-        wrap.style.transformOrigin = 'top left';
-        wrap.style.width = (100 / s).toFixed(3) + '%';
-        wrap.style.height = (100 / s).toFixed(3) + 'dvh';
-        wrap.style.maxWidth = 'none';
-        wrap.style.margin = '0';
-        wrap.style.marginBottom = '';
+        inner.style.transform = 'scale(' + s + ')';
+        inner.style.transformOrigin = 'top left';
+        inner.style.width = (100 / s).toFixed(3) + '%';
+        inner.style.marginBottom = Math.round(inner.scrollHeight * (s - 1)) + 'px';
       }
     }
     document.documentElement.style.setProperty('--ui-scale', String(ui / 100));
