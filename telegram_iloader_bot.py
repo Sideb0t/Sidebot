@@ -7894,7 +7894,7 @@ class _OtaHandler(http.server.SimpleHTTPRequestHandler):
                 pass
             return True
         if _path == "/miniapp-cert-export":
-            _qs = urllib.parse.parse_qs(_u.query)
+            _qs = urllib.parse.parse_qs(urllib.parse.urlparse(self.path).query)
             _cid = (_qs.get("cid") or [""])[0].strip()
             _kind = (_qs.get("kind") or ["p12"])[0].strip().lower()
             _target = ""
@@ -11125,7 +11125,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.90"
+SIDEBOT_VERSION = "2026.11.25.91"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
