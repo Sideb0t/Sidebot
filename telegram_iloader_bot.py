@@ -7299,7 +7299,7 @@ def install_thread(chat_id, allow_repair=True):
                 _ok, _det = install_minis_rust(_path, _udid, _bundle)
                 _tmark("install-helper done ok=%s" % _ok)
         finally:
-            if _cell_toggled and (_ms_get("skip_turn_on") is False):
+            if _cell_toggled and not bool(_ms_get("skip_turn_on")):
                 _names = _ms_get("cell_names") if isinstance(_ms_get("cell_names"), dict) else {}
                 _sc_on = (_names.get("on") or "TurnOnData")
                 if _aj:
@@ -10586,7 +10586,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.12"
+SIDEBOT_VERSION = "2026.11.25.13"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
