@@ -2136,7 +2136,7 @@ function renderSearchResults(q, items){
 function showDetail(cmd, text, items){
   var titles = {app_ids:T('tAppIds'), info:T('tInfo'), appdata:T('tAppdata'),
                 certs:T('tCerts'), cert_use:T('tCerts'), cert_remove:T('tCerts')};
-  var screenTitles = {certs:'🔏 '+T('tCerts'), appids:'🆔 '+T('tAppIds')};
+  var screenTitles = {certs:'🔏 '+T('tCerts'), appids:'🆔 '+T('tAppIds'), anisette:'🌐 '+T('advAnisette')};
   el('detailTitle').textContent = titles[cmd.action]
     || (cmd.action==='show' ? (screenTitles[cmd.screen] || cmd.screen || T('detailTitle')) : T('detailTitle'));
   el('detailBody').textContent = text || '';
@@ -2183,6 +2183,27 @@ function showDetail(cmd, text, items){
     /* Certificates (2026-11-14): each row can become the active
        signing pair, or be removed from the bot. Revoking at Apple
        is siboot's job and the screen says so. */
+    if(it.anisette_url){
+      row.style.cursor = 'pointer';
+      if(it.active){
+        row.style.borderColor = 'var(--acc, #0a84ff)';
+        var chk = document.createElement('span');
+        chk.textContent = '✓';
+        chk.style.cssText = 'font-size:16px;font-weight:800;color:var(--acc-bright,#0a84ff);padding:0 6px';
+        row.appendChild(chk);
+      }
+      row.addEventListener('click', function(){
+        apiCmd({action:'set_anisette', url: it.anisette_url}, 10000).then(function(r){
+          if(r && r.ok){
+            if(r.state) applyState(r.state);
+            toast('✅ ' + it.anisette_url.replace(/^https?:\/\//,''));
+            send({action:'show', screen:'anisette'});
+          } else {
+            toast((r && r.text) || 'Error');
+          }
+        });
+      });
+    }
     if(it.cid){
       var ca = document.createElement('button');
       ca.className = 'btn ghost rowbtn';
@@ -2208,6 +2229,29 @@ function showDetail(cmd, text, items){
   });
   var acts = el('detailActions');
   acts.innerHTML = '';
+  if(cmd.action === 'show' && cmd.screen === 'anisette'){
+    var cWrap = document.createElement('div');
+    cWrap.style.cssText = 'margin-top:12px;padding:12px;border-radius:14px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1)';
+    cWrap.innerHTML = '<div style="font-size:12px;font-weight:700;opacity:.75;margin-bottom:8px">Custom Anisette URL</div>'
+      + '<div style="display:flex;gap:8px">'
+      + '<input id="detailAniCustom" type="url" placeholder="https://..." value="'+esc(S.anisette_url || '')+'" style="flex:1;min-width:0;padding:10px 12px;border-radius:10px;border:1px solid rgba(255,255,255,.15);background:rgba(0,0,0,.35);color:#fff;font-size:13px">'
+      + '<button id="detailAniSave" class="btn" style="width:auto;margin:0;padding:10px 14px;font-size:13px">💾</button>'
+      + '</div>';
+    acts.appendChild(cWrap);
+    cWrap.querySelector('#detailAniSave').addEventListener('click', function(){
+      var u = (cWrap.querySelector('#detailAniCustom').value || '').trim();
+      if(!u.startsWith('https://') && !u.startsWith('http://')){ toast('Введи https:// посилання'); return; }
+      apiCmd({action:'set_anisette', url: u}, 10000).then(function(r){
+        if(r && r.ok){
+          if(r.state) applyState(r.state);
+          toast('✅ ' + u.replace(/^https?:\/\//,''));
+          send({action:'show', screen:'anisette'});
+        } else {
+          toast((r && r.text) || 'Error');
+        }
+      });
+    });
+  }
   if(cmd.action === 'appdata' && cmd.bundle){
     var bb = document.createElement('button');
     bb.className = 'btn'; bb.textContent = T('backupNow');
@@ -3745,9 +3789,14 @@ if(!S.loaded){ refreshState(); }
         ['★ SideStore New (Recommended)', 'https://new.ani.sidestore.io'],
         ['SideStore (.app)', 'https://ani.sidestore.app'],
         ['SideStore (.zip)', 'https://ani.sidestore.zip'],
+        ['SideStore (new)', 'https://new.ani.sidestore.io'],
+        ['jkcoxson', 'https://mac-ani.jkcoxson.com'],
+        ['iloader', 'https://ani.iloader.app'],
+        ['StikStore', 'https://ani3.stikstore.app'],
+        ['StikStore 2', 'https://ani2.stikstore.app'],
+        ['jkcoxson 2', 'https://ani.jkcoxson.com'],
         ['SideStore (.xyz)', 'https://ani.846969.xyz'],
         ['SideStore', 'https://ani.sidestore.io'],
-        ['jkcoxson (Windows ADI)', 'https://ani.jkcoxson.com'],
         ['SideStore (Windows ADI)', 'https://win.ani.sidestore.io'],
         ['nythepegasus', 'https://ani.npeg.us'],
         ['Macley', 'http://5.249.163.88:6969'],

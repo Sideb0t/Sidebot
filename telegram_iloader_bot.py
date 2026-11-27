@@ -251,13 +251,16 @@ BRIDGE_PY = ENV.get("BRIDGE_PY", "").strip()
 
 ANISETTE_FILE = os.path.join(BASE_DIR, "anisette.json")
 ANISETTE_PRESETS = [
+    ("sidestore-new", "https://new.ani.sidestore.io"),
+    ("mac-ani", "https://mac-ani.jkcoxson.com"),
+    ("iloader", "https://ani.iloader.app"),
+    ("stikstore", "https://ani3.stikstore.app"),
+    ("stikstore2", "https://ani2.stikstore.app"),
+    ("ani", "https://ani.jkcoxson.com"),
     ("sidestore", "https://ani.sidestore.io"),
     ("sidestore-app", "https://ani.sidestore.app"),
     ("sidestore-zip", "https://ani.sidestore.zip"),
     ("sidestore-xyz", "https://ani.846969.xyz"),
-    ("sidestore-new", "https://new.ani.sidestore.io"),
-    ("mac-ani", "https://mac-ani.jkcoxson.com"),
-    ("ani", "https://ani.jkcoxson.com"),
     ("sidestore-win", "https://win.ani.sidestore.io"),
     ("nythepegasus", "https://ani.npeg.us"),
     ("macley", "http://5.249.163.88:6969"),
@@ -9963,10 +9966,14 @@ def _miniapp_api_show_text(screen):
         _cur = load_anisette()["url"]
         _lines = [tr("anisette_title") % _cur]
         _out = []
+        _seen_urls = set()
         for _key, _url in ANISETTE_PRESETS:
+            _seen_urls.add(_url)
             _lines.append("%s %s" % (
                 "•" if _url != _cur else "✅", _url))
-            _out.append({"name": _url, "meta": "current" if _url == _cur else _key})
+            _out.append({"name": _key, "meta": _url, "anisette_url": _url, "active": (_url == _cur)})
+        if _cur and _cur not in _seen_urls:
+            _out.insert(0, {"name": "custom", "meta": _cur, "anisette_url": _cur, "active": True})
         return True, "\n".join(_lines), _out
     if screen == "profiles":
         return True, profiles_screen_text(load_profiles()), []
@@ -10599,7 +10606,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.21"
+SIDEBOT_VERSION = "2026.11.25.22"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
