@@ -11235,7 +11235,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.106"
+SIDEBOT_VERSION = "2026.11.25.107"
 SIDEBOT_UPDATE_BASE = "https://github.com/Sideb0t/Sidebot/raw/refs/heads/main"
 SIDEBOT_API_BASE = "https://github.com/Sideb0t/Sidebot/raw/refs/heads/main"
 
@@ -12746,9 +12746,27 @@ def _appicon_catalog_map():
 
 
 def _appicon_remote_url(bundle):
-    """Catalog iconURL for one installed bundle, or ''."""
+    """Catalog iconURL for one installed bundle (strips TeamID suffix & checks prefix), or ''."""
     try:
-        return _appicon_catalog_map().get(bundle or "", "")
+        _b = (bundle or "").strip()
+        if not _b:
+            return ""
+        _m = _appicon_catalog_map()
+        if _b in _m:
+            return _m[_b]
+        # Strip 10-char Team ID suffix like .4MCBZPGNZN
+        _parts = _b.split(".")
+        if len(_parts) >= 3 and len(_parts[-1]) == 10 and _parts[-1].isalnum():
+            _base = ".".join(_parts[:-1])
+            if _base in _m:
+                return _m[_base]
+            for _k, _v in _m.items():
+                if _k.startswith(_base + ".") or _base.startswith(_k + "."):
+                    return _v
+        for _k, _v in _m.items():
+            if _b.startswith(_k + ".") or _k.startswith(_b + "."):
+                return _v
+        return ""
     except Exception:
         return ""
 
