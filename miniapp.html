@@ -197,11 +197,15 @@
   .cdline.bad{ color:#E5534B; }
   .actgrid{ display:flex; flex-wrap:wrap; gap:8px; padding:12px 0 2px; }
   .actgrid button{
-    flex:1 1 44%; min-height:46px; border-radius:12px; font-size:14px;
-    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.12);
-    color:#FFFFFF; cursor:pointer; font-family:inherit;
+    flex:1 1 44%; min-height:44px; padding:8px 10px; border-radius:14px; font-size:13.5px; font-weight:600;
+    display:inline-flex; align-items:center; justify-content:center; gap:7px;
+    background:rgba(16,24,44,.75); border:1px solid rgba(92,238,255,.18);
+    color:#FFFFFF; cursor:pointer; font-family:inherit; transition:transform .12s, border-color .15s, background .15s;
   }
-  .actgrid button.danger{ background:rgba(220,38,38,.30); border-color:rgba(220,38,38,.55); }
+  .actgrid button:active{ transform:scale(.97); background:rgba(92,238,255,.14); border-color:rgba(92,238,255,.45); }
+  .actgrid button svg.sb-svg{ width:14px; height:14px; flex:0 0 14px; }
+  .actgrid button.danger{ background:rgba(220,38,38,.22); border-color:rgba(248,113,113,.45); color:#fecaca; }
+  .actgrid button.danger svg.sb-svg{ stroke:#f87171; }
   .actgrid button:disabled{ opacity:.45; cursor:default; }
   .appids{ text-align:center; color:var(--gray); font-size:15px; margin:18px 0 4px; }
   .appids-link{ display:block; text-align:center; margin:0 auto; }
@@ -966,10 +970,10 @@ en: {
   lcOpenBtn:"Open LiveContainer", profDelAsk:"Delete?", profNewPwPh:"New password (optional)",
   profSaveBtn:"Save changes", profUpdated:"✅ Profile updated",
   everyDayChip:"Daily",
-  deactivateBtn:"⏸ Deactivate", reactivateBtn:"▶️ Enable",
+  deactivateBtn:"Deactivate", reactivateBtn:"Enable",
   disabledBadge:"Disabled", daysShort:"d", lblUpdating:"Updating", lblLeft:"Left",
   updateSidebot:"Update SideBot", syncPhoneBtn:"Check iPhone", syncPhoneOk:"Checked on iPhone: %s app(s)",
-  clipBtn:"📲 Shortcut (FlekDeck)"
+  clipBtn:"Home Shortcut"
 },
 uk: {
   news:"Новини", sources:"Джерела", browse:"Огляд",appstoreOpen:"Відкрити App Store UI", myApps:"Мої додатки", settings:"Налаштування",
@@ -1107,10 +1111,10 @@ uk: {
   lcOpenBtn:"Відкрити LiveContainer", profDelAsk:"Видалити?", profNewPwPh:"Новий пароль (необовʼязково)",
   profSaveBtn:"Зберегти зміни", profUpdated:"✅ Профіль оновлено",
   everyDayChip:"Щодня",
-  deactivateBtn:"⏸ Вимкнути", reactivateBtn:"▶️ Увімкнути",
+  deactivateBtn:"Вимкнути", reactivateBtn:"Увімкнути",
   disabledBadge:"Вимкнено", daysShort:"дн", lblUpdating:"Оновлення", lblLeft:"Лишилось",
   updateSidebot:"Оновити SideBot", syncPhoneBtn:"Звірити з iPhone", syncPhoneOk:"Знайдено на iPhone: %s дод.",
-  clipBtn:"📲 Ярлик (FlekDeck)"
+  clipBtn:"Ярлик на екран"
 },
 ru: {
   news:"Новости", sources:"Источники", browse:"Обзор",appstoreOpen:"Открыть App Store UI", myApps:"Мои приложения", settings:"Настройки",
@@ -1248,10 +1252,10 @@ ru: {
   lcOpenBtn:"Открыть LiveContainer", profDelAsk:"Удалить?", profNewPwPh:"Новый пароль (необязательно)",
   profSaveBtn:"Сохранить изменения", profUpdated:"✅ Профиль обновлён",
   everyDayChip:"Ежедневно",
-  deactivateBtn:"⏸ Выключить", reactivateBtn:"▶️ Включить",
+  deactivateBtn:"Выключить", reactivateBtn:"Включить",
   disabledBadge:"Выключено", daysShort:"дн", lblUpdating:"Обновление", lblLeft:"Осталось",
   updateSidebot:"Обновить SideBot", syncPhoneBtn:"Сверить с iPhone", syncPhoneOk:"Найдено на iPhone: %s прил.",
-  clipBtn:"📲 Ярлык (FlekDeck)"
+  clipBtn:"Ярлык на экран"
 },
 de: {
   news:"News", sources:"Quellen", browse:"Stöbern",appstoreOpen:"App Store UI öffnen", myApps:"Meine Apps", settings:"Einstellungen",
@@ -1389,10 +1393,10 @@ de: {
   lcOpenBtn:"LiveContainer öffnen", profDelAsk:"Löschen?", profNewPwPh:"Neues Passwort (optional)",
   profSaveBtn:"Änderungen speichern", profUpdated:"✅ Profil aktualisiert",
   everyDayChip:"Täglich",
-  deactivateBtn:"⏸ Deaktivieren", reactivateBtn:"▶️ Aktivieren",
+  deactivateBtn:"Deaktivieren", reactivateBtn:"Aktivieren",
   disabledBadge:"Deaktiviert", daysShort:"T", lblUpdating:"Aktualisiere", lblLeft:"Übrig",
   updateSidebot:"SideBot aktualisieren", syncPhoneBtn:"iPhone prüfen", syncPhoneOk:"Auf iPhone gefunden: %s App(s)",
-  clipBtn:"📲 Kurzbefehl (FlekDeck)"
+  clipBtn:"Home-Kurzbefehl"
 }
 };
 var LANG = (S.lang && I18N[S.lang]) ? S.lang : 'en';
@@ -2960,16 +2964,16 @@ function renderApps(){
         + expPillHtml + '</button>'
         + '<div class="actgrid hidden" id="acts-'+i+'">'
         + (a.disabled
-            ? '<button data-cmd="reactivate" style="grid-column:1/-1;background:rgba(48,209,88,.22);color:#30d158;font-weight:700">'+esc(T('reactivateBtn'))+'</button>'
-            : '<button data-cmd="refresh">'+esc(T('refresh'))+'</button>'
-              + '<button data-cmd="reinstall-source">'+esc(T('reinstallSource'))+'</button>'
-              + '<button data-cmd="info">'+esc(T('infoBtn'))+'</button>'
-              + '<button data-cmd="jit">JIT</button>'
-              + '<button data-cmd="signopts">'+esc(String(T('signOptsBtn')||'').replace(/^[^\wА-Яа-яІіЇїЄєҐґ]+/u,''))+'</button>'
-              + '<button data-cmd="appdata">'+esc(T('backupRestore'))+'</button>'
-              + '<button data-cmd="deactivate">'+esc(T('deactivateBtn'))+'</button>')
-        + '<button data-cmd="clip">'+esc(T('clipBtn'))+'</button>'
-        + '<button data-cmd="delete" class="danger" style="grid-column:1/-1">'+esc(T('deleteBtn'))+'</button>'
+            ? '<button data-cmd="reactivate" style="grid-column:1/-1;background:rgba(48,209,88,.18);border-color:rgba(48,209,88,.45);color:#4ade80"><svg class="sb-svg" style="stroke:#4ade80" viewBox="0 0 24 24"><polygon points="6 3 20 12 6 21 6 3"/></svg><span>'+esc(T('reactivateBtn'))+'</span></button>'
+            : '<button data-cmd="refresh"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><polyline points="21 3 21 9 15 9"/></svg><span>'+esc(T('refresh'))+'</span></button>'
+              + '<button data-cmd="reinstall-source"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg><span>'+esc(T('reinstallSource'))+'</span></button>'
+              + '<button data-cmd="info"><svg class="sb-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg><span>'+esc(T('infoBtn'))+'</span></button>'
+              + '<button data-cmd="jit"><svg class="sb-svg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg><span>JIT</span></button>'
+              + '<button data-cmd="signopts"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M12 2l8 4v6c0 5.5-3.4 9.7-8 11-4.6-1.3-8-5.5-8-11V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg><span>'+esc(String(T('signOptsBtn')||'').replace(/^[^\wА-Яа-яІіЇїЄєҐґ]+/u,''))+'</span></button>'
+              + '<button data-cmd="appdata"><svg class="sb-svg" viewBox="0 0 24 24"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg><span>'+esc(T('backupRestore'))+'</span></button>'
+              + '<button data-cmd="deactivate"><svg class="sb-svg" viewBox="0 0 24 24"><rect x="6" y="4" width="4" height="16" rx="1"/><rect x="14" y="4" width="4" height="16" rx="1"/></svg><span>'+esc(T('deactivateBtn'))+'</span></button>')
+        + '<button data-cmd="clip"><svg class="sb-svg" viewBox="0 0 24 24"><rect x="5" y="2" width="14" height="20" rx="2"/><path d="M12 18h.01"/></svg><span>'+esc(T('clipBtn'))+'</span></button>'
+        + '<button data-cmd="delete" class="danger" style="grid-column:1/-1"><svg class="sb-svg" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg><span>'+esc(T('deleteBtn'))+'</span></button>'
         + '</div></div>';
     });
     box.innerHTML = html;

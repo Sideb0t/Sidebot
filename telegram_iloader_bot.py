@@ -11235,7 +11235,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.107"
+SIDEBOT_VERSION = "2026.11.25.108"
 SIDEBOT_UPDATE_BASE = "https://github.com/Sideb0t/Sidebot/raw/refs/heads/main"
 SIDEBOT_API_BASE = "https://github.com/Sideb0t/Sidebot/raw/refs/heads/main"
 
