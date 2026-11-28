@@ -8239,19 +8239,9 @@ class _OtaHandler(http.server.SimpleHTTPRequestHandler):
                         try:
                             _recs_all = load_installed()
                             _active_others = [x for x in _recs_all if x.get("bundle") != _b_raw and not x.get("disabled")]
-                            if MINIS_MODE and _ms_get("cell"):
-                                _nm = _CELL_NOTIFY_BODY.get(CUR_LANG, _CELL_NOTIFY_BODY["uk"])
-                                if _minis_notify("SideBot", _nm):
-                                    _miniapp_job_set(_jid_l, "running", "📶 Connecting to iPhone...", pct=15)
-                                    time.sleep(2.0)
-                                    _we = time.time() + 10.0
-                                    while time.time() < _we:
-                                        import socket as _sock
-                                        _s = _sock.socket(); _s.settimeout(0.4)
-                                        _okp = (_s.connect_ex(("10.7.0.1", 49152)) == 0)
-                                        _s.close()
-                                        if _okp: break
-                                        time.sleep(0.25)
+                            if MINIS_MODE:
+                                _miniapp_job_set(_jid_l, "running", "📶 Connecting to iPhone...", pct=15)
+                                _ensure_tunnel_ready(10.0)
                             if len(_active_others) >= 2:
                                 _victim = _active_others[0]
                                 _vb = _victim.get("bundle")
@@ -10648,23 +10638,8 @@ def _fast_misagent_refresh(bundles, jid=None):
     if jid:
         _miniapp_job_set(jid, "running", "⚡ Швидке оновлення профілів (%d) через misagent..." % len(_items))
     try:
-        if _ms_get("cell"):
-            _notify_msg = _CELL_NOTIFY_BODY.get(CUR_LANG, _CELL_NOTIFY_BODY["uk"])
-            if _minis_notify("SideBot", _notify_msg):
-                time.sleep(2.0)
-                _wait_end = time.time() + 10.0
-                while time.time() < _wait_end:
-                    try:
-                        import socket as _sock
-                        _s = _sock.socket()
-                        _s.settimeout(0.4)
-                        if _s.connect_ex(("10.7.0.1", 49152)) == 0:
-                            _s.close()
-                            break
-                        _s.close()
-                    except Exception:
-                        pass
-                    time.sleep(0.3)
+        if MINIS_MODE:
+            _ensure_tunnel_ready(10.0)
     except Exception as _ne:
         print("[FAST_REFRESH] notify err=%s" % _ne, flush=True)
     _cmd = [_sl, "profiles", "--plain", "--pairing-file", _pair] + [p for _, p in _items]
@@ -11270,7 +11245,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.112"
+SIDEBOT_VERSION = "2026.11.25.115"
 SIDEBOT_UPDATE_BASE = "https://github.com/Sideb0t/Sidebot/raw/refs/heads/main"
 SIDEBOT_API_BASE = "https://github.com/Sideb0t/Sidebot/raw/refs/heads/main"
 
