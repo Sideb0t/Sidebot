@@ -11132,7 +11132,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.95"
+SIDEBOT_VERSION = "2026.11.25.97"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -11963,8 +11963,9 @@ def _miniapp_api_dispatch(cmd, chat_id):
                             _fresh = ((time.time() - os.path.getmtime(_sc_ipa)) < 6 * 86400)
                         except Exception:
                             _fresh = False
+                    _install_log_line("[REACTIVATE] start bundle=%s fresh=%s" % (_b, _fresh))
                     if _fresh:
-                        _miniapp_job_set(_jid, "running", "⚡ " + (_rec.get("title") or _b))
+                        _miniapp_job_set(_jid, "running", "⚡ " + (_rec.get("title") or _b), pct=10)
                         if MINIS_MODE and _ms_get("cell"):
                             _nm = _CELL_NOTIFY_BODY.get(CUR_LANG, _CELL_NOTIFY_BODY["uk"])
                             if _minis_notify("SideBot", _nm):
@@ -11980,14 +11981,37 @@ def _miniapp_api_dispatch(cmd, chat_id):
                         _exe_ih = _minis_install_exe()
                         _rf_ih = _minis_pairing_file(_rec.get("udid") or "")
                         if _exe_ih and _rf_ih:
-                            _r_ih = subprocess.run([_exe_ih, "--host", MINIS_PHONE_HOST, "--pairing-file", _rf_ih, "--ipa", _sc_ipa, "--timeout-secs", "180"], capture_output=True, text=True, timeout=200)
-                            if _r_ih.returncode == 0:
-                                _miniapp_job_set(_jid, "done", "▶️ " + (_rec.get("title") or _b))
+                            _miniapp_job_set(_jid, "running", "📲 " + (_rec.get("title") or _b) + " (0%)", pct=15)
+                            _p_ih = subprocess.Popen(
+                                [_exe_ih, "--host", MINIS_PHONE_HOST, "--pairing-file", _rf_ih,
+                                 "--ipa", _sc_ipa, "--timeout-secs", "240"],
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1
+                            )
+                            _last_ln = ""
+                            for _ln in _p_ih.stdout:
+                                _ln = _ln.strip()
+                                if not _ln:
+                                    continue
+                                _last_ln = _ln
+                                _install_log_line("[REACTIVATE] " + _ln)
+                                _m_up = re.search(r"(\d{1,3})%", _ln)
+                                if _m_up:
+                                    _p_val = min(95, 15 + int(int(_m_up.group(1)) * 0.8))
+                                    _miniapp_job_set(_jid, "running", "📲 " + _ln, pct=_p_val)
+                                elif "INSTALL_" in _ln:
+                                    _miniapp_job_set(_jid, "running", "📲 " + _ln[:120], pct=20)
+                            _rc_ih = _p_ih.wait(timeout=250)
+                            if _rc_ih == 0:
+                                _miniapp_job_set(_jid, "done", "▶️ " + (_rec.get("title") or _b), pct=100)
                             else:
+                                _install_log_line("[REACTIVATE] helper rc=%s last=%s -> fallback" % (_rc_ih, _last_ln))
+                                _miniapp_job_set(_jid, "running", "🔄 " + (_rec.get("title") or _b), pct=15)
                                 _miniapp_api_refresh_worker(_jid, chat_id, _b, skip_misagent=True)
                         else:
+                            _miniapp_job_set(_jid, "running", "🔄 " + (_rec.get("title") or _b), pct=15)
                             _miniapp_api_refresh_worker(_jid, chat_id, _b, skip_misagent=True)
                     else:
+                        _miniapp_job_set(_jid, "running", "🔄 " + (_rec.get("title") or _b), pct=15)
                         _miniapp_api_refresh_worker(_jid, chat_id, _b, skip_misagent=True)
                     if (_MINIAPP_JOBS.get(_jid) or {}).get("status") == "done":
                         _all = load_installed()
@@ -33628,7 +33652,7 @@ def handle_action(chat_id, action, via, message_id=None):
                 send_message(chat_id, tr("choose_profile_first"))
                 return
             job["apple_password"] = _pw
-            if MINIS_MODE and (_ms_get("backend") or job.get("miniapp_backend")) == "siboot":
+            if MINIS_MODE and (_ms_get("backend") or job.get("miniapp_backend")) in ("siboot", "sideloader"):
                 # siboot signs and installs by itself: hand it the kept
                 # original, or fetch the IPA first (selected backend
                 # respected for Browse-installed apps too).
