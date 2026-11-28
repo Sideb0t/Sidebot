@@ -10551,7 +10551,7 @@ def _fast_misagent_refresh(bundles, jid=None):
     return _done_set
 
 
-def _miniapp_api_refresh_worker(jid, chat_id, bundle):
+def _miniapp_api_refresh_worker(jid, chat_id, bundle, skip_misagent=False):
     """Run one refresh/resign/reinstall flow (the same
     handle_action the chat path uses) and resolve the job from
     the installed record. 2FA waits surface in-app as need_2fa /
@@ -10560,10 +10560,17 @@ def _miniapp_api_refresh_worker(jid, chat_id, bundle):
     stopped polling. job['api_jid'] marks this flow as the API
     job's."""
     _cid = chat_id or OWNER_ID
-    _fast_ok = _fast_misagent_refresh([bundle], jid=jid)
-    if bundle in _fast_ok:
-        _miniapp_job_set(jid, "done", "⚡ Оновлено через misagent: %s" % bundle)
-        return
+    if not skip_misagent:
+        _fast_ok = _fast_misagent_refresh([bundle], jid=jid)
+        if bundle in _fast_ok:
+            _mmsg = {
+                "en": "⚡ Refreshed via misagent: %s",
+                "uk": "⚡ Оновлено через misagent: %s",
+                "ru": "⚡ Обновлено через misagent: %s",
+                "de": "⚡ Über misagent aktualisiert: %s",
+            }.get(CUR_LANG, "⚡ Refreshed via misagent: %s")
+            _miniapp_job_set(jid, "done", _mmsg % bundle)
+            return
     _before = _miniapp_refresh_snapshot(bundle)
     job["api_jid"] = jid
     try:
@@ -11125,7 +11132,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.92"
+SIDEBOT_VERSION = "2026.11.25.93"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -11977,24 +11984,25 @@ def _miniapp_api_dispatch(cmd, chat_id):
                             if _r_ih.returncode == 0:
                                 _miniapp_job_set(_jid, "done", "▶️ " + (_rec.get("title") or _b))
                             else:
-                                _miniapp_api_refresh_worker(_jid, chat_id, _b)
+                                _miniapp_api_refresh_worker(_jid, chat_id, _b, skip_misagent=True)
                         else:
-                            _miniapp_api_refresh_worker(_jid, chat_id, _b)
+                            _miniapp_api_refresh_worker(_jid, chat_id, _b, skip_misagent=True)
                     else:
-                        _miniapp_api_refresh_worker(_jid, chat_id, _b)
-                    _all = load_installed()
-                    _changed = False
-                    for _x in _all:
-                        if _x.get("bundle") == _b and _x.get("disabled"):
-                            _x["disabled"] = False
-                            _changed = True
-                    if _changed:
-                        save_installed(_all)
-                    if (_MINIAPP_JOBS.get(_jid) or {}).get("status") == "done" and _appdata_for(_b):
-                        try:
-                            _appdata_restore_thread(chat_id, _b, 0)
-                        except Exception:
-                            pass
+                        _miniapp_api_refresh_worker(_jid, chat_id, _b, skip_misagent=True)
+                    if (_MINIAPP_JOBS.get(_jid) or {}).get("status") == "done":
+                        _all = load_installed()
+                        _changed = False
+                        for _x in _all:
+                            if _x.get("bundle") == _b and _x.get("disabled"):
+                                _x["disabled"] = False
+                                _changed = True
+                        if _changed:
+                            save_installed(_all)
+                        if _appdata_for(_b):
+                            try:
+                                _appdata_restore_thread(chat_id, _b, 0)
+                            except Exception:
+                                pass
                 except Exception as _re:
                     _miniapp_job_set(_jid, "failed", "❌ " + str(_re)[:160])
             threading.Thread(target=_react_w, daemon=True).start()
