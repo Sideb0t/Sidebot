@@ -11235,7 +11235,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.108"
+SIDEBOT_VERSION = "2026.11.25.109"
 SIDEBOT_UPDATE_BASE = "https://github.com/Sideb0t/Sidebot/raw/refs/heads/main"
 SIDEBOT_API_BASE = "https://github.com/Sideb0t/Sidebot/raw/refs/heads/main"
 
@@ -11266,6 +11266,30 @@ def _miniapp_api_dispatch(cmd, chat_id):
         _action = cmd.get("action") or ""
         if _action == "check_update":
             _lver = _sidebot_local_version()
+            try:
+                # 1) Uncached instant check via GitHub Atom commit feed (no 403 rate limit, no 5-min raw CDN cache)
+                _atom_url = "https://github.com/Sideb0t/Sidebot/commits/main.atom?t=%d" % int(time.time())
+                _req_a = urllib.request.Request(_atom_url, headers={
+                    "User-Agent": "SideBot/1.0",
+                    "Cache-Control": "no-cache",
+                })
+                with urllib.request.urlopen(_req_a, timeout=6) as _ra:
+                    _atom_xml = _ra.read().decode("utf-8", "ignore")
+                _sha_m = re.search(r"Grit::Commit/([0-9a-f]{40})", _atom_xml)
+                _ver_m = re.search(r"SideBot build (\d{4}\.\d{2}\.\d{2}\.\d+)", _atom_xml)
+                if _sha_m and _ver_m:
+                    _sha = _sha_m.group(1)
+                    _rver = _ver_m.group(1).strip()
+                    _turl = "https://raw.githubusercontent.com/Sideb0t/Sidebot/%s/bot-update-fixes.tar.gz" % _sha
+                    return {
+                        "ok": True,
+                        "has_update": bool(_rver and _rver != _lver),
+                        "local_version": _lver,
+                        "remote_version": _rver,
+                        "url": _turl,
+                    }
+            except Exception:
+                pass
             _vurl = "%s/version.json?t=%d" % (SIDEBOT_UPDATE_BASE, int(time.time()))
             try:
                 _req = urllib.request.Request(_vurl, headers={
