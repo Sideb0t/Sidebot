@@ -7469,8 +7469,13 @@ def install_thread(chat_id, allow_repair=True):
             if _aj:
                 _miniapp_job_set(_aj, "running", _s)
         _port_ok = False
+        try:
+            with socket.create_connection((MINIS_PHONE_HOST, 49152), timeout=0.35):
+                _port_ok = True
+        except Exception:
+            _port_ok = False
         send_message(chat_id, "\U0001f4f2 \u0412\u0441\u0442\u0430\u043d\u043e\u0432\u043b\u044e\u044e \u0447\u0435\u0440\u0435\u0437 install-helper (Rust) \u043d\u0430 10.7.0.1... \u0422\u0440\u0438\u043c\u0430\u0439 \u0442\u0435\u043b\u0435\u0444\u043e\u043d \u0440\u043e\u0437\u0431\u043b\u043e\u043a\u043e\u0432\u0430\u043d\u0438\u043c, \u0435\u043a\u0440\u0430\u043d \u0443\u0432\u0456\u043c\u043a\u043d\u0435\u043d\u0438\u043c.")
-        if _ms_get("cell"):
+        if not _port_ok and (_ms_get("cell") or MINIS_MODE):
             _names = _ms_get("cell_names") if isinstance(_ms_get("cell_names"), dict) else {}
             _sc_off = (_names.get("off") or "TurnOffData")
             _notify_msg = _CELL_NOTIFY_BODY.get(CUR_LANG, _CELL_NOTIFY_BODY["uk"])
@@ -11265,7 +11270,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.111"
+SIDEBOT_VERSION = "2026.11.25.112"
 SIDEBOT_UPDATE_BASE = "https://github.com/Sideb0t/Sidebot/raw/refs/heads/main"
 SIDEBOT_API_BASE = "https://github.com/Sideb0t/Sidebot/raw/refs/heads/main"
 
