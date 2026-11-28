@@ -2258,7 +2258,16 @@ function startJobPoll(jid, label, kind){
       if(useAppsCard){
         setAppsCard(r.text || (r.status === 'done' ? '✅ Готово' : '❌ Помилка'), r.status === 'done' ? 100 : null, r.logs || [], true, r.open_url || '');
       }
-      if(r.toggle === 'off' || r.toggle === 'on'){
+      if(r.status === 'failed' || r.status === 'chat'){
+        currentJob = null;
+        if(toggleHideTimer) clearTimeout(toggleHideTimer);
+        if(!useAppsCard && el('jobMain')){
+          el('jobMain').classList.remove('hidden');
+          if(el('jobText')) el('jobText').textContent = r.text || '❌ Помилка';
+          if(el('jobLogsWrap')) el('jobLogsWrap').classList.remove('hidden');
+        }
+        if(useAppsCard && el('aiLogsWrap')) el('aiLogsWrap').classList.remove('hidden');
+      } else if(r.toggle === 'off' || r.toggle === 'on'){
         currentJob = null;
         if(toggleHideTimer) clearTimeout(toggleHideTimer);
         toggleHideTimer = setTimeout(hideJob, 30000);
