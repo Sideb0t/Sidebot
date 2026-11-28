@@ -11132,7 +11132,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.97"
+SIDEBOT_VERSION = "2026.11.25.98"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -18705,6 +18705,7 @@ def siboot_thread(chat_id):
                 clean = _siboot_sanitise(line, [password])
                 if not clean:
                     continue
+                _install_log_line("[SIBOOT] " + clean[:220])
                 tail.append(clean)
                 tail = tail[-30:]
                 low = clean.lower()
