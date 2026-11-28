@@ -6673,6 +6673,41 @@ def install_minis_rust(ipa_path, udid="", bundle=""):
 _UNINSTALL_PROBE = {"exe": "", "mtime": 0, "size": 0, "ok": False}
 
 
+def _resolve_url_scheme(rec):
+    if not isinstance(rec, dict):
+        return ""
+    sch = (rec.get("url_scheme") or "").strip()
+    if sch:
+        return sch
+    _b = (rec.get("bundle") or "").lower()
+    for _cand in (rec.get("signed_cache") or "", (rec.get("source") or {}).get("original_path") or ""):
+        if _cand and os.path.isfile(_cand):
+            try:
+                import zipfile as _zf, plistlib as _pl
+                with _zf.ZipFile(_cand, "r") as _z:
+                    for _nm in _z.namelist():
+                        if _nm.count("/") == 2 and _nm.endswith(".app/Info.plist"):
+                            _info = _pl.loads(_z.read(_nm))
+                            for _ut in (_info.get("CFBundleURLTypes") or []):
+                                _scs = _ut.get("CFBundleURLSchemes") or []
+                                if _scs:
+                                    sch = str(_scs[0]).strip()
+                                    break
+                            break
+            except Exception:
+                pass
+        if sch:
+            break
+    if not sch:
+        if "livecontainer" in _b:
+            sch = "livecontainer"
+        elif "sidestore" in _b:
+            sch = "sidestore"
+        elif "altstore" in _b:
+            sch = "altstore"
+    return sch
+
+
 def _sideloader_install_ipa_cached(ipa_path, udid="", jid=None, title=""):
     """Install an already-signed .ipa file-by-file using `sideloader install-app`."""
     _sl = os.path.join(BASE_DIR, "sideloader")
@@ -8146,7 +8181,7 @@ class _OtaHandler(http.server.SimpleHTTPRequestHandler):
                 if not _rec_l:
                     _out_b = json.dumps({"ok": False, "text": "App not found"}).encode("utf-8")
                 elif not _rec_l.get("disabled"):
-                    _sch = (_rec_l.get("url_scheme") or "").strip()
+                    _sch = _resolve_url_scheme(_rec_l)
                     _out_b = json.dumps({"ok": True, "status": "done", "pct": 100, "text": "Ready!", "scheme": (_sch + "://") if _sch else ""}).encode("utf-8")
                 else:
                     _jid_l = _miniapp_job_new("launch_swap", _b_raw)
@@ -8192,14 +8227,16 @@ class _OtaHandler(http.server.SimpleHTTPRequestHandler):
                                     _fresh = False
                             if _fresh:
                                 _miniapp_job_set(_jid_l, "running", "⚡ Fast-installing " + _t_l + "...", pct=60)
-                                _exe_ih = _minis_install_exe()
-                                _rf_ih = _minis_pairing_file(_rec_l.get("udid") or "")
-                                if _exe_ih and _rf_ih:
-                                    _r_ih = subprocess.run([_exe_ih, "--host", MINIS_PHONE_HOST, "--pairing-file", _rf_ih, "--ipa", _sc_ipa, "--timeout-secs", "180"], capture_output=True, text=True, timeout=200)
-                                    if _r_ih.returncode != 0:
-                                        raise RuntimeError((_r_ih.stderr or _r_ih.stdout or "install failed")[-200:])
-                                else:
-                                    raise RuntimeError("install-helper/pairing missing")
+                                _ok_sl_l, _det_sl_l = _sideloader_install_ipa_cached(_sc_ipa, _rec_l.get("udid") or "", _jid_l, _t_l)
+                                if not _ok_sl_l:
+                                    _exe_ih = _minis_install_exe()
+                                    _rf_ih = _minis_pairing_file(_rec_l.get("udid") or "")
+                                    if _exe_ih and _rf_ih:
+                                        _r_ih = subprocess.run([_exe_ih, "--host", MINIS_PHONE_HOST, "--pairing-file", _rf_ih, "--ipa", _sc_ipa, "--timeout-secs", "180"], capture_output=True, text=True, timeout=200)
+                                        if _r_ih.returncode != 0:
+                                            raise RuntimeError((_r_ih.stderr or _r_ih.stdout or _det_sl_l or "install failed")[-200:])
+                                    else:
+                                        raise RuntimeError(_det_sl_l or "install-helper/pairing missing")
                             else:
                                 _miniapp_job_set(_jid_l, "running", "🔐 Re-signing " + _t_l + "...", pct=50)
                                 _miniapp_api_refresh_worker(_jid_l, None, _b_raw, skip_misagent=True)
@@ -8214,7 +8251,7 @@ class _OtaHandler(http.server.SimpleHTTPRequestHandler):
                                     _appdata_restore_thread(None, _b_raw, 0)
                                 except Exception:
                                     pass
-                            _sch = (_rec_l.get("url_scheme") or "").strip()
+                            _sch = _resolve_url_scheme(_rec_l)
                             if _jid_l in _MINIAPP_JOBS:
                                 _MINIAPP_JOBS[_jid_l]["scheme"] = (_sch + "://") if _sch else ""
                             _miniapp_job_set(_jid_l, "done", "✅ " + _t_l + " ready!", pct=100)
@@ -11184,7 +11221,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.102"
+SIDEBOT_VERSION = "2026.11.25.103"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
