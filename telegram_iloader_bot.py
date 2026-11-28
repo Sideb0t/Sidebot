@@ -8150,7 +8150,7 @@ class _OtaHandler(http.server.SimpleHTTPRequestHandler):
                                     raise RuntimeError("install-helper/pairing missing")
                             else:
                                 _miniapp_job_set(_jid_l, "running", "🔐 Re-signing " + _t_l + "...", pct=50)
-                                _miniapp_api_refresh_worker(_jid_l, None, _b_raw)
+                                _miniapp_api_refresh_worker(_jid_l, None, _b_raw, skip_misagent=True)
                             _recs_all = load_installed()
                             for _x in _recs_all:
                                 if _x.get("bundle") == _b_raw:
@@ -11132,7 +11132,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.93"
+SIDEBOT_VERSION = "2026.11.25.94"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -12785,12 +12785,14 @@ def _miniapp_job_new(kind, bundle):
             del _MINIAPP_JOBS[_k]
     return _jid
 
-def _miniapp_job_set(jid, status, text="", options=None):
+def _miniapp_job_set(jid, status, text="", options=None, pct=None):
     if jid in _MINIAPP_JOBS:
         _MINIAPP_JOBS[jid]["status"] = status
         _MINIAPP_JOBS[jid]["text"] = text or ""
         if options is not None:
             _MINIAPP_JOBS[jid]["options"] = options
+        if pct is not None:
+            _MINIAPP_JOBS[jid]["pct"] = int(pct)
 
 def _miniapp_job_get(jid):
     return _MINIAPP_JOBS.get(jid)
