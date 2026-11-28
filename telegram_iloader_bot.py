@@ -1383,10 +1383,10 @@ TEXT = {
 "de": "🆔 App-IDs: keine App installiert, 3 übrig.",
 "en": "🆔 App IDs: no app installed, 3 left."},
 "miniapp_api_job_chat": {
-"uk": "Продовження в чаті — подробиці там.",
-"ru": "Продолжение в чате — подробности там.",
-"de": "Weiter im Chat — Details dort.",
-"en": "Continuing in chat — details there."},
+"uk": "❌ Операція перервалась — перегляньте логи нижче.",
+"ru": "❌ Операция прервалась — смотрите логи ниже.",
+"de": "❌ Vorgang unterbrochen — siehe Logs unten.",
+"en": "❌ Operation interrupted — check logs below."},
 "miniapp_api_refresh_started": {
 "uk": "🔄 Оновлюю %s…",
 "ru": "🔄 Обновляю %s…",
@@ -6666,6 +6666,51 @@ def install_minis_rust(ipa_path, udid="", bundle=""):
 _UNINSTALL_PROBE = {"exe": "", "mtime": 0, "size": 0, "ok": False}
 
 
+def _sideloader_install_ipa_cached(ipa_path, udid="", jid=None, title=""):
+    """Install an already-signed .ipa file-by-file using `sideloader install-app`."""
+    _sl = os.path.join(BASE_DIR, "sideloader")
+    _rf = _minis_pairing_file(udid or "")
+    if not os.path.isfile(_sl) or not _rf or not os.path.isfile(ipa_path):
+        return False, "sideloader/pairing/ipa missing"
+    import zipfile as _zf
+    _tmp = tempfile.mkdtemp(prefix="sl_cached_")
+    try:
+        with _zf.ZipFile(ipa_path, "r") as _z:
+            _z.extractall(_tmp)
+        _pay = os.path.join(_tmp, "Payload")
+        _app_dir = ""
+        if os.path.isdir(_pay):
+            for _nm in os.listdir(_pay):
+                if _nm.endswith(".app") and os.path.isdir(os.path.join(_pay, _nm)):
+                    _app_dir = os.path.join(_pay, _nm)
+                    break
+        if not _app_dir:
+            return False, "No .app in Payload/"
+        _cmd = [_sl, "install-app", _app_dir, "--device-ip", MINIS_PHONE_HOST,
+                "--port", "49152", "--pairing-file", _rf, "--plain"]
+        if jid:
+            _miniapp_job_set(jid, "running", "🚀 Sideloader (file-by-file): " + (title or os.path.basename(_app_dir)), pct=25)
+        _p = subprocess.Popen(_cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1)
+        _tail = []
+        for _ln in _p.stdout:
+            _ln = _ln.strip()
+            if not _ln:
+                continue
+            _tail.append(_ln)
+            _tail = _tail[-10:]
+            _install_log_line("[SL_INSTALL_APP] " + _ln[:200])
+            if jid:
+                _miniapp_job_set(jid, "running", "🚀 " + _ln[:120], pct=60)
+        _rc = _p.wait(timeout=240)
+        if _rc == 0 and any("INSTALL_OK" in x for x in _tail):
+            return True, "INSTALL_OK"
+        return False, "\n".join(_tail)[-240:] or ("rc=%s" % _rc)
+    except Exception as _e:
+        return False, str(_e)
+    finally:
+        shutil.rmtree(_tmp, ignore_errors=True)
+
+
 def _minis_uninstall_supports():
     """(exe, ok, err). Supports sideloader uninstall OR install-helper uninstall."""
     _sl = os.path.join(BASE_DIR, "sideloader")
@@ -10966,7 +11011,7 @@ def _miniapp_run_import_flow(jid, chat_id, tmpdir, ipa_path, filename, ota=False
         job["udid"] = _prof.get("udid", "")
         job["apple_password"] = _pw
         job["refresh_bundle"] = _bid
-        if MINIS_MODE and (_ms_get("backend") or job.get("miniapp_backend")) == "siboot":
+        if MINIS_MODE and (_ms_get("backend") or job.get("miniapp_backend")) in ("siboot", "sideloader"):
             job["siboot_ipa_path"] = ipa_path
             job["siboot_apple_id"] = _prof.get("apple_id", "")
             job["siboot_password"] = _pw
@@ -11132,7 +11177,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.98"
+SIDEBOT_VERSION = "2026.11.25.101"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -11978,38 +12023,53 @@ def _miniapp_api_dispatch(cmd, chat_id):
                                     _s.close()
                                     if _okp: break
                                     time.sleep(0.3)
-                        _exe_ih = _minis_install_exe()
-                        _rf_ih = _minis_pairing_file(_rec.get("udid") or "")
-                        if _exe_ih and _rf_ih:
-                            _miniapp_job_set(_jid, "running", "📲 " + (_rec.get("title") or _b) + " (0%)", pct=15)
-                            _p_ih = subprocess.Popen(
-                                [_exe_ih, "--host", MINIS_PHONE_HOST, "--pairing-file", _rf_ih,
-                                 "--ipa", _sc_ipa, "--timeout-secs", "240"],
-                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1
-                            )
-                            _last_ln = ""
-                            for _ln in _p_ih.stdout:
-                                _ln = _ln.strip()
-                                if not _ln:
-                                    continue
-                                _last_ln = _ln
-                                _install_log_line("[REACTIVATE] " + _ln)
-                                _m_up = re.search(r"(\d{1,3})%", _ln)
-                                if _m_up:
-                                    _p_val = min(95, 15 + int(int(_m_up.group(1)) * 0.8))
-                                    _miniapp_job_set(_jid, "running", "📲 " + _ln, pct=_p_val)
-                                elif "INSTALL_" in _ln:
-                                    _miniapp_job_set(_jid, "running", "📲 " + _ln[:120], pct=20)
-                            _rc_ih = _p_ih.wait(timeout=250)
-                            if _rc_ih == 0:
+                        _backend_sel = (_ms_get("backend") or job.get("miniapp_backend") or "rust").strip().lower()
+                        _sl_done = False
+                        if _backend_sel in ("siboot", "sideloader") and os.path.isfile(os.path.join(BASE_DIR, "sideloader")):
+                            _ok_sl, _det_sl = _sideloader_install_ipa_cached(_sc_ipa, _rec.get("udid") or "", _jid, _rec.get("title") or _b)
+                            if _ok_sl:
                                 _miniapp_job_set(_jid, "done", "▶️ " + (_rec.get("title") or _b), pct=100)
+                                _sl_done = True
                             else:
-                                _install_log_line("[REACTIVATE] helper rc=%s last=%s -> fallback" % (_rc_ih, _last_ln))
+                                _install_log_line("[REACTIVATE] sideloader failed: %s" % _det_sl)
+                        if not _sl_done:
+                            _exe_ih = _minis_install_exe()
+                            _rf_ih = _minis_pairing_file(_rec.get("udid") or "")
+                            if _exe_ih and _rf_ih:
+                                _miniapp_job_set(_jid, "running", "📲 " + (_rec.get("title") or _b) + " (0%)", pct=15)
+                                _p_ih = subprocess.Popen(
+                                    [_exe_ih, "--host", MINIS_PHONE_HOST, "--pairing-file", _rf_ih,
+                                     "--ipa", _sc_ipa, "--timeout-secs", "240"],
+                                    stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, bufsize=1
+                                )
+                                _last_ln = ""
+                                for _ln in _p_ih.stdout:
+                                    _ln = _ln.strip()
+                                    if not _ln:
+                                        continue
+                                    _last_ln = _ln
+                                    _install_log_line("[REACTIVATE] " + _ln)
+                                    _m_up = re.search(r"(\d{1,3})%", _ln)
+                                    if _m_up:
+                                        _p_val = min(95, 15 + int(int(_m_up.group(1)) * 0.8))
+                                        _miniapp_job_set(_jid, "running", "📲 " + _ln, pct=_p_val)
+                                    elif "INSTALL_" in _ln:
+                                        _miniapp_job_set(_jid, "running", "📲 " + _ln[:120], pct=20)
+                                _rc_ih = _p_ih.wait(timeout=250)
+                                if _rc_ih == 0:
+                                    _miniapp_job_set(_jid, "done", "▶️ " + (_rec.get("title") or _b), pct=100)
+                                else:
+                                    _install_log_line("[REACTIVATE] helper rc=%s last=%s -> trying sideloader install-app" % (_rc_ih, _last_ln))
+                                    _ok_sl2, _det_sl2 = _sideloader_install_ipa_cached(_sc_ipa, _rec.get("udid") or "", _jid, _rec.get("title") or _b)
+                                    if _ok_sl2:
+                                        _miniapp_job_set(_jid, "done", "▶️ " + (_rec.get("title") or _b), pct=100)
+                                    else:
+                                        _install_log_line("[REACTIVATE] sideloader fallback err=%s" % _det_sl2)
+                                        _miniapp_job_set(_jid, "running", "🔄 " + (_rec.get("title") or _b), pct=15)
+                                        _miniapp_api_refresh_worker(_jid, chat_id, _b, skip_misagent=True)
+                            else:
                                 _miniapp_job_set(_jid, "running", "🔄 " + (_rec.get("title") or _b), pct=15)
                                 _miniapp_api_refresh_worker(_jid, chat_id, _b, skip_misagent=True)
-                        else:
-                            _miniapp_job_set(_jid, "running", "🔄 " + (_rec.get("title") or _b), pct=15)
-                            _miniapp_api_refresh_worker(_jid, chat_id, _b, skip_misagent=True)
                     else:
                         _miniapp_job_set(_jid, "running", "🔄 " + (_rec.get("title") or _b), pct=15)
                         _miniapp_api_refresh_worker(_jid, chat_id, _b, skip_misagent=True)
@@ -33721,7 +33781,7 @@ def handle_action(chat_id, action, via, message_id=None):
                 job["ipa_path"] = _inp
                 job["ipa_name"] = os.path.basename(_orig)
                 job["chat_id"] = chat_id
-                if MINIS_MODE and (_ms_get("backend") or job.get("miniapp_backend")) == "siboot":
+                if MINIS_MODE and (_ms_get("backend") or job.get("miniapp_backend")) in ("siboot", "sideloader"):
                     job["siboot_ipa_path"] = _inp
                     job["siboot_apple_id"] = _prof.get("apple_id", "")
                     job["siboot_password"] = _pw or ""
