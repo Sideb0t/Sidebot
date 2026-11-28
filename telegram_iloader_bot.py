@@ -6617,6 +6617,13 @@ def install_minis_rust(ipa_path, udid="", bundle=""):
         return False, ("pairing file not found: put rp_pairing_file.plist "
                        "(rootshell export) or <UDID>.remote.plist in pairing/ "
                        "via the Files app, or forward it to the bot (/pairfile)")
+    if os.path.isfile(os.path.join(BASE_DIR, "sideloader")):
+        _install_log_line("=== START FAST SIDELOADER INSTALL_APP ===")
+        _ok_sl, _det_sl = _sideloader_install_ipa_cached(ipa_path, udid, job.get("api_jid"), bundle)
+        _install_log_line("=== END FAST SIDELOADER ok=%s elapsed=%.1fs ===" % (_ok_sl, time.time() - _t0))
+        if _ok_sl:
+            return True, "INSTALL_OK"
+        _install_log_line("sideloader install-app failed (%s) -> falling back to install-helper" % _det_sl)
     _fsize = os.path.getsize(ipa_path)
     _rfsize = os.path.getsize(_rf) if os.path.exists(_rf) else 0
     _cmd = [_exe, "--host", MINIS_PHONE_HOST, "--pairing-file", _rf,
@@ -11177,7 +11184,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.101"
+SIDEBOT_VERSION = "2026.11.25.102"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -12023,15 +12030,19 @@ def _miniapp_api_dispatch(cmd, chat_id):
                                     _s.close()
                                     if _okp: break
                                     time.sleep(0.3)
-                        _backend_sel = (_ms_get("backend") or job.get("miniapp_backend") or "rust").strip().lower()
                         _sl_done = False
-                        if _backend_sel in ("siboot", "sideloader") and os.path.isfile(os.path.join(BASE_DIR, "sideloader")):
+                        if os.path.isfile(os.path.join(BASE_DIR, "sideloader")):
                             _ok_sl, _det_sl = _sideloader_install_ipa_cached(_sc_ipa, _rec.get("udid") or "", _jid, _rec.get("title") or _b)
                             if _ok_sl:
                                 _miniapp_job_set(_jid, "done", "▶️ " + (_rec.get("title") or _b), pct=100)
                                 _sl_done = True
                             else:
                                 _install_log_line("[REACTIVATE] sideloader failed: %s" % _det_sl)
+                        if not _sl_done and "0xe8008018" in (_det_sl if "sideloader" in os.listdir(BASE_DIR) else ""):
+                            _install_log_line("[REACTIVATE] expired cert in cache (0xe8008018) -> re-signing immediately")
+                            _miniapp_job_set(_jid, "running", "🔄 " + (_rec.get("title") or _b), pct=15)
+                            _miniapp_api_refresh_worker(_jid, chat_id, _b, skip_misagent=True)
+                            _sl_done = True
                         if not _sl_done:
                             _exe_ih = _minis_install_exe()
                             _rf_ih = _minis_pairing_file(_rec.get("udid") or "")
