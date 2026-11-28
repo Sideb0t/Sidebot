@@ -11132,7 +11132,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.94"
+SIDEBOT_VERSION = "2026.11.25.95"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
@@ -18443,7 +18443,7 @@ def siboot_thread(chat_id):
                     pass
         cmd = [exe, "--plain"]
         if MINIS_MODE:
-            cmd += ["--device-ip", MINIS_HOST]
+            cmd += ["--device-ip", MINIS_PHONE_HOST]
         cmd += ["--home", SIBOOT_HOME,
                 "--apple-id", apple_id, "--ipa", os.path.abspath(ipa_path),
                 "--anisette", effective_anisette_url()]
@@ -18710,6 +18710,9 @@ def siboot_thread(chat_id):
                         _minis_notify("SideBot", _notify_msg)
                         _install_log_line("[SIBOOT] NEED_TUNNEL -> apple-notification")
                     continue
+                _aj_cur = job.get("api_jid")
+                if _aj_cur and any(k in low for k in ("step ", "signing", "uploading", "installing", "anisette", "apple", "tunnel")):
+                    _miniapp_job_set(_aj_cur, "running", clean[:140])
                 _m = _signed_re.match(clean)
                 if _m:
                     signed_name, signed_bundle = _m.group(1), _m.group(2)
