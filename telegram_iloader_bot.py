@@ -8114,7 +8114,16 @@ class _OtaHandler(http.server.SimpleHTTPRequestHandler):
             import plistlib, uuid as _uuid, urllib.parse as _up_mc
             _b_raw = _up_mc.unquote(_path[len("/app-clip/"):-len(".mobileconfig")])
             _rec_mc = next((r for r in load_installed() if r.get("bundle") == _b_raw), None)
-            _lbl = (_rec_mc or {}).get("title") or _b_raw or "App"
+            _lbl = (_rec_mc or {}).get("title") or ""
+            if not _lbl or _lbl == _b_raw:
+                try:
+                    _ca_mc, _ = _miniapp_find_program(_b_raw)
+                    if _ca_mc and _ca_mc.get("name"):
+                        _lbl = _ca_mc["name"]
+                except Exception:
+                    pass
+            if not _lbl:
+                _lbl = _b_raw or "App"
             _lp = ENV.get("OTA_PORT", "8080").strip() or "8080"
             _url = "http://127.0.0.1:%s/launch/%s" % (_lp, _up_mc.quote(_b_raw, safe=""))
             _wc = {
@@ -8122,8 +8131,8 @@ class _OtaHandler(http.server.SimpleHTTPRequestHandler):
                 "IgnoreManifestScope": True,
                 "IsRemovable": True,
                 "Label": str(_lbl)[:40],
-                "PayloadDescription": "FlekDeck Quick Switch for " + str(_lbl),
-                "PayloadDisplayName": str(_lbl) + " (SideBot)",
+                "PayloadDescription": str(_lbl),
+                "PayloadDisplayName": str(_lbl),
                 "PayloadIdentifier": "com.sidebot.appclip." + re.sub(r"[^A-Za-z0-9._-]", "_", _b_raw),
                 "PayloadType": "com.apple.webClip.managed",
                 "PayloadUUID": str(_uuid.uuid4()).upper(),
@@ -8133,15 +8142,20 @@ class _OtaHandler(http.server.SimpleHTTPRequestHandler):
             }
             _ic_bytes = None
             try:
-                _ic_fn = _appicon_bytes_for_bundle(_b_raw) if "_appicon_bytes_for_bundle" in globals() else None
-                if _ic_fn:
-                    _ic_bytes = _ic_fn
+                _ic_p = _appicon_png_path(_b_raw)
+                if _ic_p and os.path.isfile(_ic_p):
+                    with open(_ic_p, "rb") as _icf:
+                        _ic_bytes = _icf.read()
+                else:
+                    _ic_rurl = _appicon_remote_url(_b_raw)
+                    if _ic_rurl and _ic_rurl.startswith("http"):
+                        _req_ic = urllib.request.Request(_ic_rurl, headers={"User-Agent": "SideBot/1.0"})
+                        with urllib.request.urlopen(_req_ic, timeout=8) as _resp_ic:
+                            _ic_bytes = _resp_ic.read()
             except Exception:
                 _ic_bytes = None
             if not _ic_bytes:
-                _def_ic = os.path.join(BASE_DIR, "flekdeck-icon.png")
-                if not os.path.isfile(_def_ic):
-                    _def_ic = os.path.join(BASE_DIR, "sidebot-icon.png")
+                _def_ic = os.path.join(BASE_DIR, "sidebot-icon.png")
                 if os.path.isfile(_def_ic):
                     with open(_def_ic, "rb") as _icf:
                         _ic_bytes = _icf.read()
@@ -8149,7 +8163,7 @@ class _OtaHandler(http.server.SimpleHTTPRequestHandler):
                 _wc["Icon"] = _ic_bytes
             _prof = {
                 "PayloadContent": [_wc],
-                "PayloadDisplayName": str(_lbl) + " Shortcut",
+                "PayloadDisplayName": str(_lbl),
                 "PayloadIdentifier": "com.sidebot.appclip.prof." + re.sub(r"[^A-Za-z0-9._-]", "_", _b_raw),
                 "PayloadRemovalDisallowed": False,
                 "PayloadType": "Configuration",
@@ -11221,7 +11235,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.103"
+SIDEBOT_VERSION = "2026.11.25.104"
 SIDEBOT_UPDATE_BASE = "https://raw.githubusercontent.com/Sideb0t/Sidebot/main"
 SIDEBOT_API_BASE = "https://api.github.com/repos/Sideb0t/Sidebot/contents"
 
