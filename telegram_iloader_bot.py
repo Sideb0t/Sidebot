@@ -6714,6 +6714,7 @@ def _sideloader_install_ipa_cached(ipa_path, udid="", jid=None, title=""):
     _rf = _minis_pairing_file(udid or "")
     if not os.path.isfile(_sl) or not _rf or not os.path.isfile(ipa_path):
         return False, "sideloader/pairing/ipa missing"
+    _ensure_tunnel_ready(10.0)
     import zipfile as _zf
     _tmp = tempfile.mkdtemp(prefix="sl_cached_")
     try:
@@ -6788,12 +6789,41 @@ def _minis_uninstall_supports():
     return _exe, _ok, "" if _ok else tr("miniapp_uninstall_unsupported")
 
 
+def _ensure_tunnel_ready(wait_secs=10.0):
+    """If 10.7.0.1:49152 is closed in Minis mode, trigger TurnOffData notification and wait."""
+    import socket as _sock
+    def _is_open():
+        try:
+            _s = _sock.socket()
+            _s.settimeout(0.35)
+            _ok = (_s.connect_ex((MINIS_PHONE_HOST, 49152)) == 0)
+            _s.close()
+            return _ok
+        except Exception:
+            return False
+    if _is_open():
+        return True
+    if MINIS_MODE:
+        try:
+            _nm = _CELL_NOTIFY_BODY.get(CUR_LANG, _CELL_NOTIFY_BODY["uk"])
+            if _minis_notify("SideBot", _nm):
+                _end = time.time() + float(wait_secs)
+                while time.time() < _end:
+                    if _is_open():
+                        return True
+                    time.sleep(0.35)
+        except Exception:
+            pass
+    return _is_open()
+
+
 def _minis_uninstall(bundle, udid=""):
     """(ok, details, attempted). Uses sideloader uninstall (InstallationProxy)
     when available, falling back to install-helper."""
     _rf = _minis_pairing_file(udid or "")
     if not _rf:
         return False, "pairing file not found", True
+    _ensure_tunnel_ready(10.0)
     _sl = os.path.join(BASE_DIR, "sideloader")
     if os.path.isfile(_sl):
         _cmd = [_sl, "uninstall", bundle, "--device-ip", MINIS_PHONE_HOST,
@@ -11235,7 +11265,7 @@ def _miniapp_appdata_restore_worker(jid, chat_id, bundle, idx):
 
 # --- In-app API dispatch (Minis) ----------------------------------------------
 
-SIDEBOT_VERSION = "2026.11.25.109"
+SIDEBOT_VERSION = "2026.11.25.111"
 SIDEBOT_UPDATE_BASE = "https://github.com/Sideb0t/Sidebot/raw/refs/heads/main"
 SIDEBOT_API_BASE = "https://github.com/Sideb0t/Sidebot/raw/refs/heads/main"
 
